@@ -1,0 +1,16 @@
+#
+# First example of a tacoscript following the syntax of Salt
+# but not implementing all options
+# https://docs.saltstack.com/en/latest/ref/states/all/salt.states.cmd.html
+#
+# unique id of the task, can be any string
+do-something:
+  # Name of the class and the module
+  cmd.run:
+    - name: /bin/date > /tmp/my-date.txt
+    - cwd: /tmp
+    - user: root
+    - shell: /bin/bash
+    - env:
+        - PASSWORD: bunny
+    - creates: /tmp/my-date.txt # Don't execute if file exists.

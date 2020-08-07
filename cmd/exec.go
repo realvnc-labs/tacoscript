@@ -1,8 +1,8 @@
 package cmd
 
 import (
-	"errors"
-	"fmt"
+	"github.com/cloudradar-monitoring/tacoscript/exec"
+	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 )
 
@@ -10,17 +10,19 @@ func init() {
 	rootCmd.AddCommand(exeCmd)
 }
 
+const DefaultPath = "config.yaml"
+
 var exeCmd = &cobra.Command{
-	Use:   "exec {{PATH_TO_CMD_FILE}}",
-	Short: "Executes script provided in argument, you can also run tacoscript {{PATH_TO_CMD_FILE}}",
-	Args: func(cmd *cobra.Command, args []string) error {
-		if len(args) != 1 {
-			return errors.New("requires a PATH_TO_CMD_FILE argument")
+	Use:   "exec {{PATH_TO_SCRIPT}}",
+	Short: "Executes a script provided in argument, you can also run tacoscript {{PATH_TO_SCRIPT}}",
+	Args: cobra.ArbitraryArgs,
+	RunE: func(cmd *cobra.Command, args []string) error {
+		if len(args) == 0 {
+			args = []string{DefaultPath}
 		}
 
-		return nil
-	},
-	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Println("EXEC", args)
+		logrus.Infof("will execute script %s", args[0])
+
+		return exec.RunScript(args[0])
 	},
 }
