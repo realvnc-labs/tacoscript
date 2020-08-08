@@ -24,8 +24,20 @@ type Parser struct {
 	TaskBuilder  Builder
 }
 
-func (p Parser) ParseScripts(dataProvider RawDataProvider) (Scripts, error) {
-	yamlFile, err := dataProvider.Read()
+type PasedTasksBuilderMock struct {
+	TypeName     string
+	Path         string
+	Context      []map[string]interface{}
+	TaskToReturn Task
+	ErrToReturn  error
+}
+
+func (bm *PasedTasksBuilderMock) Build(typeName, path string, context []map[string]interface{}) (Task, error) {
+	return bm.TaskToReturn, bm.ErrToReturn
+}
+
+func (p Parser) ParseScripts() (Scripts, error) {
+	yamlFile, err := p.DataProvider.Read()
 	if err != nil {
 		return Scripts{}, err
 	}

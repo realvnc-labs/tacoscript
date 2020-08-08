@@ -22,7 +22,7 @@ func RunScript(scriptPath string) error {
 		}),
 	}
 
-	scripts, err := parser.ParseScripts(fileDataProvider)
+	scripts, err := parser.ParseScripts()
 
 	if err != nil {
 		return err
