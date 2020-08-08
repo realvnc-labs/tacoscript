@@ -11,7 +11,7 @@ var (
 		Use:   "tacoscript",
 		Short: "Tacoscript is a state-driven scripted task executor",
 		Long:  "Tacoscript is a state-driven scripted task executor, See https://docs.saltstack.com/en/latest which is used for project inspiration",
-		Args: cobra.ArbitraryArgs,
+		Args:  cobra.ArbitraryArgs,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			return exeCmd.RunE(cmd, args)
 		},

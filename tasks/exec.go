@@ -4,8 +4,6 @@ import (
 	"bytes"
 	"context"
 	"fmt"
-	io2 "github.com/cloudradar-monitoring/tacoscript/io"
-	"github.com/sirupsen/logrus"
 	"io"
 	"os"
 	"os/exec"
@@ -14,6 +12,9 @@ import (
 	"strings"
 	"syscall"
 	"time"
+
+	io2 "github.com/cloudradar-monitoring/tacoscript/io"
+	"github.com/sirupsen/logrus"
 )
 
 type CmdRunner interface {

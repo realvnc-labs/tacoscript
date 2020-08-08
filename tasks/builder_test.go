@@ -2,16 +2,17 @@ package tasks
 
 import (
 	"errors"
-	"github.com/stretchr/testify/assert"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 type BuilderMock struct {
-	TypeName string
-	Path string
-	Context []map[string]interface{}
+	TypeName     string
+	Path         string
+	Context      []map[string]interface{}
 	TaskToReturn Task
-	ErrToReturn error
+	ErrToReturn  error
 }
 
 func (bm *BuilderMock) Build(typeName, path string, context []map[string]interface{}) (Task, error) {
@@ -24,19 +25,19 @@ func (bm *BuilderMock) Build(typeName, path string, context []map[string]interfa
 
 func TestBuildWithRouting(t *testing.T) {
 	successBuilder := &BuilderMock{
-		TaskToReturn: &CmdRunTask{TypeName:  "successTask", Path: "someSuccessPath"},
+		TaskToReturn: &CmdRunTask{TypeName: "successTask", Path: "someSuccessPath"},
 		ErrToReturn:  nil,
 	}
 
 	failBuilder := &BuilderMock{
-		TaskToReturn: &CmdRunTask{TypeName:  "failedTask", Path: "someFailedPath"},
+		TaskToReturn: &CmdRunTask{TypeName: "failedTask", Path: "someFailedPath"},
 		ErrToReturn:  errors.New("some error"),
 	}
 
 	br := BuildRouter{
 		Builders: map[string]Builder{
 			"successTask": successBuilder,
-			"failedTask": failBuilder,
+			"failedTask":  failBuilder,
 		},
 	}
 
@@ -52,8 +53,8 @@ func TestBuildWithRouting(t *testing.T) {
 		return
 	}
 
-	assert.Equal(t, "successTask",  task.GetName())
-	assert.Equal(t, "someSuccessPath",  task.GetPath())
+	assert.Equal(t, "successTask", task.GetName())
+	assert.Equal(t, "someSuccessPath", task.GetPath())
 	assert.Equal(t, "successTask", successBuilder.TypeName)
 	assert.Equal(t, "someSuccessPath", successBuilder.Path)
 	assert.Equal(t, ctx, successBuilder.Context)

@@ -2,11 +2,11 @@ package script
 
 import (
 	"context"
+
 	"github.com/cloudradar-monitoring/tacoscript/tasks"
 )
 
 type Runner struct {
-
 }
 
 func (r Runner) Run(ctx context.Context, scripts tasks.Scripts) []tasks.ExecutionResult {

@@ -8,7 +8,7 @@ import (
 func Init(isVerbose bool) {
 	log.SetFormatter(&log.TextFormatter{
 		TimestampFormat: "2006-01-02T15:04:05.000000",
-		FullTimestamp: true,
+		FullTimestamp:   true,
 	})
 
 	logLevel := log.WarnLevel

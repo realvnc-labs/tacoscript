@@ -2,8 +2,9 @@ package tasks
 
 import (
 	"fmt"
-	"github.com/goccy/go-yaml"
 	"io/ioutil"
+
+	"github.com/goccy/go-yaml"
 )
 
 type FileDataProvider struct {
