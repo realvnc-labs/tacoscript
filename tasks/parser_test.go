@@ -3,8 +3,9 @@ package tasks
 import (
 	"context"
 	"errors"
-	"github.com/stretchr/testify/assert"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 type RawDataProviderMock struct {
@@ -17,11 +18,11 @@ type ParserBuilderMock struct {
 	TaskValidationError error
 }
 
-func (bm *ParserBuilderMock) Build(typeName, path string, context []map[string]interface{}) (Task, error) {
+func (bm *ParserBuilderMock) Build(typeName, path string, ctx []map[string]interface{}) (Task, error) {
 	t := TaskMock{
 		TypeName:        typeName,
 		Path:            path,
-		Context:         context,
+		Context:         ctx,
 		ValidationError: bm.TaskValidationError,
 	}
 
@@ -111,6 +112,16 @@ cwd:
 cwd:
   cmd.run:
     - name: echo 1
+`,
+			BuilderError: errors.New("failed to build task"),
+			ExpectedErrMsg:  "failed to build task",
+			ExpectedScripts: Scripts{},
+		},
+		{
+			YamlInput: `
+cwd:
+  cmd.run:
+    - name: echo 1
     - cwd: /usr/tmp
   somerun:
     - name: echo 2
@@ -165,5 +176,4 @@ func buildExpectedEnvs(expectedEnvs map[string]string) map[string]interface{} {
 	}
 
 	return mapContext
-
 }
