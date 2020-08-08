@@ -1,8 +1,8 @@
 name: Go
 on: [push]
 jobs:
-  check:
-    name: Check
+  sca:
+    name: SCA
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
@@ -10,6 +10,12 @@ jobs:
         uses: golangci/golangci-lint-action@v1
         with:
           version: v1.29
+          args: -c .golangci.yml
+  test:
+    name: Test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
       - name: Test
         run: |
           go test -race ./...

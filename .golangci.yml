@@ -7,7 +7,7 @@ linters-settings:
     lines: 100
     statements: 50
   gci:
-    local-prefixes: github.com/golangci/golangci-lint
+    local-prefixes: github.com/cloudradar-monitoring/tacoscript
   goconst:
     min-len: 2
     min-occurrences: 2
@@ -98,6 +98,7 @@ linters:
     - unused
     - varcheck
     - whitespace
+    - maligned
 
 issues:
   # Excluding configuration per-path, per-linter, per-text and per-source
