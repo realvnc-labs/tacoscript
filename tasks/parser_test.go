@@ -90,9 +90,11 @@ cwd:
 								{"name": "echo ${PASSWORD}"},
 								{"cwd": "/usr/tmp"},
 								{"shell": "zsh"},
-								buildExpectedEnvs(map[string]string{
-									"PASSWORD": "bunny",
-								}),
+								{
+									EnvField: buildExpectedEnvs(map[string]interface{}{
+										"PASSWORD": "bunny",
+									}),
+								},
 								{"creates": "/tmp/my-date.txt"},
 								{"user": "root"},
 							},
@@ -113,7 +115,7 @@ cwd:
   cmd.run:
     - name: echo 1
 `,
-			BuilderError: errors.New("failed to build task"),
+			BuilderError:    errors.New("failed to build task"),
 			ExpectedErrMsg:  "failed to build task",
 			ExpectedScripts: Scripts{},
 		},
@@ -163,7 +165,7 @@ cwd:
 	}
 }
 
-func buildExpectedEnvs(expectedEnvs map[string]string) map[string]interface{} {
+func buildExpectedEnvs(expectedEnvs map[string]interface{}) []interface{}{
 	envs := make([]interface{}, 0, len(expectedEnvs))
 	for envKey, envValue := range expectedEnvs {
 		envs = append(envs, map[string]interface{}{
@@ -171,9 +173,5 @@ func buildExpectedEnvs(expectedEnvs map[string]string) map[string]interface{} {
 		})
 	}
 
-	mapContext := map[string]interface{}{
-		"env": envs,
-	}
-
-	return mapContext
+	return envs
 }

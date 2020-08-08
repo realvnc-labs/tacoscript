@@ -27,6 +27,35 @@ func (ocm OSCmdRunner) Run(cmd *exec.Cmd) error {
 	return cmd.Run()
 }
 
+type UserSystemInfoParser interface {
+	Parse(userName, path string) (sysUserID, sysGroupID uint32, err error)
+}
+
+type OSUserSystemInfoParser struct{}
+
+func (ousif OSUserSystemInfoParser) Parse(userName, path string) (sysUserID, sysGroupID uint32, err error) {
+	logrus.Debugf("parsing user '%s' to get uid and group id from OS", userName)
+	u, err := user.Lookup(userName)
+	if err != nil {
+		err = fmt.Errorf("cannot locate user '%s': %w, check path '%s'", userName, err, path+"."+UserField)
+		return
+	}
+
+	uid, err := strconv.Atoi(u.Uid)
+	if err != nil {
+		err = fmt.Errorf("non-numeric user ID '%s': %w, check path '%s'", u.Uid, err, path+"."+UserField)
+		return
+	}
+
+	gid, err := strconv.Atoi(u.Gid)
+	if err != nil {
+		err = fmt.Errorf("non-numeric user group ID '%s': %w, check path '%s'", u.Gid, err, path+"."+UserField)
+		return
+	}
+
+	return uint32(uid), uint32(gid), nil
+}
+
 type CmdRunTask struct {
 	TypeName             string
 	Path                 string
@@ -38,10 +67,12 @@ type CmdRunTask struct {
 	MissingFileCondition string
 	Errors               *ValidationErrors
 	Runner               CmdRunner
+	UserSystemInfoParser UserSystemInfoParser
 }
 
 type CmdRunTaskBuilder struct {
 	Runner CmdRunner
+	UserSystemInfoParser UserSystemInfoParser
 }
 
 func (crtb CmdRunTaskBuilder) Build(typeName, path string, ctx []map[string]interface{}) (Task, error) {
@@ -50,6 +81,7 @@ func (crtb CmdRunTaskBuilder) Build(typeName, path string, ctx []map[string]inte
 		Path:     path,
 		Errors:   &ValidationErrors{},
 		Runner:   crtb.Runner,
+		UserSystemInfoParser: crtb.UserSystemInfoParser,
 	}
 
 	for _, contextItem := range ctx {
@@ -198,24 +230,15 @@ func (crt *CmdRunTask) setUser(cmd *exec.Cmd) error {
 		return nil
 	}
 	logrus.Debugf("will set user %s", crt.User)
-	u, err := user.Lookup(crt.User)
-	if err != nil {
-		return fmt.Errorf("cannot locate user '%s': %w, check path '%s'", crt.User, err, crt.Path+"."+UserField)
-	}
 
-	uid, err := strconv.Atoi(u.Uid)
+	uid, gid, err := crt.UserSystemInfoParser.Parse(crt.User, crt.Path)
 	if err != nil {
-		return fmt.Errorf("non-numeric user ID '%s': %w, check path '%s'", u.Uid, err, crt.Path+"."+UserField)
-	}
-
-	gid, err := strconv.Atoi(u.Gid)
-	if err != nil {
-		return fmt.Errorf("non-numeric user group ID '%s': %w, check path '%s'", u.Gid, err, crt.Path+"."+UserField)
+		return err
 	}
 
 	cmd.SysProcAttr = &syscall.SysProcAttr{
 		Setpgid:    true,
-		Credential: &syscall.Credential{Uid: uint32(uid), Gid: uint32(gid)},
+		Credential: &syscall.Credential{Uid: uid, Gid: gid},
 	}
 
 	return nil
