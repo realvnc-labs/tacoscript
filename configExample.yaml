@@ -14,3 +14,22 @@ do-something:
     - env:
         - PASSWORD: bunny
     - creates: /tmp/my-date.txt # Don't execute if file exists.
+do-something-more:
+  cmd.run:
+    - name: rm /tmp/my-date.txt
+    - require:
+        - do-something
+    - onlyif: date +%c|grep -q "^Thu" # Execute only on Thursdays
+more-work:
+  cmd.run:
+    - names:
+        - tar czf /var/backups/my-etc-backup.tar.gz /etc
+        - tar czf /var/backups/my-var-lib-backup.tar.gz /var/lib
+        - date | mail -s "Backup Finished" me@example.com
+    - require:
+        - do-something
+        - do-something-more
+    - creates:
+        - /var/backups/my-etc-backup.tar.gz
+        - /var/backups/my-var-lib-backup.tar.gz
+    - unless: test -e /etc/stop-backups

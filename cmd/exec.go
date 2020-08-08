@@ -1,7 +1,7 @@
 package cmd
 
 import (
-	"github.com/cloudradar-monitoring/tacoscript/exec"
+	"github.com/cloudradar-monitoring/tacoscript/script"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 )
@@ -23,6 +23,6 @@ var exeCmd = &cobra.Command{
 
 		logrus.Infof("will execute script %s", args[0])
 
-		return exec.RunScript(args[0])
+		return script.RunScript(args[0])
 	},
 }

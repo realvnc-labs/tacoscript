@@ -2,7 +2,6 @@ package cmd
 
 import (
 	"github.com/cloudradar-monitoring/tacoscript/applog"
-	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 )
 
@@ -29,8 +28,10 @@ func initLog() {
 	applog.Init(Verbose)
 }
 
-func Execute() {
+func Execute() error {
 	if err := rootCmd.Execute(); err != nil {
-		logrus.Fatal(err)
+		return err
 	}
+
+	return nil
 }
