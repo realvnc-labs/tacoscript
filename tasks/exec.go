@@ -44,7 +44,7 @@ type CmdRunTaskBuilder struct {
 	Runner CmdRunner
 }
 
-func (crtb CmdRunTaskBuilder) Build(typeName, path string, context []map[string]interface{}) (Task, error) {
+func (crtb CmdRunTaskBuilder) Build(typeName, path string, ctx []map[string]interface{}) (Task, error) {
 	t := &CmdRunTask{
 		TypeName: typeName,
 		Path:     path,
@@ -52,7 +52,7 @@ func (crtb CmdRunTaskBuilder) Build(typeName, path string, context []map[string]
 		Runner:   crtb.Runner,
 	}
 
-	for _, contextItem := range context {
+	for _, contextItem := range ctx {
 		for key, val := range contextItem {
 			switch key {
 			case NameField:
@@ -76,7 +76,7 @@ func (crtb CmdRunTaskBuilder) Build(typeName, path string, context []map[string]
 	return t, nil
 }
 
-func (crt CmdRunTask) GetName() string {
+func (crt *CmdRunTask) GetName() string {
 	return crt.TypeName
 }
 
@@ -85,11 +85,11 @@ func (crt *CmdRunTask) Validate() error {
 	return crt.Errors.ToError()
 }
 
-func (crt CmdRunTask) GetPath() string {
+func (crt *CmdRunTask) GetPath() string {
 	return crt.Path
 }
 
-func (crt CmdRunTask) Execute(ctx context.Context) ExecutionResult {
+func (crt *CmdRunTask) Execute(ctx context.Context) ExecutionResult {
 	execRes := ExecutionResult{}
 
 	execRes.IsSkipped, execRes.Err = crt.checkMissingFileCondition()
@@ -113,15 +113,15 @@ func (crt CmdRunTask) Execute(ctx context.Context) ExecutionResult {
 	var stdoutBuf, stderrBuf bytes.Buffer
 	crt.setIO(cmd, &stdoutBuf, &stderrBuf)
 
-	crt.run(ctx, cmd, &execRes)
+	crt.run(cmd, &execRes)
 
-	execRes.StdErr = string(stderrBuf.Bytes())
-	execRes.StdOut = string(stdoutBuf.Bytes())
+	execRes.StdErr = stderrBuf.String()
+	execRes.StdOut = stdoutBuf.String()
 
 	return execRes
 }
 
-func (crt CmdRunTask) checkMissingFileCondition() (isSkipped bool, err error) {
+func (crt *CmdRunTask) checkMissingFileCondition() (isSkipped bool, err error) {
 	if crt.MissingFileCondition == "" {
 		return
 	}
@@ -142,7 +142,7 @@ func (crt CmdRunTask) checkMissingFileCondition() (isSkipped bool, err error) {
 	return
 }
 
-func (crt CmdRunTask) createCmd() *exec.Cmd {
+func (crt *CmdRunTask) createCmd() *exec.Cmd {
 	shellParam := crt.parseShellParam(crt.Shell)
 
 	cmdParam := crt.parseCmdParam(crt.Cmd)
@@ -153,12 +153,13 @@ func (crt CmdRunTask) createCmd() *exec.Cmd {
 	return cmd
 }
 
-func (crt CmdRunTask) buildCmdParts(shellParam ShellParam, cmdParam CmdParam) (cmdName string, cmdArgs []string) {
+func (crt *CmdRunTask) buildCmdParts(shellParam ShellParam, cmdParam CmdParam) (cmdName string, cmdArgs []string) {
 	if shellParam.ShellPath != "" {
 		crt.addCShellParamIfNeeded(&shellParam)
 		cmdName = shellParam.ShellPath
 		cmdParams := fmt.Sprintf("%s %s", cmdParam.Cmd, strings.Join(cmdParam.Params, " "))
-		cmdArgs = append(shellParam.ShellParams, cmdParams)
+		cmdArgs = shellParam.ShellParams
+		cmdArgs = append(cmdArgs, cmdParams)
 	} else {
 		cmdName = cmdParam.Cmd
 		cmdArgs = cmdParam.Params
@@ -167,13 +168,13 @@ func (crt CmdRunTask) buildCmdParts(shellParam ShellParam, cmdParam CmdParam) (c
 	return
 }
 
-func (crt CmdRunTask) addCShellParamIfNeeded(shellParam *ShellParam) {
+func (crt *CmdRunTask) addCShellParamIfNeeded(shellParam *ShellParam) {
 	if shellParam.ShellName == "" || len(shellParam.ShellParams) > 0 {
 		return
 	}
 
 	isCParamSupported := false
-	for _, cShell := range c_param_shells {
+	for _, cShell := range cParamShells {
 		if cShell == shellParam.ShellName {
 			isCParamSupported = true
 			break
@@ -185,14 +186,14 @@ func (crt CmdRunTask) addCShellParamIfNeeded(shellParam *ShellParam) {
 	}
 }
 
-func (crt CmdRunTask) setWorkingDir(cmd *exec.Cmd) {
+func (crt *CmdRunTask) setWorkingDir(cmd *exec.Cmd) {
 	if crt.WorkingDir != "" {
 		logrus.Debugf("will set working dir %s", crt.WorkingDir)
 		cmd.Dir = crt.WorkingDir
 	}
 }
 
-func (crt CmdRunTask) setUser(cmd *exec.Cmd) error {
+func (crt *CmdRunTask) setUser(cmd *exec.Cmd) error {
 	if crt.User == "" {
 		return nil
 	}
@@ -220,7 +221,7 @@ func (crt CmdRunTask) setUser(cmd *exec.Cmd) error {
 	return nil
 }
 
-func (crt CmdRunTask) setEnvs(cmd *exec.Cmd) {
+func (crt *CmdRunTask) setEnvs(cmd *exec.Cmd) {
 	if len(crt.Envs) == 0 {
 		return
 	}
@@ -230,7 +231,7 @@ func (crt CmdRunTask) setEnvs(cmd *exec.Cmd) {
 	cmd.Env = append(os.Environ(), envs...)
 }
 
-func (crt CmdRunTask) setIO(cmd *exec.Cmd, stdOutWriter, stdErrWriter io.Writer) {
+func (crt *CmdRunTask) setIO(cmd *exec.Cmd, stdOutWriter, stdErrWriter io.Writer) {
 	stdOutLoggedWriter := io2.FuncWriter{
 		Callback: func(p []byte) (n int, err error) {
 			logrus.Infof(string(p))
@@ -247,14 +248,14 @@ func (crt CmdRunTask) setIO(cmd *exec.Cmd, stdOutWriter, stdErrWriter io.Writer)
 	cmd.Stderr = io.MultiWriter(stdErrLoggedWriter, stdErrWriter)
 }
 
-func (crt CmdRunTask) run(ctx context.Context, cmd *exec.Cmd, res *ExecutionResult) {
+func (crt *CmdRunTask) run(cmd *exec.Cmd, res *ExecutionResult) {
 	logrus.Infof("will run cmd %s", cmd.String())
 
 	start := time.Now()
 
 	err := crt.Runner.Run(cmd)
 
-	res.Duration = time.Now().Sub(start)
+	res.Duration = time.Since(start)
 	if err != nil {
 		res.Err = err
 	}
@@ -262,7 +263,7 @@ func (crt CmdRunTask) run(ctx context.Context, cmd *exec.Cmd, res *ExecutionResu
 	logrus.Debugf("execution of %s has finished, took: %v", crt.Cmd, res.Duration)
 }
 
-func (crt CmdRunTask) parseShellParam(rawShell string) ShellParam {
+func (crt *CmdRunTask) parseShellParam(rawShell string) ShellParam {
 	rawShell = strings.TrimSpace(rawShell)
 
 	parsedShellParam := ShellParam{
@@ -291,7 +292,7 @@ func (crt CmdRunTask) parseShellParam(rawShell string) ShellParam {
 	return parsedShellParam
 }
 
-func (crt CmdRunTask) parseCmdParam(rawCmd string) CmdParam {
+func (crt *CmdRunTask) parseCmdParam(rawCmd string) CmdParam {
 	rawCmd = strings.TrimSpace(rawCmd)
 
 	parsedCmdParam := CmdParam{

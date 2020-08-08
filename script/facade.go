@@ -7,7 +7,7 @@ import (
 	"github.com/cloudradar-monitoring/tacoscript/tasks"
 )
 
-//RunScript main entry point for the script execution
+// RunScript main entry point for the script execution
 func RunScript(scriptPath string) error {
 	fileDataProvider := tasks.FileDataProvider{
 		Path: scriptPath,

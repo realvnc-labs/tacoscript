@@ -8,7 +8,7 @@ import (
 	"time"
 )
 
-var c_param_shells = []string{
+var cParamShells = []string{
 	"zsh",
 	"bash",
 	"sh",
