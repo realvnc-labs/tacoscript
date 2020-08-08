@@ -1,0 +1,88 @@
+#see https://golangci-lint.run/usage/configuration/ for reference
+linters-settings:
+  govet:
+    check-shadowing: true
+  golint:
+    min-confidence: 0
+  gocyclo:
+    min-complexity: 15
+  misspell:
+    locale: US
+  goimports:
+    local-prefixes: github.com/cloudradar-monitoring/tacoscript
+
+linters:
+  disable-all: true
+  enable:
+    - govet
+    - deadcode
+    - errcheck
+    - goconst
+    - gofmt
+    - goimports
+    - gosimple
+    - ineffassign
+    - maligned
+    - gocyclo
+    - golint
+    - ineffassign
+    - misspell
+    - staticcheck
+    - unused
+    - varcheck
+    - whitespace
+
+run:
+  issues-exit-code: 1
+  concurrency: 4
+  tests: false
+  skip-dirs:
+    - configs
+    - docker
+
+output:
+  # colored-line-number|line-number|json|tab|checkstyle|code-climate, default is "colored-line-number"
+  format: colored-line-number
+  # print lines of code with issue, default is true
+  print-issued-lines: true
+  # print linter name in the end of issue text, default is true
+  print-linter-name: true
+  # make issues output unique by line, default is true
+  uniq-by-line: true
+
+# golangci.com configuration
+# https://github.com/golangci/golangci/wiki/Configuration
+service:
+  golangci-lint-version: 1.29 # use the fixed version to not introduce new linters unexpectedly
+  prepare:
+    - echo "here I can run custom commands, but no preparation needed for this repo"
+
+issues:
+  # Excluding configuration per-path, per-linter, per-text and per-source
+  exclude-rules:
+    - linters:
+        - staticcheck
+      text: "SA1019:"
+    - path: _test\.go
+      linters:
+        - gocyclo
+        - errcheck
+        - dupl
+        - gosec
+  exclude-use-default: false
+  # The default value is false. If set to true exclude and exclude-rules
+  # regular expressions become case sensitive.
+  exclude-case-sensitive: false
+  # Maximum issues count per one linter. Set to 0 to disable. Default is 50.
+  max-issues-per-linter: 1000
+  # Maximum count of issues with the same text. Set to 0 to disable. Default is 3.
+  max-same-issues: 0
+  # Show only new issues: if there are unstaged changes or untracked files,
+  # only those changes are analyzed, else only changes in HEAD~ are analyzed.
+  # It's a super-useful option for integration of golangci-lint into existing
+  # large codebase. It's not practical to fix all existing issues at the moment
+  # of integration: much better don't allow issues in new code.
+  # Default is false.
+  new: false
+  # Show only new issues created after git revision `REV`
+  new-from-rev: ""
