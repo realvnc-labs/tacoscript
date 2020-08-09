@@ -3,17 +3,16 @@ package io
 import (
 	"bytes"
 	"errors"
-	"github.com/stretchr/testify/assert"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 func TestFuncWriter(t *testing.T) {
 	buf := new(bytes.Buffer)
 
 	tf := FuncWriter{
-		Callback: func(p []byte) (n int, err error) {
-			return buf.Write(p)
-		},
+		Callback: buf.Write,
 	}
 
 	dataToWrite := []byte("some data")

@@ -17,7 +17,7 @@ func RunScript(scriptPath string) error {
 		DataProvider: fileDataProvider,
 		TaskBuilder: tasks.NewBuilderRouter(map[string]tasks.Builder{
 			tasks.TaskTypeCmdRun: &tasks.CmdRunTaskBuilder{
-				Runner: tasks.OSCmdRunner{},
+				Runner:               tasks.OSCmdRunner{},
 				UserSystemInfoParser: tasks.OSUserSystemInfoParser{},
 			},
 		}),

@@ -165,7 +165,7 @@ cwd:
 	}
 }
 
-func buildExpectedEnvs(expectedEnvs map[string]interface{}) []interface{}{
+func buildExpectedEnvs(expectedEnvs map[string]interface{}) []interface{} {
 	envs := make([]interface{}, 0, len(expectedEnvs))
 	for envKey, envValue := range expectedEnvs {
 		envs = append(envs, map[string]interface{}{

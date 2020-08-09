@@ -3,9 +3,10 @@ package script
 import (
 	"context"
 	"errors"
+	"testing"
+
 	"github.com/cloudradar-monitoring/tacoscript/tasks"
 	"github.com/stretchr/testify/assert"
-	"testing"
 )
 
 type TaskMock struct {
@@ -29,10 +30,10 @@ func (tm TaskMock) GetPath() string {
 }
 
 func TestRunner(t *testing.T) {
-	testCases := []struct{
-		Scripts tasks.Scripts
+	testCases := []struct {
+		Scripts        tasks.Scripts
 		ExpectedOutput []tasks.ExecutionResult
-	} {
+	}{
 		{
 			ExpectedOutput: []tasks.ExecutionResult{
 				{

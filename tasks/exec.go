@@ -71,16 +71,16 @@ type CmdRunTask struct {
 }
 
 type CmdRunTaskBuilder struct {
-	Runner CmdRunner
+	Runner               CmdRunner
 	UserSystemInfoParser UserSystemInfoParser
 }
 
 func (crtb CmdRunTaskBuilder) Build(typeName, path string, ctx []map[string]interface{}) (Task, error) {
 	t := &CmdRunTask{
-		TypeName: typeName,
-		Path:     path,
-		Errors:   &ValidationErrors{},
-		Runner:   crtb.Runner,
+		TypeName:             typeName,
+		Path:                 path,
+		Errors:               &ValidationErrors{},
+		Runner:               crtb.Runner,
 		UserSystemInfoParser: crtb.UserSystemInfoParser,
 	}
 

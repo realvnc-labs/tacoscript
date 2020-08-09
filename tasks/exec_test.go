@@ -5,11 +5,12 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"github.com/stretchr/testify/assert"
 	"os"
 	"os/exec"
 	"strings"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 type RunnerMock struct {
@@ -206,11 +207,11 @@ func TestTaskExecution(t *testing.T) {
 		},
 		{
 			UserSystemInfoParserMock: &UserSystemInfoParserMock{
-				errToReturn:        errors.New("some error"),
+				errToReturn: errors.New("some error"),
 			},
 			Task: &CmdRunTask{
-				User: "some user",
-				Cmd:        "ls -la",
+				User:                 "some user",
+				Cmd:                  "ls -la",
 				MissingFileCondition: "somefile.txt",
 			},
 			ShouldCreateFileForMissingCheck: true,
@@ -225,18 +226,39 @@ func TestTaskExecution(t *testing.T) {
 			},
 		},
 		{
-			Task: &CmdRunTask{
-				Cmd:        "ls -la",
-				MissingFileCondition: "somefile.txt",
+			UserSystemInfoParserMock: &UserSystemInfoParserMock{
+				errToReturn: errors.New("some error"),
 			},
-			ShouldCreateFileForMissingCheck: true,
+			Task: &CmdRunTask{
+				Cmd:  "echo 12345",
+				User: "some user",
+			},
+			ShouldCreateFileForMissingCheck: false,
 			ExpectedResult: ExecutionResult{
-				IsSkipped: true,
-				Err:       nil,
+				IsSkipped: false,
+				Err:       errors.New("some error"),
 			},
 			RunnerMock: &RunnerMock{
 				cmds:      []*exec.Cmd{},
 				errToGive: nil,
+				id:        "some id",
+			},
+		},
+		{
+			UserSystemInfoParserMock: &UserSystemInfoParserMock{
+				errToReturn: nil,
+			},
+			Task: &CmdRunTask{
+				Cmd: "lpwd",
+			},
+			ShouldCreateFileForMissingCheck: false,
+			ExpectedResult: ExecutionResult{
+				IsSkipped: false,
+				Err:       errors.New("some runner error"),
+			},
+			RunnerMock: &RunnerMock{
+				cmds:      []*exec.Cmd{},
+				errToGive: errors.New("some runner error"),
 				id:        "some id",
 			},
 		},
@@ -265,6 +287,10 @@ func TestTaskExecution(t *testing.T) {
 
 		if testCase.ExpectedResult.IsSkipped {
 			assert.Len(t, cmds, 0)
+			continue
+		}
+
+		if testCase.ExpectedResult.Err != nil {
 			continue
 		}
 

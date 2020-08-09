@@ -1,8 +1,9 @@
 package tasks
 
 import (
-	"github.com/stretchr/testify/assert"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 func TestValidateRequired(t *testing.T) {
@@ -17,12 +18,12 @@ func TestValidateRequired(t *testing.T) {
 		},
 		{
 			InputVal:       "",
-			InputPath: "somepath",
+			InputPath:      "somepath",
 			ExpectedErrMsg: "empty required value at path 'somepath'",
 		},
 		{
 			InputVal:       "   ",
-			InputPath: "somepath1",
+			InputPath:      "somepath1",
 			ExpectedErrMsg: "empty required value at path 'somepath1'",
 		},
 	}
