@@ -31,14 +31,14 @@ func ConvertToKeyValues(val interface{}, path string) (KeyValues, error) {
 	res := make([]KeyValue, 0, len(rawKeyValues))
 
 	for _, rawKeyValueI := range rawKeyValues {
-		rawKeyValue, ok := rawKeyValueI.(map[string]interface{})
+		rawKeyValue, ok := rawKeyValueI.(map[interface{}]interface{})
 		if !ok {
 			return []KeyValue{}, fmt.Errorf("wrong key value element at '%s': '%s'", path, ConvertSourceToJSONStrIfPossible(rawKeyValueI))
 		}
 
 		for key, val := range rawKeyValue {
 			res = append(res, KeyValue{
-				Key:   key,
+				Key:   fmt.Sprint(key),
 				Value: fmt.Sprint(val),
 			})
 		}
@@ -56,14 +56,7 @@ func ConvertToValues(val interface{}, path string) ([]string, error) {
 	res := make([]string, 0, len(rawValues))
 
 	for _, rawValueI := range rawValues {
-		rawValue, ok := rawValueI.([]interface{})
-		if !ok {
-			return []string{}, fmt.Errorf("values array expected at '%s' but got '%s'", path, ConvertSourceToJSONStrIfPossible(rawValueI))
-		}
-
-		for _, val := range rawValue {
-			res = append(res, fmt.Sprint(val))
-		}
+		res = append(res, fmt.Sprint(rawValueI))
 	}
 
 	return res, nil

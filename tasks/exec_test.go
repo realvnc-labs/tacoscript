@@ -5,11 +5,12 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"github.com/cloudradar-monitoring/tacoscript/conv"
 	"os"
 	"os/exec"
 	"strings"
 	"testing"
+
+	"github.com/cloudradar-monitoring/tacoscript/conv"
 
 	"github.com/stretchr/testify/assert"
 )
@@ -122,7 +123,7 @@ func TestCmdRunTaskBuilder(t *testing.T) {
 				Runner:   runnerMock,
 				Errors: &ValidationErrors{
 					Errs: []error{
-						fmt.Errorf("wrong env variables value: array is exected at path somePathWithErrors.env but got 123"),
+						fmt.Errorf("key value array expected at 'somePathWithErrors' but got '123'"),
 					},
 				},
 			},
@@ -144,7 +145,7 @@ func TestCmdRunTaskBuilder(t *testing.T) {
 				Runner:   runnerMock,
 				Errors: &ValidationErrors{
 					Errs: []error{
-						fmt.Errorf("wrong env variables value: array of scalar values is exected at path somePathWithErrors2.env but got [one]"),
+						errors.New(`wrong key value element at 'somePathWithErrors2': '"one"'`),
 					},
 				},
 			},
@@ -154,37 +155,21 @@ func TestCmdRunTaskBuilder(t *testing.T) {
 			path:     "manyNamesPath",
 			ctx: []map[string]interface{}{
 				{
-					NamesField:  []string{},
-					CwdField:   "somedir",
-					UserField:  "someuser",
-					ShellField: "someshell",
-					EnvField: buildExpectedEnvs(map[interface{}]interface{}{
-						"one": "1",
-						"two": "2",
-					}),
-					CreatesField: "somefile.txt",
+					NamesField: []interface{}{
+						"name one",
+						"name two",
+					},
 				},
 			},
 			expectedTask: &CmdRunTask{
-				TypeName:   "someType",
-				Path:       "somePath",
-				Name:       "1",
-				WorkingDir: "somedir",
-				User:       "someuser",
-				Shell:      "someshell",
-				Envs: conv.KeyValues{
-					{
-						Key:   "one",
-						Value: "1",
-					},
-					{
-						Key:   "two",
-						Value: "2",
-					},
+				TypeName: "manyNamesType",
+				Path:     "manyNamesPath",
+				Names: []string{
+					"name one",
+					"name two",
 				},
-				MissingFileCondition: "somefile.txt",
-				Runner:               runnerMock,
-				Errors:               &ValidationErrors{},
+				Runner: runnerMock,
+				Errors: &ValidationErrors{},
 			},
 		},
 	}
@@ -218,6 +203,8 @@ func TestCmdRunTaskBuilder(t *testing.T) {
 		assert.Equal(t, testCase.expectedTask.Name, actualCmdRunTask.Name)
 		assert.Equal(t, testCase.expectedTask.TypeName, actualCmdRunTask.TypeName)
 		assert.Equal(t, testCase.expectedTask.Shell, actualCmdRunTask.Shell)
+		assert.Equal(t, testCase.expectedTask.Names, actualCmdRunTask.Names)
+		assert.EqualValues(t, testCase.expectedTask.Errors, actualCmdRunTask.Errors)
 	}
 }
 
@@ -227,7 +214,7 @@ func TestTaskExecution(t *testing.T) {
 		ExpectedResult                  ExecutionResult
 		RunnerMock                      *RunnerMock
 		UserSystemInfoParserMock        *UserSystemInfoParserMock
-		ExpectedCmdStr                  string
+		ExpectedCmdStrs                 []string
 		ShouldCreateFileForMissingCheck bool
 	}{
 		{
@@ -249,7 +236,7 @@ func TestTaskExecution(t *testing.T) {
 				IsSkipped: false,
 				Err:       nil,
 			},
-			ExpectedCmdStr: "zsh -c ls -la",
+			ExpectedCmdStrs: []string{"zsh -c ls -la"},
 			RunnerMock: &RunnerMock{
 				cmds:      []*exec.Cmd{},
 				errToGive: nil,
@@ -350,18 +337,17 @@ func TestTaskExecution(t *testing.T) {
 			continue
 		}
 
-		assert.Len(t, cmds, 1)
-		cmd := cmds[0]
-		assert.Contains(t, cmd.String(), testCase.ExpectedCmdStr)
-		assert.Equal(t, testCase.Task.WorkingDir, cmd.Dir)
+		AssertCmdsPartiallyMatch(t, testCase.ExpectedCmdStrs, cmds)
 
-		if testCase.Task.User != "" {
-			assert.Equal(t, true, cmd.SysProcAttr.Setpgid)
-			assert.Equal(t, testCase.UserSystemInfoParserMock.sysUserIDToReturn, cmd.SysProcAttr.Credential.Uid)
-			assert.Equal(t, testCase.UserSystemInfoParserMock.sysGroupIDToReturn, cmd.SysProcAttr.Credential.Gid)
+		for _, cmd := range cmds {
+			assert.Equal(t, testCase.Task.WorkingDir, cmd.Dir)
+			if testCase.Task.User != "" {
+				assert.Equal(t, true, cmd.SysProcAttr.Setpgid)
+				assert.Equal(t, testCase.UserSystemInfoParserMock.sysUserIDToReturn, cmd.SysProcAttr.Credential.Uid)
+				assert.Equal(t, testCase.UserSystemInfoParserMock.sysGroupIDToReturn, cmd.SysProcAttr.Credential.Gid)
+			}
+			AssertEnvValuesMatch(t, testCase.Task.Envs, cmd.Env)
 		}
-
-		AssertEnvValuesMatch(t, testCase.Task.Envs, cmd.Env)
 
 		assert.Equal(t, testCase.Task.User, testCase.UserSystemInfoParserMock.userNameInput)
 		assert.Equal(t, testCase.Task.Path, testCase.UserSystemInfoParserMock.pathInput)
@@ -371,6 +357,36 @@ func TestTaskExecution(t *testing.T) {
 			assert.NoError(t, err)
 		}
 	}
+}
+
+func AssertCmdsPartiallyMatch(t *testing.T, expectedCmds []string, actualExecutedCmds []*exec.Cmd) {
+	notFoundCmds := make([]string, 0, len(expectedCmds))
+
+	executedCmdStrs := make([]string, len(actualExecutedCmds))
+	for _, actualCmd := range actualExecutedCmds {
+		executedCmdStrs = append(executedCmdStrs, actualCmd.String())
+	}
+
+	for _, expectedCmdStr := range expectedCmds {
+		cmdFound := false
+		for _, actualCmdStr := range executedCmdStrs {
+			if strings.HasSuffix(actualCmdStr, expectedCmdStr) {
+				cmdFound = true
+				break
+			}
+		}
+		if !cmdFound {
+			notFoundCmds = append(notFoundCmds, expectedCmdStr)
+		}
+	}
+
+	assert.Empty(
+		t,
+		notFoundCmds,
+		"was not able to find following expected commands %s in the list of executed commands %s",
+		strings.Join(notFoundCmds, ", "),
+		strings.Join(executedCmdStrs, ", "),
+	)
 }
 
 func AssertEnvValuesMatch(t *testing.T, expectedEnvs conv.KeyValues, actualCmdEnvs []string) {

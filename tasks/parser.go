@@ -2,8 +2,9 @@ package tasks
 
 import (
 	"fmt"
-	yaml2 "gopkg.in/yaml.v2"
 	"io/ioutil"
+
+	yaml2 "gopkg.in/yaml.v2"
 )
 
 type FileDataProvider struct {

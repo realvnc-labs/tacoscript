@@ -149,8 +149,8 @@ cwd:
     - names:
 						name one
 `,
-			ExpectedErrMsg:      "yaml: line 6: found character that cannot start any token",
-			ExpectedScripts:     Scripts{},
+			ExpectedErrMsg:  "yaml: line 6: found character that cannot start any token",
+			ExpectedScripts: Scripts{},
 		},
 	}
 

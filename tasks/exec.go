@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"context"
 	"fmt"
-	"github.com/cloudradar-monitoring/tacoscript/conv"
 	"io"
 	"os"
 	"os/exec"
@@ -13,6 +12,8 @@ import (
 	"strings"
 	"syscall"
 	"time"
+
+	"github.com/cloudradar-monitoring/tacoscript/conv"
 
 	io2 "github.com/cloudradar-monitoring/tacoscript/io"
 	"github.com/sirupsen/logrus"
@@ -103,6 +104,10 @@ func (crtb CmdRunTaskBuilder) Build(typeName, path string, ctx []map[string]inte
 				t.Envs = envs
 			case CreatesField:
 				t.MissingFileCondition = fmt.Sprint(val)
+			case NamesField:
+				names, err := conv.ConvertToValues(val, path)
+				t.Errors.Add(err)
+				t.Names = names
 			}
 		}
 	}
