@@ -58,9 +58,10 @@ func (ousif OSUserSystemInfoParser) Parse(userName, path string) (sysUserID, sys
 }
 
 type CmdRunTask struct {
+	Names                []string
 	TypeName             string
 	Path                 string
-	Cmd                  string
+	Name                 string
 	WorkingDir           string
 	User                 string
 	Shell                string
@@ -89,7 +90,7 @@ func (crtb CmdRunTaskBuilder) Build(typeName, path string, ctx []map[string]inte
 		for key, val := range contextItem {
 			switch key {
 			case NameField:
-				t.Cmd = fmt.Sprint(val)
+				t.Name = fmt.Sprint(val)
 			case CwdField:
 				t.WorkingDir = fmt.Sprint(val)
 			case UserField:
@@ -114,7 +115,7 @@ func (crt *CmdRunTask) GetName() string {
 }
 
 func (crt *CmdRunTask) Validate() error {
-	crt.Errors.Add(ValidateRequired(crt.Cmd, crt.Path+"."+CwdField))
+	crt.Errors.Add(ValidateRequired(crt.Name, crt.Path+"."+CwdField))
 	return crt.Errors.ToError()
 }
 
@@ -162,7 +163,7 @@ func (crt *CmdRunTask) checkMissingFileCondition() (isSkipped bool, err error) {
 	logrus.Debugf("will check if file '%s' is missing", crt.MissingFileCondition)
 	_, err = os.Stat(crt.MissingFileCondition)
 	if err == nil {
-		logrus.Infof("file %s exists, will skip command '%s'", crt.MissingFileCondition, crt.Cmd)
+		logrus.Infof("file %s exists, will skip command '%s'", crt.MissingFileCondition, crt.Name)
 		isSkipped = true
 		return
 	}
@@ -178,7 +179,7 @@ func (crt *CmdRunTask) checkMissingFileCondition() (isSkipped bool, err error) {
 func (crt *CmdRunTask) createCmd() *exec.Cmd {
 	shellParam := crt.parseShellParam(crt.Shell)
 
-	cmdParam := crt.parseCmdParam(crt.Cmd)
+	cmdParam := crt.parseCmdParam(crt.Name)
 
 	cmdName, cmdArgs := crt.buildCmdParts(shellParam, cmdParam)
 	cmd := exec.Command(cmdName, cmdArgs...)
@@ -284,7 +285,7 @@ func (crt *CmdRunTask) run(cmd *exec.Cmd, res *ExecutionResult) {
 		res.Err = err
 	}
 
-	logrus.Debugf("execution of %s has finished, took: %v", crt.Cmd, res.Duration)
+	logrus.Debugf("execution of %s has finished, took: %v", crt.Name, res.Duration)
 }
 
 func (crt *CmdRunTask) parseShellParam(rawShell string) ShellParam {

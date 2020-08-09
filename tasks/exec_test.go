@@ -78,7 +78,7 @@ func TestCmdRunTaskBuilder(t *testing.T) {
 					CwdField:   "somedir",
 					UserField:  "someuser",
 					ShellField: "someshell",
-					EnvField: buildExpectedEnvs(map[string]interface{}{
+					EnvField: buildExpectedEnvs(map[interface{}]interface{}{
 						"one": "1",
 						"two": "2",
 					}),
@@ -88,7 +88,7 @@ func TestCmdRunTaskBuilder(t *testing.T) {
 			expectedTask: &CmdRunTask{
 				TypeName:   "someType",
 				Path:       "somePath",
-				Cmd:        "1",
+				Name:       "1",
 				WorkingDir: "somedir",
 				User:       "someuser",
 				Shell:      "someshell",
@@ -149,6 +149,44 @@ func TestCmdRunTaskBuilder(t *testing.T) {
 				},
 			},
 		},
+		{
+			typeName: "manyNamesType",
+			path:     "manyNamesPath",
+			ctx: []map[string]interface{}{
+				{
+					NamesField:  []string{},
+					CwdField:   "somedir",
+					UserField:  "someuser",
+					ShellField: "someshell",
+					EnvField: buildExpectedEnvs(map[interface{}]interface{}{
+						"one": "1",
+						"two": "2",
+					}),
+					CreatesField: "somefile.txt",
+				},
+			},
+			expectedTask: &CmdRunTask{
+				TypeName:   "someType",
+				Path:       "somePath",
+				Name:       "1",
+				WorkingDir: "somedir",
+				User:       "someuser",
+				Shell:      "someshell",
+				Envs: conv.KeyValues{
+					{
+						Key:   "one",
+						Value: "1",
+					},
+					{
+						Key:   "two",
+						Value: "2",
+					},
+				},
+				MissingFileCondition: "somefile.txt",
+				Runner:               runnerMock,
+				Errors:               &ValidationErrors{},
+			},
+		},
 	}
 
 	for _, testCase := range testCases {
@@ -177,7 +215,7 @@ func TestCmdRunTaskBuilder(t *testing.T) {
 		assert.Equal(t, testCase.expectedTask.Path, actualCmdRunTask.Path)
 		assert.Equal(t, testCase.expectedTask.WorkingDir, actualCmdRunTask.WorkingDir)
 		assert.Equal(t, testCase.expectedTask.MissingFileCondition, actualCmdRunTask.MissingFileCondition)
-		assert.Equal(t, testCase.expectedTask.Cmd, actualCmdRunTask.Cmd)
+		assert.Equal(t, testCase.expectedTask.Name, actualCmdRunTask.Name)
 		assert.Equal(t, testCase.expectedTask.TypeName, actualCmdRunTask.TypeName)
 		assert.Equal(t, testCase.expectedTask.Shell, actualCmdRunTask.Shell)
 	}
@@ -195,7 +233,7 @@ func TestTaskExecution(t *testing.T) {
 		{
 			Task: &CmdRunTask{
 				Path:       "somepath",
-				Cmd:        "ls -la",
+				Name:       "ls -la",
 				WorkingDir: "/tmp/dev",
 				User:       "user",
 				Shell:      "zsh",
@@ -229,7 +267,7 @@ func TestTaskExecution(t *testing.T) {
 			},
 			Task: &CmdRunTask{
 				User:                 "some user",
-				Cmd:                  "ls -la",
+				Name:                 "ls -la",
 				MissingFileCondition: "somefile.txt",
 			},
 			ShouldCreateFileForMissingCheck: true,
@@ -248,7 +286,7 @@ func TestTaskExecution(t *testing.T) {
 				errToReturn: errors.New("some error"),
 			},
 			Task: &CmdRunTask{
-				Cmd:  "echo 12345",
+				Name: "echo 12345",
 				User: "some user",
 			},
 			ShouldCreateFileForMissingCheck: false,
@@ -267,7 +305,7 @@ func TestTaskExecution(t *testing.T) {
 				errToReturn: nil,
 			},
 			Task: &CmdRunTask{
-				Cmd: "lpwd",
+				Name: "lpwd",
 			},
 			ShouldCreateFileForMissingCheck: false,
 			ExpectedResult: ExecutionResult{

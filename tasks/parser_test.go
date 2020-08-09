@@ -78,6 +78,10 @@ cwd:
     - creates: /tmp/my-date.txt
     #- comment: out
     - user: root
+    - names:
+        - name one
+        - name two
+        - name three
 `,
 			ExpectedScripts: Scripts{
 				{
@@ -91,12 +95,17 @@ cwd:
 								{"cwd": "/usr/tmp"},
 								{"shell": "zsh"},
 								{
-									EnvField: buildExpectedEnvs(map[string]interface{}{
+									EnvField: buildExpectedEnvs(map[interface{}]interface{}{
 										"PASSWORD": "bunny",
 									}),
 								},
 								{"creates": "/tmp/my-date.txt"},
 								{"user": "root"},
+								{"names": []interface{}{
+									"name one",
+									"name two",
+									"name three",
+								}},
 							},
 							ValidationError: nil,
 						},
@@ -132,6 +141,17 @@ cwd:
 			ExpectedErrMsg:      "task is invalid, task is invalid",
 			ExpectedScripts:     Scripts{},
 		},
+		{
+			YamlInput: `
+cwd:
+  # Name of the class and the module
+  cmd.run:
+    - names:
+						name one
+`,
+			ExpectedErrMsg:      "yaml: line 6: found character that cannot start any token",
+			ExpectedScripts:     Scripts{},
+		},
 	}
 
 	for _, testCase := range testCases {
@@ -165,10 +185,10 @@ cwd:
 	}
 }
 
-func buildExpectedEnvs(expectedEnvs map[string]interface{}) []interface{} {
+func buildExpectedEnvs(expectedEnvs map[interface{}]interface{}) []interface{} {
 	envs := make([]interface{}, 0, len(expectedEnvs))
 	for envKey, envValue := range expectedEnvs {
-		envs = append(envs, map[string]interface{}{
+		envs = append(envs, map[interface{}]interface{}{
 			envKey: envValue,
 		})
 	}

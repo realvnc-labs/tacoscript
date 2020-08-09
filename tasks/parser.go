@@ -2,9 +2,8 @@ package tasks
 
 import (
 	"fmt"
+	yaml2 "gopkg.in/yaml.v2"
 	"io/ioutil"
-
-	"github.com/goccy/go-yaml"
 )
 
 type FileDataProvider struct {
@@ -31,7 +30,7 @@ func (p Parser) ParseScripts() (Scripts, error) {
 	}
 
 	rawScripts := map[string]map[string][]map[string]interface{}{}
-	err = yaml.Unmarshal(yamlFile, &rawScripts)
+	err = yaml2.Unmarshal(yamlFile, &rawScripts)
 	if err != nil {
 		return Scripts{}, err
 	}
