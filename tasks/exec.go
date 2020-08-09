@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"fmt"
+	"github.com/cloudradar-monitoring/tacoscript/conv"
 	"io"
 	"os"
 	"os/exec"
@@ -63,7 +64,7 @@ type CmdRunTask struct {
 	WorkingDir           string
 	User                 string
 	Shell                string
-	Envs                 Envs
+	Envs                 conv.KeyValues
 	MissingFileCondition string
 	Errors               *ValidationErrors
 	Runner               CmdRunner
@@ -96,7 +97,7 @@ func (crtb CmdRunTaskBuilder) Build(typeName, path string, ctx []map[string]inte
 			case ShellField:
 				t.Shell = fmt.Sprint(val)
 			case EnvField:
-				envs, err := extractEnvFields(val, path)
+				envs, err := conv.ConvertToKeyValues(val, path)
 				t.Errors.Add(err)
 				t.Envs = envs
 			case CreatesField:
@@ -249,7 +250,7 @@ func (crt *CmdRunTask) setEnvs(cmd *exec.Cmd) {
 		return
 	}
 
-	envs := crt.Envs.ToOSRaw()
+	envs := crt.Envs.ToEqualSignStrings()
 	logrus.Debugf("will set %d env variables", len(envs))
 	cmd.Env = append(os.Environ(), envs...)
 }

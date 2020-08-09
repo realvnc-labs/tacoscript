@@ -3,7 +3,6 @@ package tasks
 import (
 	"context"
 	"errors"
-	"fmt"
 	"strings"
 	"time"
 )
@@ -19,26 +18,6 @@ type Scripts []Script
 type Script struct {
 	ID    string
 	Tasks []Task
-}
-
-type Envs []Env
-
-func (envs Envs) ToOSRaw() []string {
-	res := make([]string, 0, len(envs))
-	for _, env := range envs {
-		res = append(res, env.ToOSRaw())
-	}
-
-	return res
-}
-
-type Env struct {
-	Key   string
-	Value string
-}
-
-func (env Env) ToOSRaw() string {
-	return fmt.Sprintf("%s=%s", env.Key, env.Value)
 }
 
 type Task interface {

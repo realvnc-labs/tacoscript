@@ -5,6 +5,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/cloudradar-monitoring/tacoscript/conv"
 	"os"
 	"os/exec"
 	"strings"
@@ -66,7 +67,7 @@ func TestCmdRunTaskBuilder(t *testing.T) {
 		typeName     string
 		path         string
 		ctx          []map[string]interface{}
-		expectedTask Task
+		expectedTask *CmdRunTask
 	}{
 		{
 			typeName: "someType",
@@ -91,7 +92,7 @@ func TestCmdRunTaskBuilder(t *testing.T) {
 				WorkingDir: "somedir",
 				User:       "someuser",
 				Shell:      "someshell",
-				Envs: Envs{
+				Envs: conv.KeyValues{
 					{
 						Key:   "one",
 						Value: "1",
@@ -117,7 +118,7 @@ func TestCmdRunTaskBuilder(t *testing.T) {
 			expectedTask: &CmdRunTask{
 				TypeName: "someTypeWithErrors",
 				Path:     "somePathWithErrors",
-				Envs:     Envs{},
+				Envs:     conv.KeyValues{},
 				Runner:   runnerMock,
 				Errors: &ValidationErrors{
 					Errs: []error{
@@ -139,7 +140,7 @@ func TestCmdRunTaskBuilder(t *testing.T) {
 			expectedTask: &CmdRunTask{
 				TypeName: "someTypeWithErrors2",
 				Path:     "somePathWithErrors2",
-				Envs:     Envs{},
+				Envs:     conv.KeyValues{},
 				Runner:   runnerMock,
 				Errors: &ValidationErrors{
 					Errs: []error{
@@ -161,7 +162,24 @@ func TestCmdRunTaskBuilder(t *testing.T) {
 		)
 
 		assert.NoError(t, err)
-		assert.EqualValues(t, testCase.expectedTask, actualTask)
+		if err != nil {
+			continue
+		}
+
+		actualCmdRunTask, ok := actualTask.(*CmdRunTask)
+		assert.True(t, ok)
+		if !ok {
+			continue
+		}
+
+		assert.Equal(t, testCase.expectedTask.User, actualCmdRunTask.User)
+		AssertEnvValuesMatch(t, testCase.expectedTask.Envs, actualCmdRunTask.Envs.ToEqualSignStrings())
+		assert.Equal(t, testCase.expectedTask.Path, actualCmdRunTask.Path)
+		assert.Equal(t, testCase.expectedTask.WorkingDir, actualCmdRunTask.WorkingDir)
+		assert.Equal(t, testCase.expectedTask.MissingFileCondition, actualCmdRunTask.MissingFileCondition)
+		assert.Equal(t, testCase.expectedTask.Cmd, actualCmdRunTask.Cmd)
+		assert.Equal(t, testCase.expectedTask.TypeName, actualCmdRunTask.TypeName)
+		assert.Equal(t, testCase.expectedTask.Shell, actualCmdRunTask.Shell)
 	}
 }
 
@@ -181,7 +199,7 @@ func TestTaskExecution(t *testing.T) {
 				WorkingDir: "/tmp/dev",
 				User:       "user",
 				Shell:      "zsh",
-				Envs: Envs{
+				Envs: conv.KeyValues{
 					{
 						Key:   "someenvkey1",
 						Value: "someenvval2",
@@ -317,8 +335,8 @@ func TestTaskExecution(t *testing.T) {
 	}
 }
 
-func AssertEnvValuesMatch(t *testing.T, expectedEnvs Envs, actualCmdEnvs []string) {
-	expectedRawEnvs := expectedEnvs.ToOSRaw()
+func AssertEnvValuesMatch(t *testing.T, expectedEnvs conv.KeyValues, actualCmdEnvs []string) {
+	expectedRawEnvs := expectedEnvs.ToEqualSignStrings()
 	notFoundEnvs := make([]string, 0, len(expectedEnvs))
 	for _, expectedRawEnv := range expectedRawEnvs {
 		foundEnv := false

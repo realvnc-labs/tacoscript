@@ -24,18 +24,6 @@ type Parser struct {
 	TaskBuilder  Builder
 }
 
-type PasedTasksBuilderMock struct {
-	TypeName     string
-	Path         string
-	Context      []map[string]interface{}
-	TaskToReturn Task
-	ErrToReturn  error
-}
-
-func (bm *PasedTasksBuilderMock) Build(typeName, path string, context []map[string]interface{}) (Task, error) {
-	return bm.TaskToReturn, bm.ErrToReturn
-}
-
 func (p Parser) ParseScripts() (Scripts, error) {
 	yamlFile, err := p.DataProvider.Read()
 	if err != nil {
@@ -71,29 +59,4 @@ func (p Parser) ParseScripts() (Scripts, error) {
 	}
 
 	return scripts, errs.ToError()
-}
-
-func extractEnvFields(envs interface{}, path string) ([]Env, error) {
-	rawEnvs, ok := envs.([]interface{})
-	if !ok {
-		return []Env{}, fmt.Errorf("wrong env variables value: array is exected at path %s.%s but got %v", path, EnvField, envs)
-	}
-
-	res := make([]Env, 0, len(rawEnvs))
-
-	for _, rawEnv := range rawEnvs {
-		envMap, ok := rawEnv.(map[string]interface{})
-		if !ok {
-			return []Env{}, fmt.Errorf("wrong env variables value: array of scalar values is exected at path %s.%s but got %v", path, EnvField, envs)
-		}
-
-		for envKey, envVal := range envMap {
-			res = append(res, Env{
-				Key:   envKey,
-				Value: fmt.Sprint(envVal),
-			})
-		}
-	}
-
-	return res, nil
 }
