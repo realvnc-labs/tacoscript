@@ -120,8 +120,16 @@ func (crt *CmdRunTask) GetName() string {
 }
 
 func (crt *CmdRunTask) Validate() error {
-	crt.Errors.Add(ValidateRequired(crt.Name, crt.Path+"."+CwdField))
-	return crt.Errors.ToError()
+	err1 := ValidateRequired(crt.Name, crt.Path+"."+NameField)
+	err2 := ValidateRequiredMany(crt.Names, crt.Path+"."+NamesField)
+
+	if err1 != nil && err2 != nil {
+		crt.Errors.Add(err1)
+		crt.Errors.Add(err2)
+		return crt.Errors.ToError()
+	}
+
+	return nil
 }
 
 func (crt *CmdRunTask) GetPath() string {
@@ -139,20 +147,36 @@ func (crt *CmdRunTask) Execute(ctx context.Context) ExecutionResult {
 		return execRes
 	}
 
-	cmd := crt.createCmd()
-	crt.setWorkingDir(cmd)
+	var stdoutBuf, stderrBuf bytes.Buffer
+	cmds, err := crt.createCmds(func(cmd *exec.Cmd) error {
+		crt.setWorkingDir(cmd)
 
-	execRes.Err = crt.setUser(cmd)
-	if execRes.Err != nil {
+		err := crt.setUser(cmd)
+		if err != nil {
+			return err
+		}
+
+		crt.setEnvs(cmd)
+
+		crt.setIO(cmd, &stdoutBuf, &stderrBuf)
+
+		return nil
+	})
+
+	if err != nil {
+		execRes.Err = err
 		return execRes
 	}
 
-	crt.setEnvs(cmd)
+	start := time.Now()
 
-	var stdoutBuf, stderrBuf bytes.Buffer
-	crt.setIO(cmd, &stdoutBuf, &stderrBuf)
+	err = crt.run(cmds)
 
-	crt.run(cmd, &execRes)
+	execRes.Duration = time.Since(start)
+	if err != nil {
+		execRes.Err = err
+	}
+	logrus.Debugf("execution of %s has finished, took: %v", crt.Name, execRes.Duration)
 
 	execRes.StdErr = stderrBuf.String()
 	execRes.StdOut = stdoutBuf.String()
@@ -181,15 +205,37 @@ func (crt *CmdRunTask) checkMissingFileCondition() (isSkipped bool, err error) {
 	return
 }
 
-func (crt *CmdRunTask) createCmd() *exec.Cmd {
+func (crt *CmdRunTask) createCmds(callback func(cmd *exec.Cmd) error) (cmds []*exec.Cmd, err error) {
+	rawCmds := make([]string, 0, 1+len(crt.Names))
+	cmdName := strings.TrimSpace(crt.Name)
+	if cmdName != "" {
+		rawCmds = append(rawCmds, cmdName)
+	}
+	for _, cmdName := range crt.Names {
+		cmdName = strings.TrimSpace(cmdName)
+		if cmdName == "" {
+			continue
+		}
+
+		rawCmds = append(rawCmds, cmdName)
+	}
+
 	shellParam := crt.parseShellParam(crt.Shell)
+	for _, rawCmd := range rawCmds {
+		cmdParam := crt.parseCmdParam(rawCmd)
+		cmdName, cmdArgs := crt.buildCmdParts(shellParam, cmdParam)
 
-	cmdParam := crt.parseCmdParam(crt.Name)
+		cmd := exec.Command(cmdName, cmdArgs...)
 
-	cmdName, cmdArgs := crt.buildCmdParts(shellParam, cmdParam)
-	cmd := exec.Command(cmdName, cmdArgs...)
+		err = callback(cmd)
+		if err != nil {
+			return
+		}
 
-	return cmd
+		cmds = append(cmds, cmd)
+	}
+
+	return
 }
 
 func (crt *CmdRunTask) buildCmdParts(shellParam ShellParam, cmdParam CmdParam) (cmdName string, cmdArgs []string) {
@@ -278,19 +324,16 @@ func (crt *CmdRunTask) setIO(cmd *exec.Cmd, stdOutWriter, stdErrWriter io.Writer
 	cmd.Stderr = io.MultiWriter(stdErrLoggedWriter, stdErrWriter)
 }
 
-func (crt *CmdRunTask) run(cmd *exec.Cmd, res *ExecutionResult) {
-	logrus.Infof("will run cmd %s", cmd.String())
-
-	start := time.Now()
-
-	err := crt.Runner.Run(cmd)
-
-	res.Duration = time.Since(start)
-	if err != nil {
-		res.Err = err
+func (crt *CmdRunTask) run(cmds []*exec.Cmd) error {
+	for _, cmd := range cmds {
+		logrus.Infof("will run cmd %s", cmd.String())
+		err := crt.Runner.Run(cmd)
+		if err != nil {
+			return err
+		}
 	}
 
-	logrus.Debugf("execution of %s has finished, took: %v", crt.Name, res.Duration)
+	return nil
 }
 
 func (crt *CmdRunTask) parseShellParam(rawShell string) ShellParam {

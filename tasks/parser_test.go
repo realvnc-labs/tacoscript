@@ -152,6 +152,36 @@ cwd:
 			ExpectedErrMsg:  "yaml: line 6: found character that cannot start any token",
 			ExpectedScripts: Scripts{},
 		},
+		{
+			YamlInput: `
+cwd:
+  # Name of the class and the module
+  cmd.run:
+    - names:
+        - run one
+        - run two
+        - run three
+`,
+			ExpectedScripts: Scripts{
+				{
+					ID: "cwd",
+					Tasks: []Task{
+						TaskMock{
+							TypeName: "cmd.run",
+							Path:     "cwd.cmd.run[1]",
+							Context: []map[string]interface{}{
+								{"names": []interface{}{
+									"run one",
+									"run two",
+									"run three",
+								}},
+							},
+							ValidationError: nil,
+						},
+					},
+				},
+			},
+		},
 	}
 
 	for _, testCase := range testCases {

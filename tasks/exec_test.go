@@ -5,6 +5,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	log "github.com/sirupsen/logrus"
 	"os"
 	"os/exec"
 	"strings"
@@ -16,12 +17,24 @@ import (
 )
 
 type RunnerMock struct {
-	cmds      []*exec.Cmd
-	errToGive error
-	id        string
+	stdOutText string
+	stdErrText string
+	cmds       []*exec.Cmd
+	errToGive  error
+	id         string
 }
 
 func (r *RunnerMock) Run(cmd *exec.Cmd) error {
+	_, err := cmd.Stdout.Write([]byte(r.stdOutText))
+	if err != nil {
+		return err
+	}
+
+	_, err = cmd.Stderr.Write([]byte(r.stdErrText))
+	if err != nil {
+		return err
+	}
+
 	r.cmds = append(r.cmds, cmd)
 
 	return r.errToGive
@@ -220,7 +233,7 @@ func TestTaskExecution(t *testing.T) {
 		{
 			Task: &CmdRunTask{
 				Path:       "somepath",
-				Name:       "ls -la",
+				Name:       "some test command",
 				WorkingDir: "/tmp/dev",
 				User:       "user",
 				Shell:      "zsh",
@@ -235,12 +248,16 @@ func TestTaskExecution(t *testing.T) {
 			ExpectedResult: ExecutionResult{
 				IsSkipped: false,
 				Err:       nil,
+				StdOut:    "some std out",
+				StdErr:    "some std err",
 			},
-			ExpectedCmdStrs: []string{"zsh -c ls -la"},
+			ExpectedCmdStrs: []string{"zsh -c some test command"},
 			RunnerMock: &RunnerMock{
-				cmds:      []*exec.Cmd{},
-				errToGive: nil,
-				id:        "some id",
+				cmds:       []*exec.Cmd{},
+				errToGive:  nil,
+				id:         "some id",
+				stdErrText: "some std err",
+				stdOutText: "some std out",
 			},
 			UserSystemInfoParserMock: &UserSystemInfoParserMock{
 				sysUserIDToReturn:  10,
@@ -254,7 +271,7 @@ func TestTaskExecution(t *testing.T) {
 			},
 			Task: &CmdRunTask{
 				User:                 "some user",
-				Name:                 "ls -la",
+				Name:                 "some parser command",
 				MissingFileCondition: "somefile.txt",
 			},
 			ShouldCreateFileForMissingCheck: true,
@@ -305,7 +322,47 @@ func TestTaskExecution(t *testing.T) {
 				id:        "some id",
 			},
 		},
+		{
+			Task: &CmdRunTask{
+				Path: "many names path",
+				Names: []string{
+					"many names cmd 1",
+					"many names cmd 2",
+					"many names cmd 3",
+				},
+				WorkingDir: "/many/dev",
+				User:       "usermany",
+			},
+			ExpectedResult: ExecutionResult{
+				IsSkipped: false,
+				Err:       nil,
+			},
+			ExpectedCmdStrs: []string{"many names cmd 1", "many names cmd 2", "many names cmd 3"},
+			RunnerMock: &RunnerMock{
+				cmds:      []*exec.Cmd{},
+				errToGive: nil,
+				id:        "some id",
+			},
+			UserSystemInfoParserMock: &UserSystemInfoParserMock{
+				sysUserIDToReturn:  10,
+				sysGroupIDToReturn: 12,
+				errToReturn:        nil,
+			},
+		},
 	}
+
+	filesToDelete := make([]string, 0)
+	defer func() {
+		if len(filesToDelete) == 0 {
+			return
+		}
+		for _, file := range filesToDelete {
+			err := os.Remove(file)
+			if err != nil {
+				log.Warn(err)
+			}
+		}
+	}()
 
 	for _, testCase := range testCases {
 		testCase.Task.Runner = testCase.RunnerMock
@@ -320,11 +377,14 @@ func TestTaskExecution(t *testing.T) {
 
 			err = emptyFile.Close()
 			assert.NoError(t, err)
+			filesToDelete = append(filesToDelete, testCase.Task.MissingFileCondition)
 		}
 
 		res := testCase.Task.Execute(context.Background())
 		assert.EqualValues(t, testCase.ExpectedResult.Err, res.Err)
 		assert.EqualValues(t, testCase.ExpectedResult.IsSkipped, res.IsSkipped)
+		assert.EqualValues(t, testCase.ExpectedResult.StdOut, res.StdOut)
+		assert.EqualValues(t, testCase.ExpectedResult.StdErr, res.StdErr)
 
 		cmds := testCase.RunnerMock.cmds
 
@@ -351,11 +411,6 @@ func TestTaskExecution(t *testing.T) {
 
 		assert.Equal(t, testCase.Task.User, testCase.UserSystemInfoParserMock.userNameInput)
 		assert.Equal(t, testCase.Task.Path, testCase.UserSystemInfoParserMock.pathInput)
-
-		if testCase.ShouldCreateFileForMissingCheck && testCase.Task.MissingFileCondition != "" {
-			err := os.Remove(testCase.Task.MissingFileCondition)
-			assert.NoError(t, err)
-		}
 	}
 }
 
@@ -383,7 +438,7 @@ func AssertCmdsPartiallyMatch(t *testing.T, expectedCmds []string, actualExecute
 	assert.Empty(
 		t,
 		notFoundCmds,
-		"was not able to find following expected commands %s in the list of executed commands %s",
+		"was not able to find following expected commands '%s' in the list of executed commands '%s'",
 		strings.Join(notFoundCmds, ", "),
 		strings.Join(executedCmdStrs, ", "),
 	)
@@ -413,4 +468,54 @@ func AssertEnvValuesMatch(t *testing.T, expectedEnvs conv.KeyValues, actualCmdEn
 		strings.Join(notFoundEnvs, ", "),
 		strings.Join(actualCmdEnvs, ", "),
 	)
+}
+
+func TestOSCmdRunnerValidation(t *testing.T) {
+	testCases := []struct {
+		Task          CmdRunTask
+		ExpectedError string
+	}{
+		{
+			Task: CmdRunTask{
+				Names: []string{"one", "two"},
+				Errors: &ValidationErrors{},
+			},
+			ExpectedError: "",
+		},
+		{
+			Task: CmdRunTask{
+				Name: "three",
+				Errors: &ValidationErrors{},
+			},
+			ExpectedError: "",
+		},
+		{
+			Task: CmdRunTask{
+				Name: "four",
+				Names: []string{"five", "six"},
+				Errors: &ValidationErrors{},
+			},
+			ExpectedError: "",
+		},
+		{
+			Task: CmdRunTask{Errors: &ValidationErrors{}},
+			ExpectedError: "empty required value at path '.name', empty required values at path '.names'",
+		},
+		{
+			Task: CmdRunTask{
+				Names: []string{"", ""},
+				Errors: &ValidationErrors{},
+			},
+			ExpectedError: "empty required value at path '.name', empty required values at path '.names'",
+		},
+	}
+
+	for _, testCase := range testCases {
+		err := testCase.Task.Validate()
+		if testCase.ExpectedError == "" {
+			assert.NoError(t, err)
+		} else {
+			assert.EqualError(t, err, testCase.ExpectedError)
+		}
+	}
 }

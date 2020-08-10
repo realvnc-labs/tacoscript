@@ -7,10 +7,12 @@
 cwd:
   # Name of the class and the module
   cmd.run:
-    - name: echo ${PASSWORD}
+    - names:
+      - echo ${PASSWORD}
+      - ls -la
     - cwd: /Users/breathbath/Projects
     - shell: zsh
     - env:
         - PASSWORD: bunny
-    - creates: /tmp/my-date.txt
+    # - creates: /tmp/my-date.txt
     #- user: root
