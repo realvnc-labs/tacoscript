@@ -29,6 +29,10 @@ func (tm TaskMock) GetPath() string {
 	return ""
 }
 
+func (tm TaskMock) GetRequirements() []string {
+	return []string{}
+}
+
 func TestRunner(t *testing.T) {
 	testCases := []struct {
 		Scripts        tasks.Scripts

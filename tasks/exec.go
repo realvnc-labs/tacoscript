@@ -7,10 +7,7 @@ import (
 	"io"
 	"os"
 	"os/exec"
-	"os/user"
-	"strconv"
 	"strings"
-	"syscall"
 	"time"
 
 	"github.com/cloudradar-monitoring/tacoscript/conv"
@@ -19,43 +16,9 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
-type CmdRunner interface {
+type OsExecutor interface {
 	Run(cmd *exec.Cmd) error
-}
-
-type OSCmdRunner struct{}
-
-func (ocm OSCmdRunner) Run(cmd *exec.Cmd) error {
-	return cmd.Run()
-}
-
-type UserSystemInfoParser interface {
-	Parse(userName, path string) (sysUserID, sysGroupID uint32, err error)
-}
-
-type OSUserSystemInfoParser struct{}
-
-func (ousif OSUserSystemInfoParser) Parse(userName, path string) (sysUserID, sysGroupID uint32, err error) {
-	logrus.Debugf("parsing user '%s' to get uid and group id from OS", userName)
-	u, err := user.Lookup(userName)
-	if err != nil {
-		err = fmt.Errorf("cannot locate user '%s': %w, check path '%s'", userName, err, path+"."+UserField)
-		return
-	}
-
-	uid, err := strconv.Atoi(u.Uid)
-	if err != nil {
-		err = fmt.Errorf("non-numeric user ID '%s': %w, check path '%s'", u.Uid, err, path+"."+UserField)
-		return
-	}
-
-	gid, err := strconv.Atoi(u.Gid)
-	if err != nil {
-		err = fmt.Errorf("non-numeric user group ID '%s': %w, check path '%s'", u.Gid, err, path+"."+UserField)
-		return
-	}
-
-	return uint32(uid), uint32(gid), nil
+	SetUser(userName, path string, cmd *exec.Cmd) error
 }
 
 type CmdRunTask struct {
@@ -68,23 +31,21 @@ type CmdRunTask struct {
 	Shell                 string
 	Envs                  conv.KeyValues
 	MissingFilesCondition []string
+	Require               []string
 	Errors                *ValidationErrors
-	Runner                CmdRunner
-	UserSystemInfoParser  UserSystemInfoParser
+	OsExecutor            OsExecutor
 }
 
 type CmdRunTaskBuilder struct {
-	Runner               CmdRunner
-	UserSystemInfoParser UserSystemInfoParser
+	OsExecutor OsExecutor
 }
 
 func (crtb CmdRunTaskBuilder) Build(typeName, path string, ctx []map[string]interface{}) (Task, error) {
 	t := &CmdRunTask{
-		TypeName:             typeName,
-		Path:                 path,
-		Errors:               &ValidationErrors{},
-		Runner:               crtb.Runner,
-		UserSystemInfoParser: crtb.UserSystemInfoParser,
+		TypeName:   typeName,
+		Path:       path,
+		Errors:     &ValidationErrors{},
+		OsExecutor: crtb.OsExecutor,
 	}
 
 	for _, contextItem := range ctx {
@@ -121,6 +82,17 @@ func (crtb CmdRunTaskBuilder) Build(typeName, path string, ctx []map[string]inte
 				names, err := conv.ConvertToValues(val, path)
 				t.Errors.Add(err)
 				t.Names = names
+			case RequireField:
+				requireItems := make([]string, 0)
+				var err error
+				switch typedVal := val.(type) {
+				case string:
+					requireItems = append(requireItems, typedVal)
+				default:
+					requireItems, err = conv.ConvertToValues(val, path)
+					t.Errors.Add(err)
+				}
+				t.Require = requireItems
 			}
 		}
 	}
@@ -130,6 +102,10 @@ func (crtb CmdRunTaskBuilder) Build(typeName, path string, ctx []map[string]inte
 
 func (crt *CmdRunTask) GetName() string {
 	return crt.TypeName
+}
+
+func (crt *CmdRunTask) GetRequirements() []string {
+	return crt.Require
 }
 
 func (crt *CmdRunTask) Validate() error {
@@ -303,15 +279,10 @@ func (crt *CmdRunTask) setUser(cmd *exec.Cmd) error {
 		return nil
 	}
 	logrus.Debugf("will set user %s", crt.User)
+	err := crt.OsExecutor.SetUser(crt.User, crt.Path, cmd)
 
-	uid, gid, err := crt.UserSystemInfoParser.Parse(crt.User, crt.Path)
 	if err != nil {
 		return err
-	}
-
-	cmd.SysProcAttr = &syscall.SysProcAttr{
-		Setpgid:    true,
-		Credential: &syscall.Credential{Uid: uid, Gid: gid},
 	}
 
 	return nil
@@ -347,7 +318,7 @@ func (crt *CmdRunTask) setIO(cmd *exec.Cmd, stdOutWriter, stdErrWriter io.Writer
 func (crt *CmdRunTask) run(cmds []*exec.Cmd) error {
 	for _, cmd := range cmds {
 		logrus.Infof("will run cmd %s", cmd.String())
-		err := crt.Runner.Run(cmd)
+		err := crt.OsExecutor.Run(cmd)
 		if err != nil {
 			return err
 		}

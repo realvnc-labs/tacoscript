@@ -58,6 +58,10 @@ func (rdpm RawDataProviderMock) Read() ([]byte, error) {
 	return []byte(rdpm.DataToReturn), rdpm.ErrToReturn
 }
 
+func (tm TaskMock) GetRequirements() []string {
+	return []string{}
+}
+
 func TestYamlParser(t *testing.T) {
 	testCases := []struct {
 		YamlInput           string
@@ -163,6 +167,10 @@ cwd:
         - run one
         - run two
         - run three
+    - require:
+        - req one
+        - req two
+        - req three
 `,
 			ExpectedScripts: tasks.Scripts{
 				{
@@ -177,6 +185,11 @@ cwd:
 									"run two",
 									"run three",
 								}},
+								{tasks.RequireField: []interface{}{
+									"req one",
+									"req two",
+									"req three",
+								}},
 							},
 							ValidationError: nil,
 						},
@@ -190,6 +203,7 @@ manyCreates:
   # Name of the class and the module
   cmd.run:
     - name: many creates cmd
+    - require: require one
     - creates:
         - create one
         - create two
@@ -204,6 +218,7 @@ manyCreates:
 							Path:     "manyCreates.cmd.run[1]",
 							Context: []map[string]interface{}{
 								{tasks.NameField: "many creates cmd"},
+								{tasks.RequireField: "require one"},
 								{tasks.CreatesField: []interface{}{
 									"create one",
 									"create two",
@@ -245,7 +260,7 @@ manyCreates:
 			continue
 		}
 
-		assert.Equal(t, testCase.ExpectedScripts, scripts)
+		assert.EqualValues(t, testCase.ExpectedScripts, scripts)
 	}
 }
 

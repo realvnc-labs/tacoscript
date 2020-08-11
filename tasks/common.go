@@ -25,6 +25,7 @@ type Task interface {
 	Execute(ctx context.Context) ExecutionResult
 	Validate() error
 	GetPath() string
+	GetRequirements() []string
 }
 
 type ValidationErrors struct {

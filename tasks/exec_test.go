@@ -1,7 +1,6 @@
 package tasks
 
 import (
-	"bytes"
 	"context"
 	"errors"
 	"fmt"
@@ -17,63 +16,43 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-type RunnerMock struct {
+type OsExecutorMock struct {
 	stdOutText string
 	stdErrText string
 	cmds       []*exec.Cmd
 	errToGive  error
 	id         string
-}
 
-func (r *RunnerMock) Run(cmd *exec.Cmd) error {
-	_, err := cmd.Stdout.Write([]byte(r.stdOutText))
-	if err != nil {
-		return err
-	}
-
-	_, err = cmd.Stderr.Write([]byte(r.stdErrText))
-	if err != nil {
-		return err
-	}
-
-	r.cmds = append(r.cmds, cmd)
-
-	return r.errToGive
-}
-
-type UserSystemInfoParserMock struct {
 	userNameInput      string
-	pathInput          string
-	sysUserIDToReturn  uint32
-	sysGroupIDToReturn uint32
-	errToReturn        error
+	userNamePathInput  string
+	userSetErrToReturn error
 }
 
-func (usipm *UserSystemInfoParserMock) Parse(userName, path string) (sysUserID, sysGroupID uint32, err error) {
-	usipm.userNameInput = userName
-	usipm.pathInput = path
-
-	return usipm.sysUserIDToReturn, usipm.sysGroupIDToReturn, usipm.errToReturn
-}
-
-func TestOSCmdRunner(t *testing.T) {
-	cmd := exec.Command("echo", "123")
-
-	var outBuf bytes.Buffer
-	cmd.Stdout = &outBuf
-
-	cmdRunner := OSCmdRunner{}
-	err := cmdRunner.Run(cmd)
-	assert.NoError(t, err)
+func (oem *OsExecutorMock) Run(cmd *exec.Cmd) error {
+	_, err := cmd.Stdout.Write([]byte(oem.stdOutText))
 	if err != nil {
-		return
+		return err
 	}
 
-	assert.Equal(t, "123\n", outBuf.String())
+	_, err = cmd.Stderr.Write([]byte(oem.stdErrText))
+	if err != nil {
+		return err
+	}
+
+	oem.cmds = append(oem.cmds, cmd)
+
+	return oem.errToGive
+}
+
+func (oem *OsExecutorMock) SetUser(userName, path string, cmd *exec.Cmd) error {
+	oem.userNameInput = userName
+	oem.userNamePathInput = path
+
+	return oem.userSetErrToReturn
 }
 
 func TestCmdRunTaskBuilder(t *testing.T) {
-	runnerMock := &RunnerMock{
+	runnerMock := &OsExecutorMock{
 		cmds: []*exec.Cmd{},
 		id:   "some id",
 	}
@@ -118,7 +97,7 @@ func TestCmdRunTaskBuilder(t *testing.T) {
 					},
 				},
 				MissingFilesCondition: []string{"somefile.txt"},
-				Runner:                runnerMock,
+				OsExecutor:            runnerMock,
 				Errors:                &ValidationErrors{},
 			},
 		},
@@ -131,10 +110,10 @@ func TestCmdRunTaskBuilder(t *testing.T) {
 				},
 			},
 			expectedTask: &CmdRunTask{
-				TypeName: "someTypeWithErrors",
-				Path:     "somePathWithErrors",
-				Envs:     conv.KeyValues{},
-				Runner:   runnerMock,
+				TypeName:   "someTypeWithErrors",
+				Path:       "somePathWithErrors",
+				Envs:       conv.KeyValues{},
+				OsExecutor: runnerMock,
 				Errors: &ValidationErrors{
 					Errs: []error{
 						fmt.Errorf("key value array expected at 'somePathWithErrors' but got '123'"),
@@ -153,10 +132,10 @@ func TestCmdRunTaskBuilder(t *testing.T) {
 				},
 			},
 			expectedTask: &CmdRunTask{
-				TypeName: "someTypeWithErrors2",
-				Path:     "somePathWithErrors2",
-				Envs:     conv.KeyValues{},
-				Runner:   runnerMock,
+				TypeName:   "someTypeWithErrors2",
+				Path:       "somePathWithErrors2",
+				Envs:       conv.KeyValues{},
+				OsExecutor: runnerMock,
 				Errors: &ValidationErrors{
 					Errs: []error{
 						errors.New(`wrong key value element at 'somePathWithErrors2': '"one"'`),
@@ -169,6 +148,7 @@ func TestCmdRunTaskBuilder(t *testing.T) {
 			path:     "manyNamesPath",
 			ctx: []map[string]interface{}{
 				{
+					RequireField: "one require field",
 					NamesField: []interface{}{
 						"name one",
 						"name two",
@@ -178,12 +158,15 @@ func TestCmdRunTaskBuilder(t *testing.T) {
 			expectedTask: &CmdRunTask{
 				TypeName: "manyNamesType",
 				Path:     "manyNamesPath",
+				Require: []string{
+					"one require field",
+				},
 				Names: []string{
 					"name one",
 					"name two",
 				},
-				Runner: runnerMock,
-				Errors: &ValidationErrors{},
+				OsExecutor: runnerMock,
+				Errors:     &ValidationErrors{},
 			},
 		},
 		{
@@ -197,18 +180,28 @@ func TestCmdRunTaskBuilder(t *testing.T) {
 						"create two",
 						"create three",
 					},
+					RequireField: []interface{}{
+						"req one",
+						"req two",
+						"req three",
+					},
 				},
 			},
 			expectedTask: &CmdRunTask{
-				TypeName: "manyCreatesType",
-				Path:     "manyCreatesPath",
-				Name:     "many creates command",
-				Runner:   runnerMock,
-				Errors:   &ValidationErrors{},
+				TypeName:   "manyCreatesType",
+				Path:       "manyCreatesPath",
+				Name:       "many creates command",
+				OsExecutor: runnerMock,
+				Errors:     &ValidationErrors{},
 				MissingFilesCondition: []string{
 					"create one",
 					"create two",
 					"create three",
+				},
+				Require: []string{
+					"req one",
+					"req two",
+					"req three",
 				},
 			},
 		},
@@ -216,7 +209,7 @@ func TestCmdRunTaskBuilder(t *testing.T) {
 
 	for _, testCase := range testCases {
 		cmdBuilder := CmdRunTaskBuilder{
-			Runner: runnerMock,
+			OsExecutor: runnerMock,
 		}
 		actualTask, err := cmdBuilder.Build(
 			testCase.typeName,
@@ -244,6 +237,7 @@ func TestCmdRunTaskBuilder(t *testing.T) {
 		assert.Equal(t, testCase.expectedTask.TypeName, actualCmdRunTask.TypeName)
 		assert.Equal(t, testCase.expectedTask.Shell, actualCmdRunTask.Shell)
 		assert.Equal(t, testCase.expectedTask.Names, actualCmdRunTask.Names)
+		assert.Equal(t, testCase.expectedTask.Require, actualCmdRunTask.Require)
 		assert.EqualValues(t, testCase.expectedTask.Errors, actualCmdRunTask.Errors)
 	}
 }
@@ -252,8 +246,7 @@ func TestTaskExecution(t *testing.T) {
 	testCases := []struct {
 		Task                            *CmdRunTask
 		ExpectedResult                  ExecutionResult
-		RunnerMock                      *RunnerMock
-		UserSystemInfoParserMock        *UserSystemInfoParserMock
+		RunnerMock                      *OsExecutorMock
 		ExpectedCmdStrs                 []string
 		ShouldCreateFileForMissingCheck bool
 	}{
@@ -279,23 +272,16 @@ func TestTaskExecution(t *testing.T) {
 				StdErr:    "some std err",
 			},
 			ExpectedCmdStrs: []string{"zsh -c some test command"},
-			RunnerMock: &RunnerMock{
-				cmds:       []*exec.Cmd{},
-				errToGive:  nil,
-				id:         "some id",
-				stdErrText: "some std err",
-				stdOutText: "some std out",
-			},
-			UserSystemInfoParserMock: &UserSystemInfoParserMock{
-				sysUserIDToReturn:  10,
-				sysGroupIDToReturn: 12,
-				errToReturn:        nil,
+			RunnerMock: &OsExecutorMock{
+				cmds:               []*exec.Cmd{},
+				errToGive:          nil,
+				id:                 "some id",
+				stdErrText:         "some std err",
+				stdOutText:         "some std out",
+				userSetErrToReturn: nil,
 			},
 		},
 		{
-			UserSystemInfoParserMock: &UserSystemInfoParserMock{
-				errToReturn: errors.New("some error"),
-			},
 			Task: &CmdRunTask{
 				User:                  "some user",
 				Name:                  "some parser command",
@@ -306,16 +292,14 @@ func TestTaskExecution(t *testing.T) {
 				IsSkipped: true,
 				Err:       nil,
 			},
-			RunnerMock: &RunnerMock{
+			RunnerMock: &OsExecutorMock{
 				cmds:      []*exec.Cmd{},
 				errToGive: nil,
 				id:        "some id",
+				userSetErrToReturn: errors.New("some error"),
 			},
 		},
 		{
-			UserSystemInfoParserMock: &UserSystemInfoParserMock{
-				errToReturn: errors.New("some error"),
-			},
 			Task: &CmdRunTask{
 				Name: "echo 12345",
 				User: "some user",
@@ -325,16 +309,14 @@ func TestTaskExecution(t *testing.T) {
 				IsSkipped: false,
 				Err:       errors.New("some error"),
 			},
-			RunnerMock: &RunnerMock{
+			RunnerMock: &OsExecutorMock{
 				cmds:      []*exec.Cmd{},
 				errToGive: nil,
 				id:        "some id",
+				userSetErrToReturn: errors.New("some error"),
 			},
 		},
 		{
-			UserSystemInfoParserMock: &UserSystemInfoParserMock{
-				errToReturn: nil,
-			},
 			Task: &CmdRunTask{
 				Name: "lpwd",
 			},
@@ -343,7 +325,7 @@ func TestTaskExecution(t *testing.T) {
 				IsSkipped: false,
 				Err:       errors.New("some runner error"),
 			},
-			RunnerMock: &RunnerMock{
+			RunnerMock: &OsExecutorMock{
 				cmds:      []*exec.Cmd{},
 				errToGive: errors.New("some runner error"),
 				id:        "some id",
@@ -365,15 +347,10 @@ func TestTaskExecution(t *testing.T) {
 				Err:       nil,
 			},
 			ExpectedCmdStrs: []string{"many names cmd 1", "many names cmd 2", "many names cmd 3"},
-			RunnerMock: &RunnerMock{
+			RunnerMock: &OsExecutorMock{
 				cmds:      []*exec.Cmd{},
 				errToGive: nil,
 				id:        "some id",
-			},
-			UserSystemInfoParserMock: &UserSystemInfoParserMock{
-				sysUserIDToReturn:  10,
-				sysGroupIDToReturn: 12,
-				errToReturn:        nil,
 			},
 		},
 		{
@@ -389,13 +366,10 @@ func TestTaskExecution(t *testing.T) {
 				Err:       nil,
 			},
 			ExpectedCmdStrs: []string{"cmd with many MissingFilesConditions"},
-			RunnerMock: &RunnerMock{
+			RunnerMock: &OsExecutorMock{
 				cmds:      []*exec.Cmd{},
 				errToGive: nil,
 				id:        "some id",
-			},
-			UserSystemInfoParserMock: &UserSystemInfoParserMock{
-				errToReturn: nil,
 			},
 			ShouldCreateFileForMissingCheck: false,
 		},
@@ -415,8 +389,7 @@ func TestTaskExecution(t *testing.T) {
 	}()
 
 	for _, testCase := range testCases {
-		testCase.Task.Runner = testCase.RunnerMock
-		testCase.Task.UserSystemInfoParser = testCase.UserSystemInfoParserMock
+		testCase.Task.OsExecutor = testCase.RunnerMock
 
 		if testCase.ShouldCreateFileForMissingCheck && len(testCase.Task.MissingFilesCondition) > 0 {
 			for _, fileToCreate := range testCase.Task.MissingFilesCondition {
@@ -454,16 +427,11 @@ func TestTaskExecution(t *testing.T) {
 		assert.Equal(t, len(testCase.ExpectedCmdStrs), len(cmds))
 		for _, cmd := range cmds {
 			assert.Equal(t, testCase.Task.WorkingDir, cmd.Dir)
-			if testCase.Task.User != "" {
-				assert.Equal(t, true, cmd.SysProcAttr.Setpgid)
-				assert.Equal(t, testCase.UserSystemInfoParserMock.sysUserIDToReturn, cmd.SysProcAttr.Credential.Uid)
-				assert.Equal(t, testCase.UserSystemInfoParserMock.sysGroupIDToReturn, cmd.SysProcAttr.Credential.Gid)
-			}
 			AssertEnvValuesMatch(t, testCase.Task.Envs, cmd.Env)
 		}
 
-		assert.Equal(t, testCase.Task.User, testCase.UserSystemInfoParserMock.userNameInput)
-		assert.Equal(t, testCase.Task.Path, testCase.UserSystemInfoParserMock.pathInput)
+		assert.Equal(t, testCase.Task.User, testCase.RunnerMock.userNameInput)
+		assert.Equal(t, testCase.Task.Path, testCase.RunnerMock.userNamePathInput)
 	}
 }
 

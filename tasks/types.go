@@ -10,4 +10,5 @@ const (
 	ShellField   = "shell"
 	EnvField     = "env"
 	CreatesField = "creates"
+	RequireField = "require"
 )

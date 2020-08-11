@@ -3,7 +3,7 @@ package script
 import (
 	"context"
 	"fmt"
-
+	"github.com/cloudradar-monitoring/tacoscript/appos"
 	"github.com/cloudradar-monitoring/tacoscript/parse"
 
 	"github.com/cloudradar-monitoring/tacoscript/tasks"
@@ -19,8 +19,7 @@ func RunScript(scriptPath string) error {
 		DataProvider: fileDataProvider,
 		TaskBuilder: tasks.NewBuilderRouter(map[string]tasks.Builder{
 			tasks.TaskTypeCmdRun: &tasks.CmdRunTaskBuilder{
-				Runner:               tasks.OSCmdRunner{},
-				UserSystemInfoParser: tasks.OSUserSystemInfoParser{},
+				OsExecutor: appos.OsExecutor{},
 			},
 		}),
 	}
