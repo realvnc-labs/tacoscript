@@ -1,8 +1,9 @@
-package tasks
+package parse
 
 import (
 	"context"
 	"errors"
+	"github.com/cloudradar-monitoring/tacoscript/tasks"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -18,7 +19,7 @@ type ParserBuilderMock struct {
 	TaskValidationError error
 }
 
-func (bm *ParserBuilderMock) Build(typeName, path string, ctx []map[string]interface{}) (Task, error) {
+func (bm *ParserBuilderMock) Build(typeName, path string, ctx []map[string]interface{}) (tasks.Task, error) {
 	t := TaskMock{
 		TypeName:        typeName,
 		Path:            path,
@@ -40,8 +41,8 @@ func (tm TaskMock) GetName() string {
 	return tm.TypeName
 }
 
-func (tm TaskMock) Execute(ctx context.Context) ExecutionResult {
-	return ExecutionResult{}
+func (tm TaskMock) Execute(ctx context.Context) tasks.ExecutionResult {
+	return tasks.ExecutionResult{}
 }
 
 func (tm TaskMock) Validate() error {
@@ -63,7 +64,7 @@ func TestYamlParser(t *testing.T) {
 		TaskValidationError error
 		BuilderError        error
 		ExpectedErrMsg      string
-		ExpectedScripts     Scripts
+		ExpectedScripts     tasks.Scripts
 	}{
 		{
 			YamlInput: `
@@ -83,10 +84,10 @@ cwd:
         - name two
         - name three
 `,
-			ExpectedScripts: Scripts{
+			ExpectedScripts: tasks.Scripts{
 				{
 					ID: "cwd",
-					Tasks: []Task{
+					Tasks: []tasks.Task{
 						TaskMock{
 							TypeName: "cmd.run",
 							Path:     "cwd.cmd.run[1]",
@@ -95,7 +96,7 @@ cwd:
 								{"cwd": "/usr/tmp"},
 								{"shell": "zsh"},
 								{
-									EnvField: buildExpectedEnvs(map[interface{}]interface{}{
+									tasks.EnvField: BuildExpectedEnvs(map[interface{}]interface{}{
 										"PASSWORD": "bunny",
 									}),
 								},
@@ -116,7 +117,7 @@ cwd:
 		{
 			DataProviderErr: errors.New("data not available"),
 			ExpectedErrMsg:  "data not available",
-			ExpectedScripts: Scripts{},
+			ExpectedScripts: tasks.Scripts{},
 		},
 		{
 			YamlInput: `
@@ -126,7 +127,7 @@ cwd:
 `,
 			BuilderError:    errors.New("failed to build task"),
 			ExpectedErrMsg:  "failed to build task",
-			ExpectedScripts: Scripts{},
+			ExpectedScripts: tasks.Scripts{},
 		},
 		{
 			YamlInput: `
@@ -139,7 +140,7 @@ cwd:
 `,
 			TaskValidationError: errors.New("task is invalid"),
 			ExpectedErrMsg:      "task is invalid, task is invalid",
-			ExpectedScripts:     Scripts{},
+			ExpectedScripts:     tasks.Scripts{},
 		},
 		{
 			YamlInput: `
@@ -150,7 +151,7 @@ cwd:
 						name one
 `,
 			ExpectedErrMsg:  "yaml: line 6: found character that cannot start any token",
-			ExpectedScripts: Scripts{},
+			ExpectedScripts: tasks.Scripts{},
 		},
 		{
 			YamlInput: `
@@ -162,10 +163,10 @@ cwd:
         - run two
         - run three
 `,
-			ExpectedScripts: Scripts{
+			ExpectedScripts: tasks.Scripts{
 				{
 					ID: "cwd",
-					Tasks: []Task{
+					Tasks: []tasks.Task{
 						TaskMock{
 							TypeName: "cmd.run",
 							Path:     "cwd.cmd.run[1]",
@@ -215,7 +216,7 @@ cwd:
 	}
 }
 
-func buildExpectedEnvs(expectedEnvs map[interface{}]interface{}) []interface{} {
+func BuildExpectedEnvs(expectedEnvs map[interface{}]interface{}) []interface{} {
 	envs := make([]interface{}, 0, len(expectedEnvs))
 	for envKey, envValue := range expectedEnvs {
 		envs = append(envs, map[interface{}]interface{}{

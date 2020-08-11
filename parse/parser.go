@@ -1,7 +1,8 @@
-package tasks
+package parse
 
 import (
 	"fmt"
+	"github.com/cloudradar-monitoring/tacoscript/tasks"
 	"io/ioutil"
 
 	yaml2 "gopkg.in/yaml.v2"
@@ -21,34 +22,34 @@ type RawDataProvider interface {
 
 type Parser struct {
 	DataProvider RawDataProvider
-	TaskBuilder  Builder
+	TaskBuilder  tasks.Builder
 }
 
-func (p Parser) ParseScripts() (Scripts, error) {
+func (p Parser) ParseScripts() (tasks.Scripts, error) {
 	yamlFile, err := p.DataProvider.Read()
 	if err != nil {
-		return Scripts{}, err
+		return tasks.Scripts{}, err
 	}
 
 	rawScripts := map[string]map[string][]map[string]interface{}{}
 	err = yaml2.Unmarshal(yamlFile, &rawScripts)
 	if err != nil {
-		return Scripts{}, err
+		return tasks.Scripts{}, err
 	}
 
-	scripts := make(Scripts, 0, len(rawScripts))
-	errs := ValidationErrors{}
+	scripts := make(tasks.Scripts, 0, len(rawScripts))
+	errs := tasks.ValidationErrors{}
 	for scriptID, rawTasks := range rawScripts {
-		script := Script{
+		script := tasks.Script{
 			ID:    scriptID,
-			Tasks: make([]Task, 0, len(rawTasks)),
+			Tasks: make([]tasks.Task, 0, len(rawTasks)),
 		}
 		index := 0
 		for taskTypeID, taskContext := range rawTasks {
 			index++
 			task, err := p.TaskBuilder.Build(taskTypeID, fmt.Sprintf("%s.%s[%d]", scriptID, taskTypeID, index), taskContext)
 			if err != nil {
-				return Scripts{}, err
+				return tasks.Scripts{}, err
 			}
 
 			errs.Add(task.Validate())

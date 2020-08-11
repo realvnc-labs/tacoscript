@@ -93,7 +93,7 @@ func TestCmdRunTaskBuilder(t *testing.T) {
 					CwdField:   "somedir",
 					UserField:  "someuser",
 					ShellField: "someshell",
-					EnvField: buildExpectedEnvs(map[interface{}]interface{}{
+					EnvField: BuildExpectedEnvs(map[interface{}]interface{}{
 						"one": "1",
 						"two": "2",
 					}),
@@ -519,4 +519,15 @@ func TestOSCmdRunnerValidation(t *testing.T) {
 			assert.EqualError(t, err, testCase.ExpectedError)
 		}
 	}
+}
+
+func BuildExpectedEnvs(expectedEnvs map[interface{}]interface{}) []interface{} {
+	envs := make([]interface{}, 0, len(expectedEnvs))
+	for envKey, envValue := range expectedEnvs {
+		envs = append(envs, map[interface{}]interface{}{
+			envKey: envValue,
+		})
+	}
+
+	return envs
 }
