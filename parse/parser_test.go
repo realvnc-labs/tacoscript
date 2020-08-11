@@ -92,17 +92,17 @@ cwd:
 							TypeName: "cmd.run",
 							Path:     "cwd.cmd.run[1]",
 							Context: []map[string]interface{}{
-								{"name": "echo ${PASSWORD}"},
-								{"cwd": "/usr/tmp"},
-								{"shell": "zsh"},
+								{tasks.NameField: "echo ${PASSWORD}"},
+								{tasks.CwdField: "/usr/tmp"},
+								{tasks.ShellField: "zsh"},
 								{
 									tasks.EnvField: BuildExpectedEnvs(map[interface{}]interface{}{
 										"PASSWORD": "bunny",
 									}),
 								},
-								{"creates": "/tmp/my-date.txt"},
-								{"user": "root"},
-								{"names": []interface{}{
+								{tasks.CreatesField: "/tmp/my-date.txt"},
+								{tasks.UserField: "root"},
+								{tasks.NamesField: []interface{}{
 									"name one",
 									"name two",
 									"name three",
@@ -171,10 +171,42 @@ cwd:
 							TypeName: "cmd.run",
 							Path:     "cwd.cmd.run[1]",
 							Context: []map[string]interface{}{
-								{"names": []interface{}{
+								{tasks.NamesField: []interface{}{
 									"run one",
 									"run two",
 									"run three",
+								}},
+							},
+							ValidationError: nil,
+						},
+					},
+				},
+			},
+		},
+		{
+			YamlInput: `
+manyCreates:
+  # Name of the class and the module
+  cmd.run:
+    - name: many creates cmd
+    - creates:
+        - create one
+        - create two
+        - create three
+`,
+			ExpectedScripts: tasks.Scripts{
+				{
+					ID: "manyCreates",
+					Tasks: []tasks.Task{
+						TaskMock{
+							TypeName: "cmd.run",
+							Path:     "manyCreates.cmd.run[1]",
+							Context: []map[string]interface{}{
+								{tasks.NameField: "many creates cmd"},
+								{tasks.CreatesField: []interface{}{
+									"create one",
+									"create two",
+									"create three",
 								}},
 							},
 							ValidationError: nil,

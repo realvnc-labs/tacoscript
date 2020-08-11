@@ -117,9 +117,9 @@ func TestCmdRunTaskBuilder(t *testing.T) {
 						Value: "2",
 					},
 				},
-				MissingFileCondition: "somefile.txt",
-				Runner:               runnerMock,
-				Errors:               &ValidationErrors{},
+				MissingFilesCondition: []string{"somefile.txt"},
+				Runner:                runnerMock,
+				Errors:                &ValidationErrors{},
 			},
 		},
 		{
@@ -186,6 +186,32 @@ func TestCmdRunTaskBuilder(t *testing.T) {
 				Errors: &ValidationErrors{},
 			},
 		},
+		{
+			typeName: "manyCreatesType",
+			path:     "manyCreatesPath",
+			ctx: []map[string]interface{}{
+				{
+					NameField: "many creates command",
+					CreatesField: []interface{}{
+						"create one",
+						"create two",
+						"create three",
+					},
+				},
+			},
+			expectedTask: &CmdRunTask{
+				TypeName: "manyCreatesType",
+				Path:     "manyCreatesPath",
+				Name:     "many creates command",
+				Runner:   runnerMock,
+				Errors:   &ValidationErrors{},
+				MissingFilesCondition: []string{
+					"create one",
+					"create two",
+					"create three",
+				},
+			},
+		},
 	}
 
 	for _, testCase := range testCases {
@@ -213,7 +239,7 @@ func TestCmdRunTaskBuilder(t *testing.T) {
 		AssertEnvValuesMatch(t, testCase.expectedTask.Envs, actualCmdRunTask.Envs.ToEqualSignStrings())
 		assert.Equal(t, testCase.expectedTask.Path, actualCmdRunTask.Path)
 		assert.Equal(t, testCase.expectedTask.WorkingDir, actualCmdRunTask.WorkingDir)
-		assert.Equal(t, testCase.expectedTask.MissingFileCondition, actualCmdRunTask.MissingFileCondition)
+		assert.Equal(t, testCase.expectedTask.MissingFilesCondition, actualCmdRunTask.MissingFilesCondition)
 		assert.Equal(t, testCase.expectedTask.Name, actualCmdRunTask.Name)
 		assert.Equal(t, testCase.expectedTask.TypeName, actualCmdRunTask.TypeName)
 		assert.Equal(t, testCase.expectedTask.Shell, actualCmdRunTask.Shell)
@@ -244,7 +270,7 @@ func TestTaskExecution(t *testing.T) {
 						Value: "someenvval2",
 					},
 				},
-				MissingFileCondition: "",
+				MissingFilesCondition: []string{""},
 			},
 			ExpectedResult: ExecutionResult{
 				IsSkipped: false,
@@ -271,9 +297,9 @@ func TestTaskExecution(t *testing.T) {
 				errToReturn: errors.New("some error"),
 			},
 			Task: &CmdRunTask{
-				User:                 "some user",
-				Name:                 "some parser command",
-				MissingFileCondition: "somefile.txt",
+				User:                  "some user",
+				Name:                  "some parser command",
+				MissingFilesCondition: []string{"somefile.txt"},
 			},
 			ShouldCreateFileForMissingCheck: true,
 			ExpectedResult: ExecutionResult{
@@ -350,6 +376,29 @@ func TestTaskExecution(t *testing.T) {
 				errToReturn:        nil,
 			},
 		},
+		{
+			Task: &CmdRunTask{
+				Name: "cmd with many MissingFilesConditions",
+				MissingFilesCondition: []string{
+					"file.one",
+					"file.two",
+				},
+			},
+			ExpectedResult: ExecutionResult{
+				IsSkipped: false,
+				Err:       nil,
+			},
+			ExpectedCmdStrs: []string{"cmd with many MissingFilesConditions"},
+			RunnerMock: &RunnerMock{
+				cmds:      []*exec.Cmd{},
+				errToGive: nil,
+				id:        "some id",
+			},
+			UserSystemInfoParserMock: &UserSystemInfoParserMock{
+				errToReturn: nil,
+			},
+			ShouldCreateFileForMissingCheck: false,
+		},
 	}
 
 	filesToDelete := make([]string, 0)
@@ -369,16 +418,18 @@ func TestTaskExecution(t *testing.T) {
 		testCase.Task.Runner = testCase.RunnerMock
 		testCase.Task.UserSystemInfoParser = testCase.UserSystemInfoParserMock
 
-		if testCase.ShouldCreateFileForMissingCheck && testCase.Task.MissingFileCondition != "" {
-			emptyFile, err := os.Create(testCase.Task.MissingFileCondition)
-			assert.NoError(t, err)
-			if err != nil {
-				continue
-			}
+		if testCase.ShouldCreateFileForMissingCheck && len(testCase.Task.MissingFilesCondition) > 0 {
+			for _, fileToCreate := range testCase.Task.MissingFilesCondition {
+				emptyFile, err := os.Create(fileToCreate)
+				assert.NoError(t, err)
+				if err != nil {
+					continue
+				}
 
-			err = emptyFile.Close()
-			assert.NoError(t, err)
-			filesToDelete = append(filesToDelete, testCase.Task.MissingFileCondition)
+				err = emptyFile.Close()
+				assert.NoError(t, err)
+				filesToDelete = append(filesToDelete, fileToCreate)
+			}
 		}
 
 		res := testCase.Task.Execute(context.Background())
@@ -400,6 +451,7 @@ func TestTaskExecution(t *testing.T) {
 
 		AssertCmdsPartiallyMatch(t, testCase.ExpectedCmdStrs, cmds)
 
+		assert.Equal(t, len(testCase.ExpectedCmdStrs), len(cmds))
 		for _, cmd := range cmds {
 			assert.Equal(t, testCase.Task.WorkingDir, cmd.Dir)
 			if testCase.Task.User != "" {
@@ -418,7 +470,7 @@ func TestTaskExecution(t *testing.T) {
 func AssertCmdsPartiallyMatch(t *testing.T, expectedCmds []string, actualExecutedCmds []*exec.Cmd) {
 	notFoundCmds := make([]string, 0, len(expectedCmds))
 
-	executedCmdStrs := make([]string, len(actualExecutedCmds))
+	executedCmdStrs := make([]string, 0, len(actualExecutedCmds))
 	for _, actualCmd := range actualExecutedCmds {
 		executedCmdStrs = append(executedCmdStrs, actualCmd.String())
 	}

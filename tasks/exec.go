@@ -59,18 +59,18 @@ func (ousif OSUserSystemInfoParser) Parse(userName, path string) (sysUserID, sys
 }
 
 type CmdRunTask struct {
-	Names                []string
-	TypeName             string
-	Path                 string
-	Name                 string
-	WorkingDir           string
-	User                 string
-	Shell                string
-	Envs                 conv.KeyValues
-	MissingFileCondition string
-	Errors               *ValidationErrors
-	Runner               CmdRunner
-	UserSystemInfoParser UserSystemInfoParser
+	Names                 []string
+	TypeName              string
+	Path                  string
+	Name                  string
+	WorkingDir            string
+	User                  string
+	Shell                 string
+	Envs                  conv.KeyValues
+	MissingFilesCondition []string
+	Errors                *ValidationErrors
+	Runner                CmdRunner
+	UserSystemInfoParser  UserSystemInfoParser
 }
 
 type CmdRunTaskBuilder struct {
@@ -103,7 +103,20 @@ func (crtb CmdRunTaskBuilder) Build(typeName, path string, ctx []map[string]inte
 				t.Errors.Add(err)
 				t.Envs = envs
 			case CreatesField:
-				t.MissingFileCondition = fmt.Sprint(val)
+				createsItems := make([]string, 0)
+				switch typedVal := val.(type) {
+				case string:
+					createsItems = append(createsItems, typedVal)
+				case []string:
+					createsItems = append(createsItems, typedVal...)
+				case []interface{}:
+					for _, typedValI := range typedVal {
+						createsItems = append(createsItems, fmt.Sprint(typedValI))
+					}
+				default:
+					createsItems = append(createsItems, fmt.Sprint(val))
+				}
+				t.MissingFilesCondition = createsItems
 			case NamesField:
 				names, err := conv.ConvertToValues(val, path)
 				t.Errors.Add(err)
@@ -185,20 +198,27 @@ func (crt *CmdRunTask) Execute(ctx context.Context) ExecutionResult {
 }
 
 func (crt *CmdRunTask) checkMissingFileCondition() (isSkipped bool, err error) {
-	if crt.MissingFileCondition == "" {
+	if len(crt.MissingFilesCondition) == 0 {
 		return
 	}
 
-	logrus.Debugf("will check if file '%s' is missing", crt.MissingFileCondition)
-	_, err = os.Stat(crt.MissingFileCondition)
-	if err == nil {
-		logrus.Infof("file %s exists, will skip command '%s'", crt.MissingFileCondition, crt.Name)
-		isSkipped = true
-		return
-	}
+	for _, missingFileCondition := range crt.MissingFilesCondition {
+		if missingFileCondition == "" {
+			continue
+		}
 
-	if !os.IsNotExist(err) {
-		err = fmt.Errorf("failed to check if file '%s' exists: %w", crt.MissingFileCondition, err)
+		logrus.Debugf("will check if file '%s' is missing", missingFileCondition)
+		_, e := os.Stat(missingFileCondition)
+		if e == nil {
+			logrus.Infof("file '%s' exists, will skip command '%s'", missingFileCondition, crt.Name)
+			isSkipped = true
+			return
+		}
+
+		if os.IsNotExist(e) {
+			continue
+		}
+		err = fmt.Errorf("failed to check if file '%s' exists: %w", missingFileCondition, e)
 		return
 	}
 
