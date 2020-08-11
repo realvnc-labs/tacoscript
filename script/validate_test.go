@@ -2,9 +2,10 @@ package script
 
 import (
 	"context"
+	"testing"
+
 	"github.com/cloudradar-monitoring/tacoscript/tasks"
 	"github.com/stretchr/testify/assert"
-	"testing"
 )
 
 type RequirementsTaskMock struct {
@@ -56,7 +57,8 @@ func TestCycleDetection(t *testing.T) {
 					},
 				},
 			},
-			ExpectedError: "cyclic requirement detected see task at 'script one.RequirementsTaskMock[1]' requires 'script two' at 'script two.RequirementsTaskMock[0]' and vice versa",
+			ExpectedError: "cyclic requirement detected see task at 'script one.RequirementsTaskMock[1]' " +
+				"requires 'script two' at 'script two.RequirementsTaskMock[0]' and vice versa",
 		},
 		{
 			Scripts: tasks.Scripts{
@@ -70,7 +72,7 @@ func TestCycleDetection(t *testing.T) {
 					},
 				},
 				{
-					ID: "script 4",
+					ID:    "script 4",
 					Tasks: []tasks.Task{},
 				},
 			},

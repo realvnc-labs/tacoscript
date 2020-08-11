@@ -3,12 +3,12 @@
 package appos
 
 import (
-	"github.com/sirupsen/logrus"
 	"os/exec"
+
+	"github.com/sirupsen/logrus"
 )
 
 type OsExecutor struct {
-
 }
 
 func (oe OsExecutor) Run(cmd *exec.Cmd) error {

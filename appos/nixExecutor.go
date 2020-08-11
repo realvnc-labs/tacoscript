@@ -4,11 +4,12 @@ package appos
 
 import (
 	"fmt"
-	"github.com/sirupsen/logrus"
 	"os/exec"
 	"os/user"
 	"strconv"
 	"syscall"
+
+	"github.com/sirupsen/logrus"
 )
 
 type OsExecutor struct {

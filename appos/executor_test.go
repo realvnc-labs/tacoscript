@@ -2,9 +2,10 @@ package appos
 
 import (
 	"bytes"
-	"github.com/stretchr/testify/assert"
 	"os/exec"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 func TestExecutor(t *testing.T) {

@@ -64,40 +64,48 @@ func (crtb CmdRunTaskBuilder) Build(typeName, path string, ctx []map[string]inte
 				t.Errors.Add(err)
 				t.Envs = envs
 			case CreatesField:
-				createsItems := make([]string, 0)
-				switch typedVal := val.(type) {
-				case string:
-					createsItems = append(createsItems, typedVal)
-				case []string:
-					createsItems = append(createsItems, typedVal...)
-				case []interface{}:
-					for _, typedValI := range typedVal {
-						createsItems = append(createsItems, fmt.Sprint(typedValI))
-					}
-				default:
-					createsItems = append(createsItems, fmt.Sprint(val))
-				}
-				t.MissingFilesCondition = createsItems
+				crtb.parseCreatesField(t, val)
 			case NamesField:
 				names, err := conv.ConvertToValues(val, path)
 				t.Errors.Add(err)
 				t.Names = names
 			case RequireField:
-				requireItems := make([]string, 0)
-				var err error
-				switch typedVal := val.(type) {
-				case string:
-					requireItems = append(requireItems, typedVal)
-				default:
-					requireItems, err = conv.ConvertToValues(val, path)
-					t.Errors.Add(err)
-				}
-				t.Require = requireItems
+				crtb.parseRequireField(t, val, path)
 			}
 		}
 	}
 
 	return t, nil
+}
+
+func (crtb CmdRunTaskBuilder) parseRequireField(t *CmdRunTask, val interface{}, path string) {
+	requireItems := make([]string, 0)
+	var err error
+	switch typedVal := val.(type) {
+	case string:
+		requireItems = append(requireItems, typedVal)
+	default:
+		requireItems, err = conv.ConvertToValues(val, path)
+		t.Errors.Add(err)
+	}
+	t.Require = requireItems
+}
+
+func (crtb CmdRunTaskBuilder) parseCreatesField(t *CmdRunTask, val interface{}) {
+	createsItems := make([]string, 0)
+	switch typedVal := val.(type) {
+	case string:
+		createsItems = append(createsItems, typedVal)
+	case []string:
+		createsItems = append(createsItems, typedVal...)
+	case []interface{}:
+		for _, typedValI := range typedVal {
+			createsItems = append(createsItems, fmt.Sprint(typedValI))
+		}
+	default:
+		createsItems = append(createsItems, fmt.Sprint(val))
+	}
+	t.MissingFilesCondition = createsItems
 }
 
 func (crt *CmdRunTask) GetName() string {

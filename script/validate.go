@@ -17,4 +17,3 @@ func ValidateScripts(scrpts tasks.Scripts) error {
 	}
 	return nil
 }
-
