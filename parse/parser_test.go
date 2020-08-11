@@ -3,8 +3,9 @@ package parse
 import (
 	"context"
 	"errors"
-	"github.com/cloudradar-monitoring/tacoscript/tasks"
 	"testing"
+
+	"github.com/cloudradar-monitoring/tacoscript/tasks"
 
 	"github.com/stretchr/testify/assert"
 )

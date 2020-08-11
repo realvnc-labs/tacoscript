@@ -3,6 +3,7 @@ package script
 import (
 	"context"
 	"fmt"
+
 	"github.com/cloudradar-monitoring/tacoscript/parse"
 
 	"github.com/cloudradar-monitoring/tacoscript/tasks"

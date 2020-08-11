@@ -2,8 +2,9 @@ package parse
 
 import (
 	"fmt"
-	"github.com/cloudradar-monitoring/tacoscript/tasks"
 	"io/ioutil"
+
+	"github.com/cloudradar-monitoring/tacoscript/tasks"
 
 	yaml2 "gopkg.in/yaml.v2"
 )
