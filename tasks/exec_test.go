@@ -5,11 +5,12 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	log "github.com/sirupsen/logrus"
 	"os"
 	"os/exec"
 	"strings"
 	"testing"
+
+	log "github.com/sirupsen/logrus"
 
 	"github.com/cloudradar-monitoring/tacoscript/conv"
 
@@ -477,33 +478,33 @@ func TestOSCmdRunnerValidation(t *testing.T) {
 	}{
 		{
 			Task: CmdRunTask{
-				Names: []string{"one", "two"},
+				Names:  []string{"one", "two"},
 				Errors: &ValidationErrors{},
 			},
 			ExpectedError: "",
 		},
 		{
 			Task: CmdRunTask{
-				Name: "three",
+				Name:   "three",
 				Errors: &ValidationErrors{},
 			},
 			ExpectedError: "",
 		},
 		{
 			Task: CmdRunTask{
-				Name: "four",
-				Names: []string{"five", "six"},
+				Name:   "four",
+				Names:  []string{"five", "six"},
 				Errors: &ValidationErrors{},
 			},
 			ExpectedError: "",
 		},
 		{
-			Task: CmdRunTask{Errors: &ValidationErrors{}},
+			Task:          CmdRunTask{Errors: &ValidationErrors{}},
 			ExpectedError: "empty required value at path '.name', empty required values at path '.names'",
 		},
 		{
 			Task: CmdRunTask{
-				Names: []string{"", ""},
+				Names:  []string{"", ""},
 				Errors: &ValidationErrors{},
 			},
 			ExpectedError: "empty required value at path '.name', empty required values at path '.names'",

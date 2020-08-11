@@ -235,7 +235,7 @@ func (crt *CmdRunTask) createCmds(callback func(cmd *exec.Cmd) error) (cmds []*e
 		cmds = append(cmds, cmd)
 	}
 
-	return
+	return cmds, nil
 }
 
 func (crt *CmdRunTask) buildCmdParts(shellParam ShellParam, cmdParam CmdParam) (cmdName string, cmdArgs []string) {
