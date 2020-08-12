@@ -3,8 +3,10 @@ module github.com/cloudradar-monitoring/tacoscript
 go 1.14
 
 require (
+	github.com/elliotchance/orderedmap v1.3.0
 	github.com/fatih/color v1.9.0 // indirect
 	github.com/goccy/go-yaml v1.8.0
+	github.com/magiconair/properties v1.8.0
 	github.com/mattn/go-colorable v0.1.7 // indirect
 	github.com/sirupsen/logrus v1.6.0
 	github.com/spf13/cobra v1.0.0

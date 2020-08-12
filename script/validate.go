@@ -1,20 +1,20 @@
 package script
 
 import (
-	"errors"
 	"fmt"
+
 	"github.com/cloudradar-monitoring/tacoscript/tasks"
 	"github.com/cloudradar-monitoring/tacoscript/utils"
+	"github.com/elliotchance/orderedmap"
 )
 
-type node struct {
-	task           tasks.Task
-	sourceScriptID string
-	targetScriptID string
-}
-
-func isCyclic(curScriptID string, scriptIDToNodesMap map[string][]node, visited map[string]bool, requestStack map[string]bool) bool {
-	if isInRequestStack, ok := requestStack[curScriptID]; ok && isInRequestStack {
+func isCyclic(curScriptID string,
+	scriptIDToRequiredScriptIDsMap map[string][]string,
+	visited map[string]bool,
+	requestStack,
+	cyclicItems *orderedmap.OrderedMap) bool {
+	if isInRequestStack, ok := requestStack.Get(curScriptID); ok && isInRequestStack.(bool) {
+		cyclicItems.Set(curScriptID, true)
 		return true
 	}
 
@@ -23,76 +23,52 @@ func isCyclic(curScriptID string, scriptIDToNodesMap map[string][]node, visited 
 	}
 
 	visited[curScriptID] = true
-	requestStack[curScriptID] = true
+	requestStack.Set(curScriptID, true)
+	cyclicItems.Set(curScriptID, true)
 
-	if childNodes, ok := scriptIDToNodesMap[curScriptID]; ok {
-		for _, childNode := range childNodes {
-			isCyclic := isCyclic(childNode.targetScriptID, scriptIDToNodesMap, visited, requestStack)
+	if requirements, ok := scriptIDToRequiredScriptIDsMap[curScriptID]; ok {
+		for _, requirement := range requirements {
+			isCyclic := isCyclic(requirement, scriptIDToRequiredScriptIDsMap, visited, requestStack, cyclicItems)
 			if isCyclic {
 				return true
 			}
 		}
 	}
 
-	requestStack[curScriptID] = false
+	requestStack.Set(curScriptID, false)
+	cyclicItems.Delete(curScriptID)
 
 	return false
 }
 
 func ValidateScripts(scrpts tasks.Scripts) error {
-	sciptIDToNodesMap := make(map[string][]node)
+	sciptIDToNodesMap := make(map[string][]string)
 	errs := utils.Errors{}
 
 	for _, script := range scrpts {
-		sciptIDToNodesMap[script.ID] = make([]node, 0)
+		sciptIDToNodesMap[script.ID] = make([]string, 0)
 		for _, task := range script.Tasks {
 			for _, reqName := range task.GetRequirements() {
-				sciptIDToNodesMap[script.ID] = append(sciptIDToNodesMap[script.ID], node{
-					task:           task,
-					sourceScriptID: script.ID,
-					targetScriptID: reqName,
-				})
+				sciptIDToNodesMap[script.ID] = append(sciptIDToNodesMap[script.ID], reqName)
 
 				if reqName == script.ID {
-					errs.Add(fmt.Errorf("task at path '%s' cannot require own script %s", task.GetPath(), script.ID))
+					errs.Add(fmt.Errorf("task at path '%s' cannot require own script '%s'", task.GetPath(), script.ID))
 					continue
 				}
 			}
 		}
 	}
 
-	visited, requestStack := make(map[string]bool, 0), make(map[string]bool, 0)
-	isCyclicAll := false
-	for curScriptID, _ := range sciptIDToNodesMap {
-		isCyclic := isCyclic(curScriptID, sciptIDToNodesMap, visited, requestStack)
+	requestStack := orderedmap.NewOrderedMap()
+	visited := make(map[string]bool)
+	for curScriptID := range sciptIDToNodesMap {
+		cyclicItms := orderedmap.NewOrderedMap()
+		isCyclic := isCyclic(curScriptID, sciptIDToNodesMap, visited, requestStack, cyclicItms)
 		if isCyclic {
-			isCyclicAll = true
+			errs.Add(fmt.Errorf("cyclic requirements are detected: '%s'", cyclicItms.Keys()))
+			break
 		}
-
-		//for _, curNode := range curNodes {
-		//	currentNodeSource := curNode.sourceScriptID
-		//	nodesRequiringCurScript, ok := targetScriptIDToNodeMap[currentNodeSource]
-		//	if !ok {
-		//		continue
-		//	}
-		//
-		//	for _, nodeRequiringCurScript := range nodesRequiringCurScript {
-		//		if nodeRequiringCurScript.sourceScriptID == targetScriptID {
-		//			errs.Add(fmt.Errorf("cyclic requirement detected: the task at '%s' of script %s"+
-		//				"requires '%s' which has task at '%s' requiring script '%s'",
-		//				curNode.task.GetPath(),
-		//				currentNodeSource,
-		//				curNode.targetScriptID,
-		//				nodeRequiringCurScript.task.GetPath(),
-		//				targetScriptID,
-		//			))
-		//		}
-		//	}
-		//}
 	}
 
-	if isCyclicAll {
-		return errors.New("is cyclic")
-	}
-	return nil
+	return errs.ToError()
 }

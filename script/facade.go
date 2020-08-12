@@ -5,18 +5,17 @@ import (
 	"fmt"
 
 	"github.com/cloudradar-monitoring/tacoscript/appos"
-	"github.com/cloudradar-monitoring/tacoscript/parse"
 
 	"github.com/cloudradar-monitoring/tacoscript/tasks"
 )
 
 // RunScript main entry point for the script execution
 func RunScript(scriptPath string) error {
-	fileDataProvider := parse.FileDataProvider{
+	fileDataProvider := FileDataProvider{
 		Path: scriptPath,
 	}
 
-	parser := parse.Parser{
+	parser := Builder{
 		DataProvider: fileDataProvider,
 		TaskBuilder: tasks.NewBuilderRouter(map[string]tasks.Builder{
 			tasks.TaskTypeCmdRun: &tasks.CmdRunTaskBuilder{
@@ -25,7 +24,7 @@ func RunScript(scriptPath string) error {
 		}),
 	}
 
-	scripts, err := parser.ParseScripts()
+	scripts, err := parser.BuildScripts()
 
 	if err != nil {
 		return err

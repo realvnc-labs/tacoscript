@@ -4,12 +4,13 @@ import (
 	"bytes"
 	"context"
 	"fmt"
-	"github.com/cloudradar-monitoring/tacoscript/utils"
 	"io"
 	"os"
 	"os/exec"
 	"strings"
 	"time"
+
+	"github.com/cloudradar-monitoring/tacoscript/utils"
 
 	"github.com/cloudradar-monitoring/tacoscript/conv"
 

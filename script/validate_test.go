@@ -10,7 +10,7 @@ import (
 
 type RequirementsTaskMock struct {
 	RequirementsToGive []string
-	Path string
+	Path               string
 }
 
 func (rtm RequirementsTaskMock) GetName() string {
@@ -33,10 +33,15 @@ func (rtm RequirementsTaskMock) GetRequirements() []string {
 	return rtm.RequirementsToGive
 }
 
+type cycleErrorExpectation struct {
+	messagePrefix  string
+	availableParts []string
+}
+
 func TestCycleDetection(t *testing.T) {
 	testCases := []struct {
-		Scripts       tasks.Scripts
-		ExpectedError string
+		Scripts               tasks.Scripts
+		cycleErrorExpectation cycleErrorExpectation
 	}{
 		{
 			Scripts: tasks.Scripts{
@@ -45,7 +50,7 @@ func TestCycleDetection(t *testing.T) {
 					Tasks: []tasks.Task{
 						RequirementsTaskMock{
 							RequirementsToGive: []string{"script two"},
-							Path: "script one.RequirementsTaskMock[0]",
+							Path:               "script one.RequirementsTaskMock[0]",
 						},
 					},
 				},
@@ -54,15 +59,18 @@ func TestCycleDetection(t *testing.T) {
 					Tasks: []tasks.Task{
 						RequirementsTaskMock{
 							RequirementsToGive: []string{"script one"},
-							Path: "script two.RequirementsTaskMock[0]",
+							Path:               "script two.RequirementsTaskMock[0]",
 						},
 					},
 				},
 			},
-			ExpectedError: "cyclic requirement detected: the task at 'script one.RequirementsTaskMock[0]' " +
-				"requires 'script two' which has task at 'script two.RequirementsTaskMock[0]' requiring script 'script one', " +
-			"cyclic requirement detected: the task at 'script two.RequirementsTaskMock[0]' " +
-				"requires 'script one' which has task at 'script one.RequirementsTaskMock[0]' requiring script 'script two'",
+			cycleErrorExpectation: cycleErrorExpectation{
+				messagePrefix: "cyclic requirements are detected",
+				availableParts: []string{
+					"script one",
+					"script two",
+				},
+			},
 		},
 		{
 			Scripts: tasks.Scripts{
@@ -80,16 +88,118 @@ func TestCycleDetection(t *testing.T) {
 					Tasks: []tasks.Task{},
 				},
 			},
-			ExpectedError: "",
+			cycleErrorExpectation: cycleErrorExpectation{
+				messagePrefix: "",
+			},
+		},
+		{
+			Scripts: tasks.Scripts{
+				{
+					ID: "script 6",
+					Tasks: []tasks.Task{
+						RequirementsTaskMock{
+							RequirementsToGive: []string{"script 7"},
+						},
+					},
+				},
+				{
+					ID: "script 7",
+					Tasks: []tasks.Task{
+						RequirementsTaskMock{
+							RequirementsToGive: []string{"script 8"},
+						},
+					},
+				},
+				{
+					ID: "script 8",
+					Tasks: []tasks.Task{
+						RequirementsTaskMock{
+							RequirementsToGive: []string{"script 6"},
+						},
+					},
+				},
+				{
+					ID: "script 9",
+					Tasks: []tasks.Task{
+						RequirementsTaskMock{
+							RequirementsToGive: []string{"script 6"},
+						},
+					},
+				},
+			},
+			cycleErrorExpectation: cycleErrorExpectation{
+				messagePrefix: "cyclic requirements are detected",
+				availableParts: []string{
+					"script 6",
+					"script 7",
+					"script 8",
+				},
+			},
+		},
+		{
+			Scripts: tasks.Scripts{
+				{
+					ID: "script 10",
+					Tasks: []tasks.Task{
+						RequirementsTaskMock{
+							RequirementsToGive: []string{"script 11"},
+						},
+					},
+				},
+				{
+					ID: "script 11",
+					Tasks: []tasks.Task{
+						RequirementsTaskMock{
+							RequirementsToGive: []string{"script 12", "script 13"},
+						},
+					},
+				},
+				{
+					ID: "script 13",
+					Tasks: []tasks.Task{
+						RequirementsTaskMock{
+							RequirementsToGive: []string{},
+						},
+					},
+				},
+			},
+			cycleErrorExpectation: cycleErrorExpectation{
+				messagePrefix: "",
+			},
+		},
+		{
+			Scripts: tasks.Scripts{
+				{
+					ID: "script 20",
+					Tasks: []tasks.Task{
+						RequirementsTaskMock{
+							RequirementsToGive: []string{"script 20"},
+							Path:               "script 20 task 1 path 1",
+						},
+					},
+				},
+			},
+			cycleErrorExpectation: cycleErrorExpectation{
+				messagePrefix: "task at path 'script 20 task 1 path 1' cannot require own script 'script 20'",
+			},
 		},
 	}
 
 	for _, testCase := range testCases {
 		err := ValidateScripts(testCase.Scripts)
-		if testCase.ExpectedError == "" {
+		if testCase.cycleErrorExpectation.messagePrefix == "" {
 			assert.NoError(t, err)
 		} else {
-			assert.EqualError(t, err, testCase.ExpectedError)
+			assert.Error(t, err)
+			if err == nil {
+				continue
+			}
+
+			assert.Contains(t, err.Error(), testCase.cycleErrorExpectation.messagePrefix)
+
+			for _, expectedMsgPart := range testCase.cycleErrorExpectation.availableParts {
+				assert.Contains(t, err.Error(), expectedMsgPart)
+			}
 		}
 	}
 }

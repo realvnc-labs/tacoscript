@@ -1,4 +1,4 @@
-package parse
+package script
 
 import (
 	"context"
@@ -15,42 +15,45 @@ type RawDataProviderMock struct {
 	ErrToReturn  error
 }
 
-type ParserBuilderMock struct {
+type TaskBuilderMock struct {
 	BuildError          error
 	TaskValidationError error
+	TaskRequirements    []string
 }
 
-func (bm *ParserBuilderMock) Build(typeName, path string, ctx []map[string]interface{}) (tasks.Task, error) {
-	t := TaskMock{
+func (bm *TaskBuilderMock) Build(typeName, path string, ctx []map[string]interface{}) (tasks.Task, error) {
+	t := &TaskBuilderTaskMock{
 		TypeName:        typeName,
 		Path:            path,
 		Context:         ctx,
 		ValidationError: bm.TaskValidationError,
+		Requirements:    bm.TaskRequirements,
 	}
 
 	return t, bm.BuildError
 }
 
-type TaskMock struct {
+type TaskBuilderTaskMock struct {
 	TypeName        string
 	Path            string
 	Context         []map[string]interface{}
 	ValidationError error
+	Requirements    []string
 }
 
-func (tm TaskMock) GetName() string {
+func (tm *TaskBuilderTaskMock) GetName() string {
 	return tm.TypeName
 }
 
-func (tm TaskMock) Execute(ctx context.Context) tasks.ExecutionResult {
+func (tm *TaskBuilderTaskMock) Execute(ctx context.Context) tasks.ExecutionResult {
 	return tasks.ExecutionResult{}
 }
 
-func (tm TaskMock) Validate() error {
+func (tm *TaskBuilderTaskMock) Validate() error {
 	return tm.ValidationError
 }
 
-func (tm TaskMock) GetPath() string {
+func (tm *TaskBuilderTaskMock) GetPath() string {
 	return tm.Path
 }
 
@@ -58,11 +61,11 @@ func (rdpm RawDataProviderMock) Read() ([]byte, error) {
 	return []byte(rdpm.DataToReturn), rdpm.ErrToReturn
 }
 
-func (tm TaskMock) GetRequirements() []string {
-	return []string{}
+func (tm *TaskBuilderTaskMock) GetRequirements() []string {
+	return tm.Requirements
 }
 
-func TestYamlParser(t *testing.T) {
+func TestBuilder(t *testing.T) {
 	testCases := []struct {
 		YamlInput           string
 		DataProviderErr     error
@@ -70,6 +73,7 @@ func TestYamlParser(t *testing.T) {
 		BuilderError        error
 		ExpectedErrMsg      string
 		ExpectedScripts     tasks.Scripts
+		TaskRequirements    []string
 	}{
 		{
 			YamlInput: `
@@ -93,7 +97,7 @@ cwd:
 				{
 					ID: "cwd",
 					Tasks: []tasks.Task{
-						TaskMock{
+						&TaskBuilderTaskMock{
 							TypeName: "cmd.run",
 							Path:     "cwd.cmd.run[1]",
 							Context: []map[string]interface{}{
@@ -176,7 +180,7 @@ cwd:
 				{
 					ID: "cwd",
 					Tasks: []tasks.Task{
-						TaskMock{
+						&TaskBuilderTaskMock{
 							TypeName: "cmd.run",
 							Path:     "cwd.cmd.run[1]",
 							Context: []map[string]interface{}{
@@ -213,7 +217,7 @@ manyCreates:
 				{
 					ID: "manyCreates",
 					Tasks: []tasks.Task{
-						TaskMock{
+						&TaskBuilderTaskMock{
 							TypeName: "cmd.run",
 							Path:     "manyCreates.cmd.run[1]",
 							Context: []map[string]interface{}{
@@ -231,6 +235,17 @@ manyCreates:
 				},
 			},
 		},
+		{
+			YamlInput: `
+scriptValidation:
+  cmd.run:
+    - name: task one
+    - require: scriptValidation
+`,
+			ExpectedErrMsg: "task at path 'scriptValidation.cmd.run[1]' cannot require own script 'scriptValidation', " +
+				"cyclic requirements are detected: 'scriptValidation, scriptValidation'",
+			TaskRequirements: []string{"scriptValidation"},
+		},
 	}
 
 	for _, testCase := range testCases {
@@ -239,19 +254,20 @@ manyCreates:
 			ErrToReturn:  testCase.DataProviderErr,
 		}
 
-		taskBuilderMock := &ParserBuilderMock{
+		taskBuilderMock := &TaskBuilderMock{
 			BuildError:          testCase.BuilderError,
 			TaskValidationError: testCase.TaskValidationError,
+			TaskRequirements:    testCase.TaskRequirements,
 		}
 
-		parser := Parser{
+		parser := Builder{
 			DataProvider: dataProviderMock,
 			TaskBuilder:  taskBuilderMock,
 		}
 
-		scripts, err := parser.ParseScripts()
+		scripts, err := parser.BuildScripts()
 		if testCase.ExpectedErrMsg != "" {
-			assert.EqualError(t, err, testCase.ExpectedErrMsg)
+			assert.EqualError(t, err, testCase.ExpectedErrMsg, testCase.ExpectedErrMsg)
 			continue
 		}
 

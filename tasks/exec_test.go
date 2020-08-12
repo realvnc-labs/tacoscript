@@ -4,11 +4,12 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"github.com/cloudradar-monitoring/tacoscript/utils"
 	"os"
 	"os/exec"
 	"strings"
 	"testing"
+
+	"github.com/cloudradar-monitoring/tacoscript/utils"
 
 	log "github.com/sirupsen/logrus"
 

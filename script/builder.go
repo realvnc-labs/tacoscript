@@ -1,9 +1,10 @@
-package parse
+package script
 
 import (
 	"fmt"
-	"github.com/cloudradar-monitoring/tacoscript/utils"
 	"io/ioutil"
+
+	"github.com/cloudradar-monitoring/tacoscript/utils"
 
 	"github.com/cloudradar-monitoring/tacoscript/tasks"
 
@@ -22,12 +23,12 @@ type RawDataProvider interface {
 	Read() ([]byte, error)
 }
 
-type Parser struct {
+type Builder struct {
 	DataProvider RawDataProvider
 	TaskBuilder  tasks.Builder
 }
 
-func (p Parser) ParseScripts() (tasks.Scripts, error) {
+func (p Builder) BuildScripts() (tasks.Scripts, error) {
 	yamlFile, err := p.DataProvider.Read()
 	if err != nil {
 		return tasks.Scripts{}, err
@@ -49,9 +50,9 @@ func (p Parser) ParseScripts() (tasks.Scripts, error) {
 		index := 0
 		for taskTypeID, taskContext := range rawTasks {
 			index++
-			task, err := p.TaskBuilder.Build(taskTypeID, fmt.Sprintf("%s.%s[%d]", scriptID, taskTypeID, index), taskContext)
-			if err != nil {
-				return tasks.Scripts{}, err
+			task, e := p.TaskBuilder.Build(taskTypeID, fmt.Sprintf("%s.%s[%d]", scriptID, taskTypeID, index), taskContext)
+			if e != nil {
+				return tasks.Scripts{}, e
 			}
 
 			errs.Add(task.Validate())
@@ -60,6 +61,8 @@ func (p Parser) ParseScripts() (tasks.Scripts, error) {
 
 		scripts = append(scripts, script)
 	}
+	err = ValidateScripts(scripts)
+	errs.Add(err)
 
 	return scripts, errs.ToError()
 }
