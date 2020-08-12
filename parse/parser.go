@@ -2,6 +2,7 @@ package parse
 
 import (
 	"fmt"
+	"github.com/cloudradar-monitoring/tacoscript/utils"
 	"io/ioutil"
 
 	"github.com/cloudradar-monitoring/tacoscript/tasks"
@@ -39,7 +40,7 @@ func (p Parser) ParseScripts() (tasks.Scripts, error) {
 	}
 
 	scripts := make(tasks.Scripts, 0, len(rawScripts))
-	errs := tasks.ValidationErrors{}
+	errs := utils.Errors{}
 	for scriptID, rawTasks := range rawScripts {
 		script := tasks.Script{
 			ID:    scriptID,

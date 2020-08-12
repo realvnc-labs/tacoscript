@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"fmt"
+	"github.com/cloudradar-monitoring/tacoscript/utils"
 	"io"
 	"os"
 	"os/exec"
@@ -32,7 +33,7 @@ type CmdRunTask struct {
 	Envs                  conv.KeyValues
 	MissingFilesCondition []string
 	Require               []string
-	Errors                *ValidationErrors
+	Errors                *utils.Errors
 	OsExecutor            OsExecutor
 }
 
@@ -44,7 +45,7 @@ func (crtb CmdRunTaskBuilder) Build(typeName, path string, ctx []map[string]inte
 	t := &CmdRunTask{
 		TypeName:   typeName,
 		Path:       path,
-		Errors:     &ValidationErrors{},
+		Errors:     &utils.Errors{},
 		OsExecutor: crtb.OsExecutor,
 	}
 

@@ -2,8 +2,6 @@ package tasks
 
 import (
 	"context"
-	"errors"
-	"strings"
 	"time"
 )
 
@@ -26,31 +24,6 @@ type Task interface {
 	Validate() error
 	GetPath() string
 	GetRequirements() []string
-}
-
-type ValidationErrors struct {
-	Errs []error
-}
-
-func (ve *ValidationErrors) Add(err error) {
-	if err == nil {
-		return
-	}
-
-	ve.Errs = append(ve.Errs, err)
-}
-
-func (ve ValidationErrors) ToError() error {
-	if len(ve.Errs) == 0 {
-		return nil
-	}
-
-	rawErrors := make([]string, 0, len(ve.Errs))
-	for _, err := range ve.Errs {
-		rawErrors = append(rawErrors, err.Error())
-	}
-
-	return errors.New(strings.Join(rawErrors, ", "))
 }
 
 type ExecutionResult struct {

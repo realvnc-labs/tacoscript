@@ -10,6 +10,7 @@ import (
 
 type RequirementsTaskMock struct {
 	RequirementsToGive []string
+	Path string
 }
 
 func (rtm RequirementsTaskMock) GetName() string {
@@ -25,7 +26,7 @@ func (rtm RequirementsTaskMock) Validate() error {
 }
 
 func (rtm RequirementsTaskMock) GetPath() string {
-	return "RequirementsTaskMock"
+	return rtm.Path
 }
 
 func (rtm RequirementsTaskMock) GetRequirements() []string {
@@ -42,9 +43,9 @@ func TestCycleDetection(t *testing.T) {
 				{
 					ID: "script one",
 					Tasks: []tasks.Task{
-						RequirementsTaskMock{},
 						RequirementsTaskMock{
 							RequirementsToGive: []string{"script two"},
+							Path: "script one.RequirementsTaskMock[0]",
 						},
 					},
 				},
@@ -53,12 +54,15 @@ func TestCycleDetection(t *testing.T) {
 					Tasks: []tasks.Task{
 						RequirementsTaskMock{
 							RequirementsToGive: []string{"script one"},
+							Path: "script two.RequirementsTaskMock[0]",
 						},
 					},
 				},
 			},
-			ExpectedError: "cyclic requirement detected see task at 'script one.RequirementsTaskMock[1]' " +
-				"requires 'script two' at 'script two.RequirementsTaskMock[0]' and vice versa",
+			ExpectedError: "cyclic requirement detected: the task at 'script one.RequirementsTaskMock[0]' " +
+				"requires 'script two' which has task at 'script two.RequirementsTaskMock[0]' requiring script 'script one', " +
+			"cyclic requirement detected: the task at 'script two.RequirementsTaskMock[0]' " +
+				"requires 'script one' which has task at 'script one.RequirementsTaskMock[0]' requiring script 'script two'",
 		},
 		{
 			Scripts: tasks.Scripts{

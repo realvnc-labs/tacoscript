@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/cloudradar-monitoring/tacoscript/utils"
 	"os"
 	"os/exec"
 	"strings"
@@ -98,7 +99,7 @@ func TestCmdRunTaskBuilder(t *testing.T) {
 				},
 				MissingFilesCondition: []string{"somefile.txt"},
 				OsExecutor:            runnerMock,
-				Errors:                &ValidationErrors{},
+				Errors:                &utils.Errors{},
 			},
 		},
 		{
@@ -114,7 +115,7 @@ func TestCmdRunTaskBuilder(t *testing.T) {
 				Path:       "somePathWithErrors",
 				Envs:       conv.KeyValues{},
 				OsExecutor: runnerMock,
-				Errors: &ValidationErrors{
+				Errors: &utils.Errors{
 					Errs: []error{
 						fmt.Errorf("key value array expected at 'somePathWithErrors' but got '123'"),
 					},
@@ -136,7 +137,7 @@ func TestCmdRunTaskBuilder(t *testing.T) {
 				Path:       "somePathWithErrors2",
 				Envs:       conv.KeyValues{},
 				OsExecutor: runnerMock,
-				Errors: &ValidationErrors{
+				Errors: &utils.Errors{
 					Errs: []error{
 						errors.New(`wrong key value element at 'somePathWithErrors2': '"one"'`),
 					},
@@ -166,7 +167,7 @@ func TestCmdRunTaskBuilder(t *testing.T) {
 					"name two",
 				},
 				OsExecutor: runnerMock,
-				Errors:     &ValidationErrors{},
+				Errors:     &utils.Errors{},
 			},
 		},
 		{
@@ -192,7 +193,7 @@ func TestCmdRunTaskBuilder(t *testing.T) {
 				Path:       "manyCreatesPath",
 				Name:       "many creates command",
 				OsExecutor: runnerMock,
-				Errors:     &ValidationErrors{},
+				Errors:     &utils.Errors{},
 				MissingFilesCondition: []string{
 					"create one",
 					"create two",
@@ -499,14 +500,14 @@ func TestOSCmdRunnerValidation(t *testing.T) {
 		{
 			Task: CmdRunTask{
 				Names:  []string{"one", "two"},
-				Errors: &ValidationErrors{},
+				Errors: &utils.Errors{},
 			},
 			ExpectedError: "",
 		},
 		{
 			Task: CmdRunTask{
 				Name:   "three",
-				Errors: &ValidationErrors{},
+				Errors: &utils.Errors{},
 			},
 			ExpectedError: "",
 		},
@@ -514,18 +515,18 @@ func TestOSCmdRunnerValidation(t *testing.T) {
 			Task: CmdRunTask{
 				Name:   "four",
 				Names:  []string{"five", "six"},
-				Errors: &ValidationErrors{},
+				Errors: &utils.Errors{},
 			},
 			ExpectedError: "",
 		},
 		{
-			Task:          CmdRunTask{Errors: &ValidationErrors{}},
+			Task:          CmdRunTask{Errors: &utils.Errors{}},
 			ExpectedError: "empty required value at path '.name', empty required values at path '.names'",
 		},
 		{
 			Task: CmdRunTask{
 				Names:  []string{"", ""},
-				Errors: &ValidationErrors{},
+				Errors: &utils.Errors{},
 			},
 			ExpectedError: "empty required value at path '.name', empty required values at path '.names'",
 		},
