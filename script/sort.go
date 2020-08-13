@@ -1,45 +1,87 @@
 package script
 
 import (
-	"sort"
-
 	"github.com/cloudradar-monitoring/tacoscript/tasks"
 )
 
-func SortScriptsRespectingRequirements(scrptsS tasks.Scripts) {
-	requirementsMap := buildRequirementsMap(scrptsS)
-
-	sort.Slice(scrptsS, func(leftIndex, rightIndex int) bool {
-		if leftIndex > len(scrptsS)-1 || rightIndex > len(scrptsS)-1 {
-			return false
-		}
-
-		leftScript := scrptsS[leftIndex]
-		rightScript := scrptsS[rightIndex]
-
-		// means left script is required by the right script
-		if _, ok := requirementsMap[leftScript.ID][rightScript.ID]; ok {
-			return true // since left is required by right it should go first
-		}
-
-		return false
-	})
+type positionedRequirement struct {
+	previous string
+	next     string
 }
 
-func buildRequirementsMap(scrpts tasks.Scripts) map[string]map[string]bool {
-	reqMap := make(map[string]map[string]bool)
+func SortScriptsRespectingRequirements(scripts tasks.Scripts) {
+	requirements, positionsMap := buildRequirementsMap(scripts)
 
-	for _, script := range scrpts {
+	for {
+		allReqMet, req := allRequirementsMet(requirements, positionsMap)
+		if allReqMet {
+			break
+		}
+
+		previousElementIndex := positionsMap[req.previous]
+		nexElementIndex := positionsMap[req.next]
+
+		moveScriptToPosition(scripts, previousElementIndex, nexElementIndex)
+
+		positionsMap = make(map[string]int, len(positionsMap))
+		for pos, script := range scripts {
+			positionsMap[script.ID] = pos
+		}
+	}
+}
+
+func allRequirementsMet(requirements []positionedRequirement, positionsMap map[string]int) (bool, positionedRequirement) {
+	for _, req := range requirements {
+		if req.previous == req.next {
+			continue
+		}
+		previousPos, ok := positionsMap[req.previous]
+		if !ok {
+			continue
+		}
+
+		nextPos, ok := positionsMap[req.next]
+		if !ok {
+			continue
+		}
+
+		if previousPos > nextPos {
+			return false, req
+		}
+	}
+
+	return true, positionedRequirement{}
+}
+
+func buildRequirementsMap(scrpts tasks.Scripts) ([]positionedRequirement, map[string]int) {
+	req := make([]positionedRequirement, 0)
+	positionsMap := make(map[string]int)
+
+	for pos, script := range scrpts {
+		positionsMap[script.ID] = pos
 		for _, task := range script.Tasks {
 			for _, reqName := range task.GetRequirements() {
-				if _, ok := reqMap[reqName]; !ok {
-					reqMap[reqName] = make(map[string]bool)
-				}
-
-				reqMap[reqName][script.ID] = true
+				req = append(req, positionedRequirement{
+					previous: reqName,
+					next:     script.ID,
+				})
 			}
 		}
 	}
 
-	return reqMap
+	return req, positionsMap
+}
+
+
+func insertScript(array tasks.Scripts, value tasks.Script, index int) tasks.Scripts {
+	return append(array[:index], append(tasks.Scripts{value}, array[index:]...)...)
+}
+
+func removeScript(array tasks.Scripts, index int) tasks.Scripts {
+	return append(array[:index], array[index+1:]...)
+}
+
+func moveScriptToPosition(array tasks.Scripts, srcIndex int, dstIndex int) tasks.Scripts {
+	value := array[srcIndex]
+	return insertScript(removeScript(array, srcIndex), value, dstIndex)
 }

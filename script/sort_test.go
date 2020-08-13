@@ -15,6 +15,53 @@ func TestSort(t *testing.T) {
 		{
 			scriptsInInput: tasks.Scripts{
 				{
+					ID: "script 7",
+					Tasks: []tasks.Task{
+						RequirementsTaskMock{
+							RequirementsToGive: []string{"script 5"},
+						},
+						RequirementsTaskMock{
+							RequirementsToGive: []string{"script 6"},
+						},
+						RequirementsTaskMock{
+							RequirementsToGive: []string{"script 1"},
+						},
+					},
+				},
+				{
+					ID:    "script 5",
+					Tasks: []tasks.Task{},
+				},
+				{
+					ID:    "script 6",
+					Tasks: []tasks.Task{},
+				},
+				{
+					ID:    "script 4",
+					Tasks: []tasks.Task{},
+				},
+				{
+					ID: "script 8",
+					Tasks: []tasks.Task{
+						RequirementsTaskMock{
+							RequirementsToGive: []string{"script 1"},
+						},
+					},
+				},
+				{
+					ID:    "script 1",
+					Tasks: []tasks.Task{},
+				},
+				{
+					ID:    "script 9",
+					Tasks: []tasks.Task{},
+				},
+			},
+			expectedScriptIDs: []string{"script 5", "script 6", "script 1", "script 7", "script 4", "script 8", "script 9"},
+		},
+		{
+			scriptsInInput: tasks.Scripts{
+				{
 					ID: "script 1",
 					Tasks: []tasks.Task{
 						RequirementsTaskMock{
@@ -36,34 +83,33 @@ func TestSort(t *testing.T) {
 		{
 			scriptsInInput: tasks.Scripts{
 				{
-					ID: "script 4",
+					ID: "script 12",
 					Tasks: []tasks.Task{
 						RequirementsTaskMock{
-							RequirementsToGive: []string{"script 5"},
+							RequirementsToGive: []string{"script 10"},
 						},
 						RequirementsTaskMock{
-							RequirementsToGive: []string{"script 6"},
+							RequirementsToGive: []string{"script 10"},
+						},
+						RequirementsTaskMock{
+							RequirementsToGive: []string{"script 11"},
 						},
 					},
 				},
 				{
-					ID:    "script 5",
-					Tasks: []tasks.Task{},
-				},
-				{
-					ID: "script 6",
+					ID:    "script 10",
 					Tasks: []tasks.Task{
 						RequirementsTaskMock{
-							RequirementsToGive: []string{"script 7"},
+							RequirementsToGive: []string{"script 11"},
 						},
 					},
 				},
 				{
-					ID:    "script 7",
+					ID:    "script 11",
 					Tasks: []tasks.Task{},
 				},
 			},
-			expectedScriptIDs: []string{"script 5", "script 7", "script 6", "script 4"},
+			expectedScriptIDs: []string{"script 11", "script 10", "script 12"},
 		},
 	}
 

@@ -4,8 +4,7 @@
 # https://docs.saltstack.com/en/latest/ref/states/all/salt.states.cmd.html
 #
 # unique id of the task, can be any string
-cwd:
-  # Name of the class and the module
+testing1:
   cmd.run:
     - names:
       - echo ${PASSWORD}
@@ -14,5 +13,10 @@ cwd:
     - shell: zsh
     - env:
         - PASSWORD: bunny
-    # - creates: /tmp/my-date.txt
-    #- user: root
+    - require:
+        - testing2
+testing2:
+  cmd.run:
+    - names:
+        - echo "I am first"
+    - pwd: /Users/breathbath/Projects
