@@ -92,6 +92,7 @@ cwd:
         - name one
         - name two
         - name three
+    - onlyif: echo 1
 `,
 			ExpectedScripts: tasks.Scripts{
 				{
@@ -116,6 +117,7 @@ cwd:
 									"name two",
 									"name three",
 								}},
+								{tasks.OnlyIf: "echo 1"},
 							},
 							ValidationError: nil,
 						},
@@ -175,6 +177,10 @@ cwd:
         - req one
         - req two
         - req three
+    - onlyif:
+        - onlyif one
+        - onlyif two
+        - onlyif three
 `,
 			ExpectedScripts: tasks.Scripts{
 				{
@@ -193,6 +199,11 @@ cwd:
 									"req one",
 									"req two",
 									"req three",
+								}},
+								{tasks.OnlyIf: []interface{}{
+									"onlyif one",
+									"onlyif two",
+									"onlyif three",
 								}},
 							},
 							ValidationError: nil,
@@ -243,7 +254,7 @@ scriptValidation:
     - require: scriptValidation
 `,
 			ExpectedErrMsg: "task at path 'scriptValidation.cmd.run[1]' cannot require own script 'scriptValidation', " +
-				"cyclic requirements are detected: 'scriptValidation, scriptValidation'",
+				"cyclic requirements are detected: '[scriptValidation]'",
 			TaskRequirements: []string{"scriptValidation"},
 		},
 	}

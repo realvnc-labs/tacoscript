@@ -79,6 +79,7 @@ func TestCmdRunTaskBuilder(t *testing.T) {
 						"two": "2",
 					}),
 					CreatesField: "somefile.txt",
+					OnlyIf:       "one condition",
 				},
 			},
 			expectedTask: &CmdRunTask{
@@ -101,6 +102,7 @@ func TestCmdRunTaskBuilder(t *testing.T) {
 				MissingFilesCondition: []string{"somefile.txt"},
 				OsExecutor:            runnerMock,
 				Errors:                &utils.Errors{},
+				OnlyIf:                []string{"one condition"},
 			},
 		},
 		{
@@ -187,6 +189,11 @@ func TestCmdRunTaskBuilder(t *testing.T) {
 						"req two",
 						"req three",
 					},
+					OnlyIf: []interface{}{
+						"OnlyIf one",
+						"OnlyIf two",
+						"OnlyIf three",
+					},
 				},
 			},
 			expectedTask: &CmdRunTask{
@@ -204,6 +211,11 @@ func TestCmdRunTaskBuilder(t *testing.T) {
 					"req one",
 					"req two",
 					"req three",
+				},
+				OnlyIf: []string{
+					"OnlyIf one",
+					"OnlyIf two",
+					"OnlyIf three",
 				},
 			},
 		},
@@ -240,6 +252,7 @@ func TestCmdRunTaskBuilder(t *testing.T) {
 		assert.Equal(t, testCase.expectedTask.Shell, actualCmdRunTask.Shell)
 		assert.Equal(t, testCase.expectedTask.Names, actualCmdRunTask.Names)
 		assert.Equal(t, testCase.expectedTask.Require, actualCmdRunTask.Require)
+		assert.Equal(t, testCase.expectedTask.OnlyIf, actualCmdRunTask.OnlyIf)
 		assert.EqualValues(t, testCase.expectedTask.Errors, actualCmdRunTask.Errors)
 	}
 }

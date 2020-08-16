@@ -5,10 +5,11 @@ import (
 	"time"
 )
 
-var cParamShells = []string{
-	"zsh",
-	"bash",
-	"sh",
+var cParamShells = map [string]string{
+	"zsh": "-c",
+	"bash": "-c",
+	"sh": "-c",
+	"cmd.exe": "/C",
 }
 
 type Scripts []Script

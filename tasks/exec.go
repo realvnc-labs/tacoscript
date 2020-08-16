@@ -36,6 +36,7 @@ type CmdRunTask struct {
 	Require               []string
 	Errors                *utils.Errors
 	OsExecutor            OsExecutor
+	OnlyIf                []string
 }
 
 type CmdRunTaskBuilder struct {
@@ -66,13 +67,15 @@ func (crtb CmdRunTaskBuilder) Build(typeName, path string, ctx []map[string]inte
 				t.Errors.Add(err)
 				t.Envs = envs
 			case CreatesField:
-				crtb.parseCreatesField(t, val)
+				crtb.parseCreatesField(t, val, path)
 			case NamesField:
 				names, err := conv.ConvertToValues(val, path)
 				t.Errors.Add(err)
 				t.Names = names
 			case RequireField:
 				crtb.parseRequireField(t, val, path)
+			case OnlyIf:
+				crtb.parseOnlyIfField(t, val, path)
 			}
 		}
 	}
@@ -93,21 +96,30 @@ func (crtb CmdRunTaskBuilder) parseRequireField(t *CmdRunTask, val interface{}, 
 	t.Require = requireItems
 }
 
-func (crtb CmdRunTaskBuilder) parseCreatesField(t *CmdRunTask, val interface{}) {
+func (crtb CmdRunTaskBuilder) parseCreatesField(t *CmdRunTask, val interface{}, path string) {
 	createsItems := make([]string, 0)
+	var err error
 	switch typedVal := val.(type) {
 	case string:
 		createsItems = append(createsItems, typedVal)
-	case []string:
-		createsItems = append(createsItems, typedVal...)
-	case []interface{}:
-		for _, typedValI := range typedVal {
-			createsItems = append(createsItems, fmt.Sprint(typedValI))
-		}
 	default:
-		createsItems = append(createsItems, fmt.Sprint(val))
+		createsItems, err = conv.ConvertToValues(val, path)
+		t.Errors.Add(err)
 	}
 	t.MissingFilesCondition = createsItems
+}
+
+func (crtb CmdRunTaskBuilder) parseOnlyIfField(t *CmdRunTask, val interface{}, path string) {
+	onlyIf := make([]string, 0)
+	var err error
+	switch typedVal := val.(type) {
+	case string:
+		onlyIf = append(onlyIf, typedVal)
+	default:
+		onlyIf, err = conv.ConvertToValues(val, path)
+		t.Errors.Add(err)
+	}
+	t.OnlyIf = onlyIf
 }
 
 func (crt *CmdRunTask) GetName() string {
@@ -264,16 +276,16 @@ func (crt *CmdRunTask) addCShellParamIfNeeded(shellParam *ShellParam) {
 		return
 	}
 
-	isCParamSupported := false
-	for _, cShell := range cParamShells {
-		if cShell == shellParam.ShellName {
-			isCParamSupported = true
+	var cParam string
+	for knownShellName, knownCParam := range cParamShells {
+		if knownShellName == shellParam.ShellName {
+			cParam = knownCParam
 			break
 		}
 	}
 
-	if isCParamSupported {
-		shellParam.ShellParams = append(shellParam.ShellParams, "-c")
+	if cParam != "" {
+		shellParam.ShellParams = append(shellParam.ShellParams, cParam)
 	}
 }
 

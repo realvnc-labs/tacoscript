@@ -11,4 +11,5 @@ const (
 	EnvField     = "env"
 	CreatesField = "creates"
 	RequireField = "require"
+	OnlyIf       = "onlyif"
 )
