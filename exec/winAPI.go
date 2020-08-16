@@ -1,6 +1,6 @@
 // +build windows
 
-package appos
+package exec
 
 import (
 	"os/exec"
@@ -8,14 +8,14 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
-type OsExecutor struct {
+type OSApi struct {
 }
 
-func (oe OsExecutor) Run(cmd *exec.Cmd) error {
+func (oe OSApi) Run(cmd *exec.Cmd) error {
 	return cmd.Run()
 }
 
-func (oe OsExecutor) SetUser(userName, path string, cmd *exec.Cmd) error {
+func (oe OSApi) SetUser(userName, path string, cmd *exec.Cmd) error {
 	logrus.Warn("user switch is not implemented in Windows")
 
 	return nil

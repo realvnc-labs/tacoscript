@@ -1,6 +1,6 @@
 // +build !windows
 
-package appos
+package exec
 
 import (
 	"fmt"
@@ -12,14 +12,14 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
-type OsExecutor struct {
+type OSApi struct {
 }
 
-func (oe OsExecutor) Run(cmd *exec.Cmd) error {
+func (oe OSApi) Run(cmd *exec.Cmd) error {
 	return cmd.Run()
 }
 
-func (oe OsExecutor) SetUser(userName, path string, cmd *exec.Cmd) error {
+func (oe OSApi) SetUser(userName, path string, cmd *exec.Cmd) error {
 	if userName == "" {
 		return nil
 	}
@@ -38,7 +38,7 @@ func (oe OsExecutor) SetUser(userName, path string, cmd *exec.Cmd) error {
 	return nil
 }
 
-func (oe OsExecutor) parse(userName, path string) (sysUserID, sysGroupID uint32, err error) {
+func (oe OSApi) parse(userName, path string) (sysUserID, sysGroupID uint32, err error) {
 	logrus.Debugf("parsing user '%s' to get uid and group id from OS", userName)
 	u, err := user.Lookup(userName)
 	if err != nil {

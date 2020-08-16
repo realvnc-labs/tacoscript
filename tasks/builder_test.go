@@ -2,6 +2,7 @@ package tasks
 
 import (
 	"errors"
+	"github.com/cloudradar-monitoring/tacoscript/utils"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -25,12 +26,12 @@ func (bm *BuilderMock) Build(typeName, path string, context []map[string]interfa
 
 func TestBuildWithRouting(t *testing.T) {
 	successBuilder := &BuilderMock{
-		TaskToReturn: &CmdRunTask{TypeName: "successTask", Path: "someSuccessPath"},
+		TaskToReturn: &CmdRunTask{TypeName: "successTask", Path: "someSuccessPath", FsManager: &utils.FsManagerMock{}},
 		ErrToReturn:  nil,
 	}
 
 	failBuilder := &BuilderMock{
-		TaskToReturn: &CmdRunTask{TypeName: "failedTask", Path: "someFailedPath"},
+		TaskToReturn: &CmdRunTask{TypeName: "failedTask", Path: "someFailedPath", FsManager: &utils.FsManagerMock{}},
 		ErrToReturn:  errors.New("some error"),
 	}
 

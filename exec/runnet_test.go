@@ -1,4 +1,4 @@
-package appos
+package exec
 
 import (
 	"bytes"
@@ -8,13 +8,13 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestExecutor(t *testing.T) {
+func TestOSApi(t *testing.T) {
 	cmd := exec.Command("echo", "123")
 
 	var outBuf bytes.Buffer
 	cmd.Stdout = &outBuf
 
-	cmdRunner := OsExecutor{}
+	cmdRunner := OSApi{}
 	err := cmdRunner.Run(cmd)
 	assert.NoError(t, err)
 	if err != nil {

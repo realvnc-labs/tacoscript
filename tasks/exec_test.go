@@ -3,269 +3,34 @@ package tasks
 import (
 	"context"
 	"errors"
-	"fmt"
-	"os"
+	exec2 "github.com/cloudradar-monitoring/tacoscript/exec"
 	"os/exec"
 	"strings"
 	"testing"
 
 	"github.com/cloudradar-monitoring/tacoscript/utils"
 
-	log "github.com/sirupsen/logrus"
-
 	"github.com/cloudradar-monitoring/tacoscript/conv"
 
 	"github.com/stretchr/testify/assert"
 )
 
-type OsExecutorMock struct {
-	stdOutText string
-	stdErrText string
-	cmds       []*exec.Cmd
-	errToGive  error
-	id         string
-
-	userNameInput      string
-	userNamePathInput  string
-	userSetErrToReturn error
-}
-
-func (oem *OsExecutorMock) Run(cmd *exec.Cmd) error {
-	_, err := cmd.Stdout.Write([]byte(oem.stdOutText))
-	if err != nil {
-		return err
-	}
-
-	_, err = cmd.Stderr.Write([]byte(oem.stdErrText))
-	if err != nil {
-		return err
-	}
-
-	oem.cmds = append(oem.cmds, cmd)
-
-	return oem.errToGive
-}
-
-func (oem *OsExecutorMock) SetUser(userName, path string, cmd *exec.Cmd) error {
-	oem.userNameInput = userName
-	oem.userNamePathInput = path
-
-	return oem.userSetErrToReturn
-}
-
-func TestCmdRunTaskBuilder(t *testing.T) {
-	runnerMock := &OsExecutorMock{
-		cmds: []*exec.Cmd{},
-		id:   "some id",
-	}
-
-	testCases := []struct {
-		typeName     string
-		path         string
-		ctx          []map[string]interface{}
-		expectedTask *CmdRunTask
-	}{
-		{
-			typeName: "someType",
-			path:     "somePath",
-			ctx: []map[string]interface{}{
-				{
-					NameField:  1,
-					CwdField:   "somedir",
-					UserField:  "someuser",
-					ShellField: "someshell",
-					EnvField: BuildExpectedEnvs(map[interface{}]interface{}{
-						"one": "1",
-						"two": "2",
-					}),
-					CreatesField: "somefile.txt",
-					OnlyIf:       "one condition",
-				},
-			},
-			expectedTask: &CmdRunTask{
-				TypeName:   "someType",
-				Path:       "somePath",
-				Name:       "1",
-				WorkingDir: "somedir",
-				User:       "someuser",
-				Shell:      "someshell",
-				Envs: conv.KeyValues{
-					{
-						Key:   "one",
-						Value: "1",
-					},
-					{
-						Key:   "two",
-						Value: "2",
-					},
-				},
-				MissingFilesCondition: []string{"somefile.txt"},
-				OsExecutor:            runnerMock,
-				Errors:                &utils.Errors{},
-				OnlyIf:                []string{"one condition"},
-			},
-		},
-		{
-			typeName: "someTypeWithErrors",
-			path:     "somePathWithErrors",
-			ctx: []map[string]interface{}{
-				{
-					EnvField: 123,
-				},
-			},
-			expectedTask: &CmdRunTask{
-				TypeName:   "someTypeWithErrors",
-				Path:       "somePathWithErrors",
-				Envs:       conv.KeyValues{},
-				OsExecutor: runnerMock,
-				Errors: &utils.Errors{
-					Errs: []error{
-						fmt.Errorf("key value array expected at 'somePathWithErrors' but got '123'"),
-					},
-				},
-			},
-		},
-		{
-			typeName: "someTypeWithErrors2",
-			path:     "somePathWithErrors2",
-			ctx: []map[string]interface{}{
-				{
-					EnvField: []interface{}{
-						"one",
-					},
-				},
-			},
-			expectedTask: &CmdRunTask{
-				TypeName:   "someTypeWithErrors2",
-				Path:       "somePathWithErrors2",
-				Envs:       conv.KeyValues{},
-				OsExecutor: runnerMock,
-				Errors: &utils.Errors{
-					Errs: []error{
-						errors.New(`wrong key value element at 'somePathWithErrors2': '"one"'`),
-					},
-				},
-			},
-		},
-		{
-			typeName: "manyNamesType",
-			path:     "manyNamesPath",
-			ctx: []map[string]interface{}{
-				{
-					RequireField: "one require field",
-					NamesField: []interface{}{
-						"name one",
-						"name two",
-					},
-				},
-			},
-			expectedTask: &CmdRunTask{
-				TypeName: "manyNamesType",
-				Path:     "manyNamesPath",
-				Require: []string{
-					"one require field",
-				},
-				Names: []string{
-					"name one",
-					"name two",
-				},
-				OsExecutor: runnerMock,
-				Errors:     &utils.Errors{},
-			},
-		},
-		{
-			typeName: "manyCreatesType",
-			path:     "manyCreatesPath",
-			ctx: []map[string]interface{}{
-				{
-					NameField: "many creates command",
-					CreatesField: []interface{}{
-						"create one",
-						"create two",
-						"create three",
-					},
-					RequireField: []interface{}{
-						"req one",
-						"req two",
-						"req three",
-					},
-					OnlyIf: []interface{}{
-						"OnlyIf one",
-						"OnlyIf two",
-						"OnlyIf three",
-					},
-				},
-			},
-			expectedTask: &CmdRunTask{
-				TypeName:   "manyCreatesType",
-				Path:       "manyCreatesPath",
-				Name:       "many creates command",
-				OsExecutor: runnerMock,
-				Errors:     &utils.Errors{},
-				MissingFilesCondition: []string{
-					"create one",
-					"create two",
-					"create three",
-				},
-				Require: []string{
-					"req one",
-					"req two",
-					"req three",
-				},
-				OnlyIf: []string{
-					"OnlyIf one",
-					"OnlyIf two",
-					"OnlyIf three",
-				},
-			},
-		},
-	}
-
-	for _, testCase := range testCases {
-		cmdBuilder := CmdRunTaskBuilder{
-			OsExecutor: runnerMock,
-		}
-		actualTask, err := cmdBuilder.Build(
-			testCase.typeName,
-			testCase.path,
-			testCase.ctx,
-		)
-
-		assert.NoError(t, err)
-		if err != nil {
-			continue
-		}
-
-		actualCmdRunTask, ok := actualTask.(*CmdRunTask)
-		assert.True(t, ok)
-		if !ok {
-			continue
-		}
-
-		assert.Equal(t, testCase.expectedTask.User, actualCmdRunTask.User)
-		AssertEnvValuesMatch(t, testCase.expectedTask.Envs, actualCmdRunTask.Envs.ToEqualSignStrings())
-		assert.Equal(t, testCase.expectedTask.Path, actualCmdRunTask.Path)
-		assert.Equal(t, testCase.expectedTask.WorkingDir, actualCmdRunTask.WorkingDir)
-		assert.Equal(t, testCase.expectedTask.MissingFilesCondition, actualCmdRunTask.MissingFilesCondition)
-		assert.Equal(t, testCase.expectedTask.Name, actualCmdRunTask.Name)
-		assert.Equal(t, testCase.expectedTask.TypeName, actualCmdRunTask.TypeName)
-		assert.Equal(t, testCase.expectedTask.Shell, actualCmdRunTask.Shell)
-		assert.Equal(t, testCase.expectedTask.Names, actualCmdRunTask.Names)
-		assert.Equal(t, testCase.expectedTask.Require, actualCmdRunTask.Require)
-		assert.Equal(t, testCase.expectedTask.OnlyIf, actualCmdRunTask.OnlyIf)
-		assert.EqualValues(t, testCase.expectedTask.Errors, actualCmdRunTask.Errors)
-	}
-}
-
 func TestTaskExecution(t *testing.T) {
+	systemAPIMock := &exec2.SystemAPIMock{
+		Cmds: []*exec.Cmd{},
+	}
+
+	runnerMock := &exec2.SystemRunner{SystemAPI: systemAPIMock}
+
 	testCases := []struct {
-		Task                            *CmdRunTask
-		ExpectedResult                  ExecutionResult
-		RunnerMock                      *OsExecutorMock
-		ExpectedCmdStrs                 []string
-		ShouldCreateFileForMissingCheck bool
+		Task            *CmdRunTask
+		ExpectedResult  ExecutionResult
+		RunnerMock      *exec2.SystemRunner
+		ExpectedCmdStrs []string
+		Name            string
 	}{
 		{
+			Name: "test one name command with 2 envs",
 			Task: &CmdRunTask{
 				Path:       "somepath",
 				Name:       "some test command",
@@ -279,6 +44,8 @@ func TestTaskExecution(t *testing.T) {
 					},
 				},
 				MissingFilesCondition: []string{""},
+				FsManager:             &utils.FsManagerMock{},
+				Runner:                runnerMock,
 			},
 			ExpectedResult: ExecutionResult{
 				IsSkipped: false,
@@ -287,66 +54,68 @@ func TestTaskExecution(t *testing.T) {
 				StdErr:    "some std err",
 			},
 			ExpectedCmdStrs: []string{"zsh -c some test command"},
-			RunnerMock: &OsExecutorMock{
-				cmds:               []*exec.Cmd{},
-				errToGive:          nil,
-				id:                 "some id",
-				stdErrText:         "some std err",
-				stdOutText:         "some std out",
-				userSetErrToReturn: nil,
-			},
+			RunnerMock: &exec2.SystemRunner{SystemAPI: &exec2.SystemAPIMock{
+				Cmds:               []*exec.Cmd{},
+				ErrToGive:          nil,
+				StdErrText:         "some std err",
+				StdOutText:         "some std out",
+				UserSetErrToReturn: nil,
+			}},
 		},
 		{
+			Name: "test skip command if file exists",
 			Task: &CmdRunTask{
 				User:                  "some user",
 				Name:                  "some parser command",
 				MissingFilesCondition: []string{"somefile.txt"},
+				FsManager: &utils.FsManagerMock{
+					ExistsToReturn: true,
+				},
 			},
-			ShouldCreateFileForMissingCheck: true,
 			ExpectedResult: ExecutionResult{
 				IsSkipped: true,
 				Err:       nil,
 			},
-			RunnerMock: &OsExecutorMock{
-				cmds:               []*exec.Cmd{},
-				errToGive:          nil,
-				id:                 "some id",
-				userSetErrToReturn: errors.New("some error"),
-			},
+			RunnerMock: &exec2.SystemRunner{SystemAPI: &exec2.SystemAPIMock{
+				Cmds:               []*exec.Cmd{},
+				ErrToGive:          nil,
+				UserSetErrToReturn: errors.New("some error"),
+			}},
 		},
 		{
+			Name: "test setting user failure",
 			Task: &CmdRunTask{
-				Name: "echo 12345",
-				User: "some user",
+				Name:      "echo 12345",
+				User:      "some user",
+				FsManager: &utils.FsManagerMock{},
 			},
-			ShouldCreateFileForMissingCheck: false,
 			ExpectedResult: ExecutionResult{
 				IsSkipped: false,
 				Err:       errors.New("some error"),
 			},
-			RunnerMock: &OsExecutorMock{
-				cmds:               []*exec.Cmd{},
-				errToGive:          nil,
-				id:                 "some id",
-				userSetErrToReturn: errors.New("some error"),
-			},
+			RunnerMock: &exec2.SystemRunner{SystemAPI: &exec2.SystemAPIMock{
+				Cmds:               []*exec.Cmd{},
+				ErrToGive:          nil,
+				UserSetErrToReturn: errors.New("some error"),
+			}},
 		},
 		{
+			Name: "same cmd execution failure",
 			Task: &CmdRunTask{
-				Name: "lpwd",
+				Name:      "lpwd",
+				FsManager: &utils.FsManagerMock{},
 			},
-			ShouldCreateFileForMissingCheck: false,
 			ExpectedResult: ExecutionResult{
 				IsSkipped: false,
 				Err:       errors.New("some runner error"),
 			},
-			RunnerMock: &OsExecutorMock{
-				cmds:      []*exec.Cmd{},
-				errToGive: errors.New("some runner error"),
-				id:        "some id",
-			},
+			RunnerMock: &exec2.SystemRunner{SystemAPI: &exec2.SystemAPIMock{
+				Cmds:      []*exec.Cmd{},
+				ErrToGive: errors.New("some runner error"),
+			}},
 		},
 		{
+			Name: "execute multiple names",
 			Task: &CmdRunTask{
 				Path: "many names path",
 				Names: []string{
@@ -356,97 +125,153 @@ func TestTaskExecution(t *testing.T) {
 				},
 				WorkingDir: "/many/dev",
 				User:       "usermany",
+				FsManager:  &utils.FsManagerMock{},
 			},
 			ExpectedResult: ExecutionResult{
 				IsSkipped: false,
 				Err:       nil,
 			},
 			ExpectedCmdStrs: []string{"many names cmd 1", "many names cmd 2", "many names cmd 3"},
-			RunnerMock: &OsExecutorMock{
-				cmds:      []*exec.Cmd{},
-				errToGive: nil,
-				id:        "some id",
-			},
+			RunnerMock: &exec2.SystemRunner{SystemAPI: &exec2.SystemAPIMock{
+				Cmds:      []*exec.Cmd{},
+				ErrToGive: nil,
+			}},
 		},
 		{
+			Name: "test multiple create file conditions",
 			Task: &CmdRunTask{
 				Name: "cmd with many MissingFilesConditions",
 				MissingFilesCondition: []string{
 					"file.one",
 					"file.two",
 				},
+				FsManager: &utils.FsManagerMock{},
 			},
 			ExpectedResult: ExecutionResult{
 				IsSkipped: false,
 				Err:       nil,
 			},
 			ExpectedCmdStrs: []string{"cmd with many MissingFilesConditions"},
-			RunnerMock: &OsExecutorMock{
-				cmds:      []*exec.Cmd{},
-				errToGive: nil,
-				id:        "some id",
+			RunnerMock: &exec2.SystemRunner{SystemAPI: &exec2.SystemAPIMock{
+				Cmds:      []*exec.Cmd{},
+				ErrToGive: nil,
+			}},
+		},
+		{
+			Name: "executing one onlyif condition with success",
+			Task: &CmdRunTask{
+				Name:      "cmd lala",
+				OnlyIf:    []string{"check before lala"},
+				FsManager: &utils.FsManagerMock{},
 			},
-			ShouldCreateFileForMissingCheck: false,
+			ExpectedResult: ExecutionResult{
+				IsSkipped: false,
+				Err:       nil,
+			},
+			ExpectedCmdStrs: []string{"check before lala", "cmd lala"},
+			RunnerMock: &exec2.SystemRunner{SystemAPI: &exec2.SystemAPIMock{
+				Cmds:      []*exec.Cmd{},
+				ErrToGive: nil,
+			}},
+		},
+		{
+			Name: "executing one onlyif condition with failure",
+			Task: &CmdRunTask{
+				Name:      "cmd with OnlyIf failure",
+				OnlyIf:    []string{"check OnlyIf error"},
+				FsManager: &utils.FsManagerMock{},
+			},
+			ExpectedResult: ExecutionResult{
+				IsSkipped: true,
+				Err:       nil,
+			},
+			ExpectedCmdStrs: []string{},
+			RunnerMock: &exec2.SystemRunner{SystemAPI: &exec2.SystemAPIMock{
+				Cmds: []*exec.Cmd{},
+				Callback: func(cmd *exec.Cmd) error {
+					cmdStr := cmd.String()
+					if strings.Contains(cmdStr, "cmd with OnlyIf failure") {
+						return nil
+					}
+
+					return errors.New("some OnlyIfFailure")
+				},
+			},
+			}},
+		{
+			Name: "executing multiple onlyif conditions with failure",
+			Task: &CmdRunTask{
+				Name:      "cmd with multiple OnlyIf failure",
+				OnlyIf:    []string{"check OnlyIf success", "check OnlyIf failure"},
+				FsManager: &utils.FsManagerMock{},
+			},
+			ExpectedResult: ExecutionResult{
+				IsSkipped: true,
+				Err:       nil,
+			},
+			ExpectedCmdStrs: []string{},
+			RunnerMock: &exec2.SystemRunner{SystemAPI: &exec2.SystemAPIMock{
+				Cmds: []*exec.Cmd{},
+				Callback: func(cmd *exec.Cmd) error {
+					cmdStr := cmd.String()
+					if strings.Contains(cmdStr, "check OnlyIf failure") {
+						return errors.New("check OnlyIf failure")
+					}
+
+					return nil
+				},
+			}},
+		},
+		{
+			Name: "executing multiple onlyif conditions with success",
+			Task: &CmdRunTask{
+				Name:      "cmd with multiple OnlyIf success",
+				OnlyIf:    []string{"check OnlyIf success 1", "check OnlyIf success 2"},
+				FsManager: &utils.FsManagerMock{},
+			},
+			ExpectedResult: ExecutionResult{
+				IsSkipped: false,
+				Err:       nil,
+			},
+			ExpectedCmdStrs: []string{"check OnlyIf success 1", "check OnlyIf success 2", "cmd with multiple OnlyIf success"},
+			RunnerMock: &exec2.SystemRunner{SystemAPI: &exec2.SystemAPIMock{
+				Cmds: []*exec.Cmd{},
+			}},
 		},
 	}
 
-	filesToDelete := make([]string, 0)
-	defer func() {
-		if len(filesToDelete) == 0 {
-			return
-		}
-		for _, file := range filesToDelete {
-			err := os.Remove(file)
-			if err != nil {
-				log.Warn(err)
-			}
-		}
-	}()
-
 	for _, testCase := range testCases {
-		testCase.Task.OsExecutor = testCase.RunnerMock
+		t.Run(testCase.Name, func(tt *testing.T) {
+			testCase.Task.Runner = testCase.RunnerMock
 
-		if testCase.ShouldCreateFileForMissingCheck && len(testCase.Task.MissingFilesCondition) > 0 {
-			for _, fileToCreate := range testCase.Task.MissingFilesCondition {
-				emptyFile, err := os.Create(fileToCreate)
-				assert.NoError(t, err)
-				if err != nil {
-					continue
-				}
+			res := testCase.Task.Execute(context.Background())
+			assert.EqualValues(t, testCase.ExpectedResult.Err, res.Err)
+			assert.EqualValues(t, testCase.ExpectedResult.IsSkipped, res.IsSkipped)
+			assert.EqualValues(t, testCase.ExpectedResult.StdOut, res.StdOut)
+			assert.EqualValues(t, testCase.ExpectedResult.StdErr, res.StdErr)
 
-				err = emptyFile.Close()
-				assert.NoError(t, err)
-				filesToDelete = append(filesToDelete, fileToCreate)
+
+			if testCase.ExpectedResult.Err != nil {
+				return
 			}
-		}
 
-		res := testCase.Task.Execute(context.Background())
-		assert.EqualValues(t, testCase.ExpectedResult.Err, res.Err)
-		assert.EqualValues(t, testCase.ExpectedResult.IsSkipped, res.IsSkipped)
-		assert.EqualValues(t, testCase.ExpectedResult.StdOut, res.StdOut)
-		assert.EqualValues(t, testCase.ExpectedResult.StdErr, res.StdErr)
+			systemAPIMock := testCase.RunnerMock.SystemAPI.(*exec2.SystemAPIMock)
+			cmds := systemAPIMock.Cmds
 
-		cmds := testCase.RunnerMock.cmds
+			AssertCmdsPartiallyMatch(t, testCase.ExpectedCmdStrs, cmds)
+			if testCase.ExpectedResult.IsSkipped {
+				return
+			}
 
-		if testCase.ExpectedResult.IsSkipped {
-			assert.Len(t, cmds, 0)
-			continue
-		}
+			assert.Equal(t, len(testCase.ExpectedCmdStrs), len(cmds))
+			for _, cmd := range cmds {
+				assert.Equal(t, testCase.Task.WorkingDir, cmd.Dir)
+				AssertEnvValuesMatch(t, testCase.Task.Envs, cmd.Env)
+			}
 
-		if testCase.ExpectedResult.Err != nil {
-			continue
-		}
-
-		AssertCmdsPartiallyMatch(t, testCase.ExpectedCmdStrs, cmds)
-
-		assert.Equal(t, len(testCase.ExpectedCmdStrs), len(cmds))
-		for _, cmd := range cmds {
-			assert.Equal(t, testCase.Task.WorkingDir, cmd.Dir)
-			AssertEnvValuesMatch(t, testCase.Task.Envs, cmd.Env)
-		}
-
-		assert.Equal(t, testCase.Task.User, testCase.RunnerMock.userNameInput)
-		assert.Equal(t, testCase.Task.Path, testCase.RunnerMock.userNamePathInput)
+			assert.Equal(t, testCase.Task.User, systemAPIMock.UserNameInput)
+			assert.Equal(t, testCase.Task.Path, systemAPIMock.UserNamePathInput)
+		})
 	}
 }
 
@@ -480,32 +305,6 @@ func AssertCmdsPartiallyMatch(t *testing.T, expectedCmds []string, actualExecute
 	)
 }
 
-func AssertEnvValuesMatch(t *testing.T, expectedEnvs conv.KeyValues, actualCmdEnvs []string) {
-	expectedRawEnvs := expectedEnvs.ToEqualSignStrings()
-	notFoundEnvs := make([]string, 0, len(expectedEnvs))
-	for _, expectedRawEnv := range expectedRawEnvs {
-		foundEnv := false
-		for _, actualCmdEnv := range actualCmdEnvs {
-			if expectedRawEnv == actualCmdEnv {
-				foundEnv = true
-				break
-			}
-		}
-
-		if !foundEnv {
-			notFoundEnvs = append(notFoundEnvs, expectedRawEnv)
-		}
-	}
-
-	assert.Empty(
-		t,
-		notFoundEnvs,
-		"was not able to find expected environment variables %s in cmd envs %s",
-		strings.Join(notFoundEnvs, ", "),
-		strings.Join(actualCmdEnvs, ", "),
-	)
-}
-
 func TestOSCmdRunnerValidation(t *testing.T) {
 	testCases := []struct {
 		Task          CmdRunTask
@@ -513,34 +312,38 @@ func TestOSCmdRunnerValidation(t *testing.T) {
 	}{
 		{
 			Task: CmdRunTask{
-				Names:  []string{"one", "two"},
-				Errors: &utils.Errors{},
+				Names:     []string{"one", "two"},
+				Errors:    &utils.Errors{},
+				FsManager: &utils.FsManagerMock{},
 			},
 			ExpectedError: "",
 		},
 		{
 			Task: CmdRunTask{
-				Name:   "three",
-				Errors: &utils.Errors{},
+				Name:      "three",
+				Errors:    &utils.Errors{},
+				FsManager: &utils.FsManagerMock{},
 			},
 			ExpectedError: "",
 		},
 		{
 			Task: CmdRunTask{
-				Name:   "four",
-				Names:  []string{"five", "six"},
-				Errors: &utils.Errors{},
+				Name:      "four",
+				Names:     []string{"five", "six"},
+				Errors:    &utils.Errors{},
+				FsManager: &utils.FsManagerMock{},
 			},
 			ExpectedError: "",
 		},
 		{
-			Task:          CmdRunTask{Errors: &utils.Errors{}},
+			Task:          CmdRunTask{Errors: &utils.Errors{}, FsManager: &utils.FsManagerMock{}},
 			ExpectedError: "empty required value at path '.name', empty required values at path '.names'",
 		},
 		{
 			Task: CmdRunTask{
-				Names:  []string{"", ""},
-				Errors: &utils.Errors{},
+				Names:     []string{"", ""},
+				Errors:    &utils.Errors{},
+				FsManager: &utils.FsManagerMock{},
 			},
 			ExpectedError: "empty required value at path '.name', empty required values at path '.names'",
 		},
@@ -554,15 +357,4 @@ func TestOSCmdRunnerValidation(t *testing.T) {
 			assert.EqualError(t, err, testCase.ExpectedError)
 		}
 	}
-}
-
-func BuildExpectedEnvs(expectedEnvs map[interface{}]interface{}) []interface{} {
-	envs := make([]interface{}, 0, len(expectedEnvs))
-	for envKey, envValue := range expectedEnvs {
-		envs = append(envs, map[interface{}]interface{}{
-			envKey: envValue,
-		})
-	}
-
-	return envs
 }
