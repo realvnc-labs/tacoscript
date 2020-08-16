@@ -2,8 +2,9 @@ package utils
 
 import (
 	"fmt"
-	"github.com/sirupsen/logrus"
 	"os"
+
+	"github.com/sirupsen/logrus"
 )
 
 type FsManager interface {
@@ -21,7 +22,7 @@ func (fmm *FsManagerMock) FileExists(filePath string) (bool, error) {
 	return fmm.ExistsToReturn, fmm.ErrToReturn
 }
 
-type OSFsManager struct {}
+type OSFsManager struct{}
 
 func (fmm *OSFsManager) FileExists(filePath string) (bool, error) {
 	if filePath == "" {

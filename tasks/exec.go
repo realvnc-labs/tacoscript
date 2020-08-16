@@ -4,8 +4,9 @@ import (
 	"bytes"
 	"context"
 	"fmt"
-	exec2 "github.com/cloudradar-monitoring/tacoscript/exec"
 	"time"
+
+	exec2 "github.com/cloudradar-monitoring/tacoscript/exec"
 
 	"github.com/cloudradar-monitoring/tacoscript/utils"
 
@@ -148,7 +149,7 @@ func (crt *CmdRunTask) Execute(ctx context.Context) ExecutionResult {
 	rawCmds = append(rawCmds, crt.Names...)
 
 	var stdoutBuf, stderrBuf bytes.Buffer
-	execCtx := exec2.Context{
+	execCtx := &exec2.Context{
 		Ctx:          ctx,
 		StdoutWriter: &stdoutBuf,
 		StderrWriter: &stderrBuf,
@@ -188,22 +189,30 @@ func (crt *CmdRunTask) Execute(ctx context.Context) ExecutionResult {
 	return execRes
 }
 
-func (crt *CmdRunTask) checkOnlyIfs(ctx exec2.Context) (isSuccess bool, err error) {
+func (crt *CmdRunTask) checkOnlyIfs(ctx *exec2.Context) (isSuccess bool, err error) {
 	if len(crt.OnlyIf) == 0 {
 		return true, nil
 	}
 
-	ctx.Cmds = crt.OnlyIf
-	err = crt.Runner.Run(ctx)
+	newCtx := ctx.Copy()
+
+	newCtx.Cmds = crt.OnlyIf
+	err = crt.Runner.Run(&newCtx)
+
 	if err != nil {
-		logrus.Infof("will skip cmd since onlyif condition has failed: %v", err)
-		return false, nil
+		runErr, isRunErr := err.(exec2.RunError)
+		if isRunErr {
+			logrus.Infof("will skip cmd since onlyif condition has failed: %v", runErr)
+			return false, nil
+		}
+
+		return false, err
 	}
 
 	return true, nil
 }
 
-func (crt *CmdRunTask) shouldBeExecuted(ctx exec2.Context) (shouldBeExecuted bool, err error) {
+func (crt *CmdRunTask) shouldBeExecuted(ctx *exec2.Context) (shouldBeExecuted bool, err error) {
 	isExists, err := crt.checkMissingFileCondition()
 	if err != nil {
 		return false, err

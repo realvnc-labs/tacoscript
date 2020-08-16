@@ -69,9 +69,9 @@ func TestCmdRunTaskBuilder(t *testing.T) {
 				},
 			},
 			expectedTask: &CmdRunTask{
-				TypeName:   "someTypeWithErrors",
-				Path:       "somePathWithErrors",
-				Envs:       conv.KeyValues{},
+				TypeName: "someTypeWithErrors",
+				Path:     "somePathWithErrors",
+				Envs:     conv.KeyValues{},
 				Errors: &utils.Errors{
 					Errs: []error{
 						fmt.Errorf("key value array expected at 'somePathWithErrors' but got '123'"),
@@ -91,9 +91,9 @@ func TestCmdRunTaskBuilder(t *testing.T) {
 				},
 			},
 			expectedTask: &CmdRunTask{
-				TypeName:   "someTypeWithErrors2",
-				Path:       "somePathWithErrors2",
-				Envs:       conv.KeyValues{},
+				TypeName: "someTypeWithErrors2",
+				Path:     "somePathWithErrors2",
+				Envs:     conv.KeyValues{},
 				Errors: &utils.Errors{
 					Errs: []error{
 						errors.New(`wrong key value element at 'somePathWithErrors2': '"one"'`),
@@ -124,8 +124,8 @@ func TestCmdRunTaskBuilder(t *testing.T) {
 					"name one",
 					"name two",
 				},
-				Errors:     &utils.Errors{},
-				FsManager:  &utils.FsManagerMock{},
+				Errors:    &utils.Errors{},
+				FsManager: &utils.FsManagerMock{},
 			},
 		},
 		{
@@ -152,10 +152,10 @@ func TestCmdRunTaskBuilder(t *testing.T) {
 				},
 			},
 			expectedTask: &CmdRunTask{
-				TypeName:   "manyCreatesType",
-				Path:       "manyCreatesPath",
-				Name:       "many creates command",
-				Errors:     &utils.Errors{},
+				TypeName: "manyCreatesType",
+				Path:     "manyCreatesPath",
+				Name:     "many creates command",
+				Errors:   &utils.Errors{},
 				MissingFilesCondition: []string{
 					"create one",
 					"create two",

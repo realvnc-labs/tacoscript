@@ -53,9 +53,9 @@ func allRequirementsMet(requirements []positionedRequirement, positionsMap map[s
 	return true, positionedRequirement{}
 }
 
-func buildRequirementsMap(scrpts tasks.Scripts) ([]positionedRequirement, map[string]int) {
-	req := make([]positionedRequirement, 0)
-	positionsMap := make(map[string]int)
+func buildRequirementsMap(scrpts tasks.Scripts) (req []positionedRequirement, positionsMap map[string]int) {
+	req = make([]positionedRequirement, 0)
+	positionsMap = make(map[string]int)
 
 	for pos, script := range scrpts {
 		positionsMap[script.ID] = pos
@@ -72,7 +72,6 @@ func buildRequirementsMap(scrpts tasks.Scripts) ([]positionedRequirement, map[st
 	return req, positionsMap
 }
 
-
 func insertScript(array tasks.Scripts, value tasks.Script, index int) tasks.Scripts {
 	return append(array[:index], append(tasks.Scripts{value}, array[index:]...)...)
 }
@@ -81,7 +80,11 @@ func removeScript(array tasks.Scripts, index int) tasks.Scripts {
 	return append(array[:index], array[index+1:]...)
 }
 
-func moveScriptToPosition(array tasks.Scripts, srcIndex int, dstIndex int) tasks.Scripts {
+func moveScriptToPosition(array tasks.Scripts, srcIndex, dstIndex int) tasks.Scripts {
+	if srcIndex > len(array)-1 {
+		return tasks.Scripts{}
+	}
+
 	value := array[srcIndex]
 	return insertScript(removeScript(array, srcIndex), value, dstIndex)
 }

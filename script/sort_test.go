@@ -97,7 +97,7 @@ func TestSort(t *testing.T) {
 					},
 				},
 				{
-					ID:    "script 10",
+					ID: "script 10",
 					Tasks: []tasks.Task{
 						RequirementsTaskMock{
 							RequirementsToGive: []string{"script 11"},

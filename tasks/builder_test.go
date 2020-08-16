@@ -2,8 +2,9 @@ package tasks
 
 import (
 	"errors"
-	"github.com/cloudradar-monitoring/tacoscript/utils"
 	"testing"
+
+	"github.com/cloudradar-monitoring/tacoscript/utils"
 
 	"github.com/stretchr/testify/assert"
 )

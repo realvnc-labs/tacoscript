@@ -2,8 +2,9 @@ package exec
 
 import (
 	"context"
-	"github.com/cloudradar-monitoring/tacoscript/conv"
 	"io"
+
+	"github.com/cloudradar-monitoring/tacoscript/conv"
 )
 
 type Context struct {
@@ -18,6 +19,20 @@ type Context struct {
 	Shell        string
 }
 
+func (c *Context) Copy() Context {
+	return Context{
+		Ctx:          c.Ctx,
+		StdoutWriter: c.StdoutWriter,
+		StderrWriter: c.StderrWriter,
+		WorkingDir:   c.WorkingDir,
+		User:         c.User,
+		Path:         c.Path,
+		Envs:         c.Envs,
+		Cmds:         c.Cmds,
+		Shell:        c.Shell,
+	}
+}
+
 type ShellParam struct {
 	ShellName      string
 	ShellPath      string
@@ -29,4 +44,12 @@ type CmdParam struct {
 	Cmd          string
 	Params       []string
 	RawCmdString string
+}
+
+type RunError struct {
+	Err error
+}
+
+func (re RunError) Error() string {
+	return re.Err.Error()
 }
