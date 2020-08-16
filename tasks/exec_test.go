@@ -355,13 +355,6 @@ func TestTaskExecution(t *testing.T) {
 			RunnerMock: &appExec.SystemRunner{SystemAPI: &appExec.SystemAPIMock{
 				Cmds:               []*exec.Cmd{},
 				UserSetErrToReturn: errors.New("cannot set user 345"),
-				Callback: func(cmd *exec.Cmd) error {
-					cmdStr := cmd.String()
-					if strings.Contains(cmdStr, "checking unless validation error") {
-						return errors.New("unless validation failure")
-					}
-					return nil
-				},
 			}},
 			ExpectedResult: ExecutionResult{
 				IsSkipped: false,
@@ -383,6 +376,7 @@ func TestTaskExecution(t *testing.T) {
 			assert.EqualValues(tt, tc.ExpectedResult.StdErr, res.StdErr)
 
 			if tc.ExpectedResult.Err != nil {
+				assert.Equal(tt, len(tc.ExpectedCmdStrs), len(systemAPIMock.Cmds))
 				return
 			}
 
