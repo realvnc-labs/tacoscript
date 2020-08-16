@@ -223,6 +223,7 @@ manyCreates:
         - create one
         - create two
         - create three
+    - unless: some expected false condition
 `,
 			ExpectedScripts: tasks.Scripts{
 				{
@@ -239,6 +240,7 @@ manyCreates:
 									"create two",
 									"create three",
 								}},
+								{tasks.Unless: "some expected false condition"},
 							},
 							ValidationError: nil,
 						},
@@ -256,6 +258,37 @@ scriptValidation:
 			ExpectedErrMsg: "task at path 'scriptValidation.cmd.run[1]' cannot require own script 'scriptValidation', " +
 				"cyclic requirements are detected: '[scriptValidation]'",
 			TaskRequirements: []string{"scriptValidation"},
+		},
+		{
+			YamlInput: `
+manyUnless:
+  cmd.run:
+    - name: expecting for one unless to be false
+    - unless:
+        - unless one
+        - unless two
+        - unless three
+`,
+			ExpectedScripts: tasks.Scripts{
+				{
+					ID: "manyUnless",
+					Tasks: []tasks.Task{
+						&TaskBuilderTaskMock{
+							TypeName: "cmd.run",
+							Path:     "manyUnless.cmd.run[1]",
+							Context: []map[string]interface{}{
+								{tasks.NameField: "expecting for one unless to be false"},
+								{tasks.Unless: []interface{}{
+									"unless one",
+									"unless two",
+									"unless three",
+								}},
+							},
+							ValidationError: nil,
+						},
+					},
+				},
+			},
 		},
 	}
 

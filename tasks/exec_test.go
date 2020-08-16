@@ -264,6 +264,111 @@ func TestTaskExecution(t *testing.T) {
 				},
 			}},
 		},
+		{
+			Name: "executing one unless condition with success",
+			Task: &CmdRunTask{
+				Name:      "cmd masa",
+				Unless:    []string{"run unless masa"},
+				FsManager: &utils.FsManagerMock{},
+			},
+			ExpectedResult: ExecutionResult{
+				IsSkipped: false,
+				Err:       nil,
+			},
+			ExpectedCmdStrs: []string{"run unless masa", "cmd masa"},
+			RunnerMock: &appExec.SystemRunner{SystemAPI: &appExec.SystemAPIMock{
+				Cmds: []*exec.Cmd{},
+				Callback: func(cmd *exec.Cmd) error {
+					cmdStr := cmd.String()
+					if strings.Contains(cmdStr, "run unless masa") {
+						return appExec.RunError{Err: errors.New("run unless masa failed")}
+					}
+
+					return nil
+				},
+			}},
+		},
+		{
+			Name: "executing one unless condition with failure",
+			Task: &CmdRunTask{
+				Name:      "cmd with unless failure",
+				Unless:    []string{"check unless failure"},
+				FsManager: &utils.FsManagerMock{},
+			},
+			ExpectedResult: ExecutionResult{
+				IsSkipped: true,
+				Err:       nil,
+			},
+			ExpectedCmdStrs: []string{},
+			RunnerMock: &appExec.SystemRunner{SystemAPI: &appExec.SystemAPIMock{
+				Cmds: []*exec.Cmd{},
+			}},
+		},
+		{
+			Name: "executing multiple unless conditions with all success",
+			Task: &CmdRunTask{
+				Name:      "cmd with multiple unless success",
+				Unless:    []string{"check unless one", "check unless two"},
+				FsManager: &utils.FsManagerMock{},
+			},
+			ExpectedResult: ExecutionResult{
+				IsSkipped: true,
+				Err:       nil,
+			},
+			ExpectedCmdStrs: []string{},
+			RunnerMock: &appExec.SystemRunner{SystemAPI: &appExec.SystemAPIMock{
+				Cmds: []*exec.Cmd{},
+			}},
+		},
+		{
+			Name: "executing multiple unless conditions with at least one failure",
+			Task: &CmdRunTask{
+				Name:      "cmd with multiple unless with at least one failure",
+				Unless:    []string{"check unless 1", "check unless 2"},
+				FsManager: &utils.FsManagerMock{},
+			},
+			ExpectedResult: ExecutionResult{
+				IsSkipped: false,
+				Err:       nil,
+			},
+			ExpectedCmdStrs: []string{"check unless 1", "check unless 2", "cmd with multiple unless with at least one failure"},
+			RunnerMock: &appExec.SystemRunner{SystemAPI: &appExec.SystemAPIMock{
+				Cmds: []*exec.Cmd{},
+				Callback: func(cmd *exec.Cmd) error {
+					cmdStr := cmd.String()
+					if strings.Contains(cmdStr, "check unless 2") {
+						return appExec.RunError{Err: errors.New("check unless 2 failed")}
+					}
+
+					return nil
+				},
+			}},
+		},
+		{
+			Name: "executing unless validation error",
+			Task: &CmdRunTask{
+				Unless:    []string{"checking unless validation error"},
+				Name:      "executing unless validation error",
+				User:      "some user 345",
+				FsManager: &utils.FsManagerMock{},
+			},
+			RunnerMock: &appExec.SystemRunner{SystemAPI: &appExec.SystemAPIMock{
+				Cmds:               []*exec.Cmd{},
+				UserSetErrToReturn: errors.New("cannot set user 345"),
+				Callback: func(cmd *exec.Cmd) error {
+					cmdStr := cmd.String()
+					if strings.Contains(cmdStr, "checking unless validation error") {
+						return errors.New("unless validation failure")
+					}
+					return nil
+				},
+			}},
+			ExpectedResult: ExecutionResult{
+				IsSkipped: false,
+				Err:       errors.New("cannot set user 345"),
+			},
+			ExpectedCmdStrs: []string{},
+		},
 	}
 
 	for _, testCase := range testCases {

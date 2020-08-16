@@ -29,6 +29,7 @@ type CmdRunTask struct {
 	Errors                *utils.Errors
 	Runner                exec2.Runner
 	OnlyIf                []string
+	Unless                []string
 	FsManager             utils.FsManager
 }
 
@@ -71,6 +72,8 @@ func (crtb CmdRunTaskBuilder) Build(typeName, path string, ctx []map[string]inte
 				crtb.parseRequireField(t, val, path)
 			case OnlyIf:
 				crtb.parseOnlyIfField(t, val, path)
+			case Unless:
+				crtb.parseUnlessField(t, val, path)
 			}
 		}
 	}
@@ -115,6 +118,19 @@ func (crtb CmdRunTaskBuilder) parseOnlyIfField(t *CmdRunTask, val interface{}, p
 		t.Errors.Add(err)
 	}
 	t.OnlyIf = onlyIf
+}
+
+func (crtb CmdRunTaskBuilder) parseUnlessField(t *CmdRunTask, val interface{}, path string) {
+	unless := make([]string, 0)
+	var err error
+	switch typedVal := val.(type) {
+	case string:
+		unless = append(unless, typedVal)
+	default:
+		unless, err = conv.ConvertToValues(val, path)
+		t.Errors.Add(err)
+	}
+	t.Unless = unless
 }
 
 func (crt *CmdRunTask) GetName() string {
@@ -212,6 +228,31 @@ func (crt *CmdRunTask) checkOnlyIfs(ctx *exec2.Context) (isSuccess bool, err err
 	return true, nil
 }
 
+func (crt *CmdRunTask) checkUnless(ctx *exec2.Context) (isExpectationSuccess bool, err error) {
+	if len(crt.Unless) == 0 {
+		return true, nil
+	}
+
+	newCtx := ctx.Copy()
+
+	newCtx.Cmds = crt.Unless
+
+	err = crt.Runner.Run(&newCtx)
+
+	if err != nil {
+		runErr, isRunErr := err.(exec2.RunError)
+		if isRunErr {
+			logrus.Infof("will continue cmd since at least one unless condition has failed: %v", runErr)
+			return true, nil
+		}
+
+		return false, err
+	}
+
+	logrus.Infof("will stop cmd since all unless conditions din't fail")
+	return false, nil
+}
+
 func (crt *CmdRunTask) shouldBeExecuted(ctx *exec2.Context) (shouldBeExecuted bool, err error) {
 	isExists, err := crt.checkMissingFileCondition()
 	if err != nil {
@@ -227,11 +268,20 @@ func (crt *CmdRunTask) shouldBeExecuted(ctx *exec2.Context) (shouldBeExecuted bo
 		return false, err
 	}
 
-	if isSuccess {
-		return true, nil
+	if !isSuccess {
+		return false, nil
 	}
 
-	return false, nil
+	isExpectationSuccess, err := crt.checkUnless(ctx)
+	if err != nil {
+		return false, err
+	}
+
+	if !isExpectationSuccess {
+		return false, nil
+	}
+
+	return true, nil
 }
 
 func (crt *CmdRunTask) checkMissingFileCondition() (isExists bool, err error) {

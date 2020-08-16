@@ -174,41 +174,91 @@ func TestCmdRunTaskBuilder(t *testing.T) {
 				FsManager: &utils.FsManagerMock{},
 			},
 		},
+		{
+			typeName: "oneUnlessValue",
+			path:     "oneUnlessValuePath",
+			ctx: []map[string]interface{}{
+				{
+					NameField: "one unless value",
+					Unless:    "unless one",
+				},
+			},
+			expectedTask: &CmdRunTask{
+				TypeName: "oneUnlessValue",
+				Path:     "oneUnlessValuePath",
+				Name:     "one unless value",
+				Errors:   &utils.Errors{},
+				Unless: []string{
+					"unless one",
+				},
+				FsManager: &utils.FsManagerMock{},
+			},
+		},
+		{
+			typeName: "manyUnlessValue",
+			path:     "manyUnlessValuePath",
+			ctx: []map[string]interface{}{
+				{
+					NameField: "many unless value",
+					Unless: []interface{}{
+						"Unless one",
+						"Unless two",
+						"Unless three",
+					},
+				},
+			},
+			expectedTask: &CmdRunTask{
+				TypeName: "manyUnlessValue",
+				Path:     "manyUnlessValuePath",
+				Name:     "many unless value",
+				Errors:   &utils.Errors{},
+				Unless: []string{
+					"Unless one",
+					"Unless two",
+					"Unless three",
+				},
+				FsManager: &utils.FsManagerMock{},
+			},
+		},
 	}
 
 	for _, testCase := range testCases {
-		cmdBuilder := CmdRunTaskBuilder{
-			FsManager: &utils.FsManagerMock{},
-		}
-		actualTask, err := cmdBuilder.Build(
-			testCase.typeName,
-			testCase.path,
-			testCase.ctx,
-		)
+		tc := testCase
+		t.Run(tc.typeName, func(t *testing.T) {
+			cmdBuilder := CmdRunTaskBuilder{
+				FsManager: &utils.FsManagerMock{},
+			}
+			actualTask, err := cmdBuilder.Build(
+				tc.typeName,
+				tc.path,
+				tc.ctx,
+			)
 
-		assert.NoError(t, err)
-		if err != nil {
-			continue
-		}
+			assert.NoError(t, err)
+			if err != nil {
+				return
+			}
 
-		actualCmdRunTask, ok := actualTask.(*CmdRunTask)
-		assert.True(t, ok)
-		if !ok {
-			continue
-		}
+			actualCmdRunTask, ok := actualTask.(*CmdRunTask)
+			assert.True(t, ok)
+			if !ok {
+				return
+			}
 
-		assert.Equal(t, testCase.expectedTask.User, actualCmdRunTask.User)
-		AssertEnvValuesMatch(t, testCase.expectedTask.Envs, actualCmdRunTask.Envs.ToEqualSignStrings())
-		assert.Equal(t, testCase.expectedTask.Path, actualCmdRunTask.Path)
-		assert.Equal(t, testCase.expectedTask.WorkingDir, actualCmdRunTask.WorkingDir)
-		assert.Equal(t, testCase.expectedTask.MissingFilesCondition, actualCmdRunTask.MissingFilesCondition)
-		assert.Equal(t, testCase.expectedTask.Name, actualCmdRunTask.Name)
-		assert.Equal(t, testCase.expectedTask.TypeName, actualCmdRunTask.TypeName)
-		assert.Equal(t, testCase.expectedTask.Shell, actualCmdRunTask.Shell)
-		assert.Equal(t, testCase.expectedTask.Names, actualCmdRunTask.Names)
-		assert.Equal(t, testCase.expectedTask.Require, actualCmdRunTask.Require)
-		assert.Equal(t, testCase.expectedTask.OnlyIf, actualCmdRunTask.OnlyIf)
-		assert.EqualValues(t, testCase.expectedTask.Errors, actualCmdRunTask.Errors)
+			assert.Equal(t, tc.expectedTask.User, actualCmdRunTask.User)
+			AssertEnvValuesMatch(t, tc.expectedTask.Envs, actualCmdRunTask.Envs.ToEqualSignStrings())
+			assert.Equal(t, tc.expectedTask.Path, actualCmdRunTask.Path)
+			assert.Equal(t, tc.expectedTask.WorkingDir, actualCmdRunTask.WorkingDir)
+			assert.Equal(t, tc.expectedTask.MissingFilesCondition, actualCmdRunTask.MissingFilesCondition)
+			assert.Equal(t, tc.expectedTask.Name, actualCmdRunTask.Name)
+			assert.Equal(t, tc.expectedTask.TypeName, actualCmdRunTask.TypeName)
+			assert.Equal(t, tc.expectedTask.Shell, actualCmdRunTask.Shell)
+			assert.Equal(t, tc.expectedTask.Names, actualCmdRunTask.Names)
+			assert.Equal(t, tc.expectedTask.Require, actualCmdRunTask.Require)
+			assert.Equal(t, tc.expectedTask.OnlyIf, actualCmdRunTask.OnlyIf)
+			assert.Equal(t, tc.expectedTask.Unless, actualCmdRunTask.Unless)
+			assert.EqualValues(t, tc.expectedTask.Errors, actualCmdRunTask.Errors)
+		})
 	}
 }
 

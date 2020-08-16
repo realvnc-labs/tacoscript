@@ -12,4 +12,5 @@ const (
 	CreatesField = "creates"
 	RequireField = "require"
 	OnlyIf       = "onlyif"
+	Unless       = "unless"
 )
