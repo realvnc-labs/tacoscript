@@ -18,4 +18,8 @@ jobs:
       - uses: actions/checkout@v2
       - name: Test
         run: |
-          go test -race ./...
+          go test -race -coverprofile=profile.cov ./...
+      - name: Send coverage
+        uses: shogo82148/actions-goveralls@v1
+        with:
+          path-to-profile: profile.cov
