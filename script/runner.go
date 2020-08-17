@@ -2,6 +2,7 @@ package script
 
 import (
 	"context"
+
 	"github.com/sirupsen/logrus"
 
 	"github.com/cloudradar-monitoring/tacoscript/tasks"
@@ -11,7 +12,6 @@ type Runner struct {
 }
 
 func (r Runner) Run(ctx context.Context, scripts tasks.Scripts) error {
-
 	SortScriptsRespectingRequirements(scripts)
 
 	for _, script := range scripts {
@@ -23,7 +23,6 @@ func (r Runner) Run(ctx context.Context, scripts tasks.Scripts) error {
 			if res.Err != nil {
 				return res.Err
 			}
-
 		}
 		logrus.Infof("finished script '%s'", script.ID)
 	}

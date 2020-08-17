@@ -35,7 +35,7 @@ func (tm TaskMock) GetRequirements() []string {
 
 func TestRunner(t *testing.T) {
 	testCases := []struct {
-		Scripts        tasks.Scripts
+		Scripts       tasks.Scripts
 		ExpectedError string
 	}{
 		{
