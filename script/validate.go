@@ -2,6 +2,7 @@ package script
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/cloudradar-monitoring/tacoscript/tasks"
 	"github.com/cloudradar-monitoring/tacoscript/utils"
@@ -42,14 +43,18 @@ func isCyclic(curScriptID string,
 }
 
 func ValidateScripts(scrpts tasks.Scripts) error {
-	sciptIDToNodesMap := make(map[string][]string)
+	scriptIDToNodesMap := make(map[string][]string)
+	scriptIDsMap := make(map[string]bool, len(scrpts))
+	requirements := make(map[string]string)
 	errs := utils.Errors{}
 
 	for _, script := range scrpts {
-		sciptIDToNodesMap[script.ID] = make([]string, 0)
+		scriptIDToNodesMap[script.ID] = make([]string, 0)
+		scriptIDsMap[script.ID] = true
 		for _, task := range script.Tasks {
-			for _, reqName := range task.GetRequirements() {
-				sciptIDToNodesMap[script.ID] = append(sciptIDToNodesMap[script.ID], reqName)
+			for k, reqName := range task.GetRequirements() {
+				requirements[reqName] = fmt.Sprintf("%s.%s[%d]", task.GetPath(), tasks.RequireField, k)
+				scriptIDToNodesMap[script.ID] = append(scriptIDToNodesMap[script.ID], reqName)
 
 				if reqName == script.ID {
 					errs.Add(fmt.Errorf("task at path '%s' cannot require own script '%s'", task.GetPath(), script.ID))
@@ -59,11 +64,22 @@ func ValidateScripts(scrpts tasks.Scripts) error {
 		}
 	}
 
+	reqFailures := make([]string, 0, len(requirements))
+	for reqName, reqPath := range requirements {
+		if _, ok := scriptIDsMap[reqName]; !ok {
+			reqFailures = append(reqFailures, fmt.Sprintf("'%s' at path '%s'", reqName, reqPath))
+		}
+	}
+
+	if len(reqFailures) > 0 {
+		errs.Add(fmt.Errorf("missing required scripts %s", strings.Join(reqFailures, ", ")))
+	}
+
 	requestStack := orderedmap.NewOrderedMap()
 	visited := make(map[string]bool)
-	for curScriptID := range sciptIDToNodesMap {
+	for curScriptID := range scriptIDToNodesMap {
 		cyclicItms := orderedmap.NewOrderedMap()
-		isCyclic := isCyclic(curScriptID, sciptIDToNodesMap, visited, requestStack, cyclicItms)
+		isCyclic := isCyclic(curScriptID, scriptIDToNodesMap, visited, requestStack, cyclicItms)
 		if isCyclic {
 			errs.Add(fmt.Errorf("cyclic requirements are detected: '%s'", cyclicItms.Keys()))
 			break

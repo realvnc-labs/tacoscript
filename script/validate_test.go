@@ -4,8 +4,9 @@ import (
 	"context"
 	"testing"
 
-	"github.com/cloudradar-monitoring/tacoscript/tasks"
 	"github.com/stretchr/testify/assert"
+
+	"github.com/cloudradar-monitoring/tacoscript/tasks"
 )
 
 type RequirementsTaskMock struct {
@@ -33,18 +34,20 @@ func (rtm RequirementsTaskMock) GetRequirements() []string {
 	return rtm.RequirementsToGive
 }
 
-type cycleErrorExpectation struct {
+type errorExpectation struct {
 	messagePrefix  string
 	availableParts []string
 }
 
-func TestCycleDetection(t *testing.T) {
+func TestScriptsValidation(t *testing.T) {
 	testCases := []struct {
-		Scripts               tasks.Scripts
-		cycleErrorExpectation cycleErrorExpectation
+		name             string
+		scripts          tasks.Scripts
+		errorExpectation errorExpectation
 	}{
 		{
-			Scripts: tasks.Scripts{
+			name: "cycle of 2 scripts requiring each other",
+			scripts: tasks.Scripts{
 				{
 					ID: "script one",
 					Tasks: []tasks.Task{
@@ -64,7 +67,7 @@ func TestCycleDetection(t *testing.T) {
 					},
 				},
 			},
-			cycleErrorExpectation: cycleErrorExpectation{
+			errorExpectation: errorExpectation{
 				messagePrefix: "cyclic requirements are detected",
 				availableParts: []string{
 					"script one",
@@ -73,7 +76,8 @@ func TestCycleDetection(t *testing.T) {
 			},
 		},
 		{
-			Scripts: tasks.Scripts{
+			name: "no requirement cycle",
+			scripts: tasks.Scripts{
 				{
 					ID: "script 3",
 					Tasks: []tasks.Task{
@@ -88,12 +92,13 @@ func TestCycleDetection(t *testing.T) {
 					Tasks: []tasks.Task{},
 				},
 			},
-			cycleErrorExpectation: cycleErrorExpectation{
+			errorExpectation: errorExpectation{
 				messagePrefix: "",
 			},
 		},
 		{
-			Scripts: tasks.Scripts{
+			name: "circling cycle",
+			scripts: tasks.Scripts{
 				{
 					ID: "script 6",
 					Tasks: []tasks.Task{
@@ -127,7 +132,7 @@ func TestCycleDetection(t *testing.T) {
 					},
 				},
 			},
-			cycleErrorExpectation: cycleErrorExpectation{
+			errorExpectation: errorExpectation{
 				messagePrefix: "cyclic requirements are detected",
 				availableParts: []string{
 					"script 6",
@@ -137,7 +142,8 @@ func TestCycleDetection(t *testing.T) {
 			},
 		},
 		{
-			Scripts: tasks.Scripts{
+			name: "many_scripts_no_cycle",
+			scripts: tasks.Scripts{
 				{
 					ID: "script 10",
 					Tasks: []tasks.Task{
@@ -162,13 +168,22 @@ func TestCycleDetection(t *testing.T) {
 						},
 					},
 				},
+				{
+					ID: "script 12",
+					Tasks: []tasks.Task{
+						RequirementsTaskMock{
+							RequirementsToGive: []string{},
+						},
+					},
+				},
 			},
-			cycleErrorExpectation: cycleErrorExpectation{
+			errorExpectation: errorExpectation{
 				messagePrefix: "",
 			},
 		},
 		{
-			Scripts: tasks.Scripts{
+			name: "require itself",
+			scripts: tasks.Scripts{
 				{
 					ID: "script 20",
 					Tasks: []tasks.Task{
@@ -179,27 +194,109 @@ func TestCycleDetection(t *testing.T) {
 					},
 				},
 			},
-			cycleErrorExpectation: cycleErrorExpectation{
+			errorExpectation: errorExpectation{
 				messagePrefix: "task at path 'script 20 task 1 path 1' cannot require own script 'script 20'",
+			},
+		},
+		{
+			name: "multiple required scripts not found",
+			scripts: tasks.Scripts{
+				{
+					ID: "script 30",
+					Tasks: []tasks.Task{
+						RequirementsTaskMock{
+							RequirementsToGive: []string{"script 31", "script 32"},
+							Path:               "path 1",
+						},
+					},
+				},
+			},
+			errorExpectation: errorExpectation{
+				messagePrefix: "missing required scripts",
+				availableParts: []string{
+					"'script 31' at path 'path 1.require[0]'",
+					"'script 32' at path 'path 1.require[1]'",
+				},
+			},
+		},
+		{
+			name: "all required scripts are found",
+			scripts: tasks.Scripts{
+				{
+					ID: "script 32",
+					Tasks: []tasks.Task{
+						RequirementsTaskMock{
+							RequirementsToGive: []string{"script 33", "script 34"},
+						},
+					},
+				},
+				{
+					ID:    "script 33",
+					Tasks: []tasks.Task{RequirementsTaskMock{}},
+				},
+				{
+					ID:    "script 34",
+					Tasks: []tasks.Task{RequirementsTaskMock{}},
+				},
+			},
+			errorExpectation: errorExpectation{
+				messagePrefix: "",
+			},
+		},
+		{
+			name: "some required scripts not found",
+			scripts: tasks.Scripts{
+				{
+					ID: "script 35",
+					Tasks: []tasks.Task{
+						RequirementsTaskMock{
+							RequirementsToGive: []string{"script 36"},
+						},
+					},
+				},
+				{
+					ID: "script 36",
+					Tasks: []tasks.Task{RequirementsTaskMock{
+						RequirementsToGive: []string{"script 37"},
+						Path:               "path 36",
+					}},
+				},
+				{
+					ID: "script 38",
+					Tasks: []tasks.Task{RequirementsTaskMock{
+						RequirementsToGive: []string{"script 40"},
+						Path:               "path 38",
+					}},
+				},
+			},
+			errorExpectation: errorExpectation{
+				messagePrefix: "missing required scripts",
+				availableParts: []string{
+					"'script 37' at path 'path 36.require[0]'",
+					"'script 40' at path 'path 38.require[0]'",
+				},
 			},
 		},
 	}
 
 	for _, testCase := range testCases {
-		err := ValidateScripts(testCase.Scripts)
-		if testCase.cycleErrorExpectation.messagePrefix == "" {
-			assert.NoError(t, err)
-		} else {
-			assert.Error(t, err)
-			if err == nil {
-				continue
-			}
+		tc := testCase
+		t.Run(tc.name, func(t *testing.T) {
+			err := ValidateScripts(tc.scripts)
+			if tc.errorExpectation.messagePrefix == "" {
+				assert.NoError(t, err)
+			} else {
+				assert.Error(t, err)
+				if err == nil {
+					return
+				}
 
-			assert.Contains(t, err.Error(), testCase.cycleErrorExpectation.messagePrefix)
+				assert.Contains(t, err.Error(), tc.errorExpectation.messagePrefix)
 
-			for _, expectedMsgPart := range testCase.cycleErrorExpectation.availableParts {
-				assert.Contains(t, err.Error(), expectedMsgPart)
+				for _, expectedMsgPart := range tc.errorExpectation.availableParts {
+					assert.Contains(t, err.Error(), expectedMsgPart)
+				}
 			}
-		}
+		})
 	}
 }
