@@ -36,14 +36,10 @@ func (tm TaskMock) GetRequirements() []string {
 func TestRunner(t *testing.T) {
 	testCases := []struct {
 		Scripts        tasks.Scripts
-		ExpectedOutput []tasks.ExecutionResult
+		ExpectedError string
 	}{
 		{
-			ExpectedOutput: []tasks.ExecutionResult{
-				{
-					StdOut: "some task1",
-				},
-			},
+			ExpectedError: "",
 			Scripts: tasks.Scripts{
 				{
 					Tasks: []tasks.Task{
@@ -57,14 +53,7 @@ func TestRunner(t *testing.T) {
 			},
 		},
 		{
-			ExpectedOutput: []tasks.ExecutionResult{
-				{
-					Err: errors.New("some error"),
-				},
-				{
-					StdOut: "some out",
-				},
-			},
+			ExpectedError: "some error",
 			Scripts: tasks.Scripts{
 				{
 					Tasks: []tasks.Task{
@@ -90,7 +79,11 @@ func TestRunner(t *testing.T) {
 
 	for _, testCase := range testCases {
 		runr := Runner{}
-		actualOutput := runr.Run(context.Background(), testCase.Scripts)
-		assert.Equal(t, testCase.ExpectedOutput, actualOutput)
+		err := runr.Run(context.Background(), testCase.Scripts)
+		if testCase.ExpectedError == "" {
+			assert.NoError(t, err)
+		} else {
+			assert.EqualError(t, err, testCase.ExpectedError)
+		}
 	}
 }

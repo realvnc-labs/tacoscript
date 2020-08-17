@@ -157,7 +157,7 @@ func (sr SystemRunner) setEnvs(cmd *exec.Cmd, execContext *Context) {
 	}
 
 	envs := execContext.Envs.ToEqualSignStrings()
-	logrus.Debugf("will set %d env variables", len(envs))
+	logrus.Debugf("will set %d env variables: %s", len(envs), envs)
 	cmd.Env = append(os.Environ(), envs...)
 }
 
@@ -165,7 +165,6 @@ func (sr SystemRunner) setUser(cmd *exec.Cmd, execContext *Context) error {
 	if execContext.User == "" {
 		return nil
 	}
-	logrus.Debugf("will set user %s", execContext.User)
 	err := sr.SystemAPI.SetUser(execContext.User, execContext.Path, cmd)
 
 	if err != nil {

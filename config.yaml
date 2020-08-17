@@ -4,19 +4,35 @@
 # https://docs.saltstack.com/en/latest/ref/states/all/salt.states.cmd.html
 #
 # unique id of the task, can be any string
-testing1:
+pack-result:
   cmd.run:
     - names:
-      - echo ${PASSWORD}
-      - ls -la
-    - cwd: /Users/breathbath/Projects
-    - shell: zsh
+        - tar czf /tmp/my-date.tar.gz /tmp/my-date.txt
+        - mv /tmp/my-date.tar.gz /tmp/mydate
+    - require:
+        - save-date
+        - remove-date
+        - create-folder
+    - creates:
+        - /tmp/my-date.tar.gz
+save-date:
+  # Name of the class and the module
+  cmd.run:
+    - name: /bin/date > /tmp/my-date.txt
+    - cwd: /tmp
+    #- user: breathbath
+    - shell: bash
     - env:
         - PASSWORD: bunny
+    - creates: /tmp/my-date.txt # Don't execute if file exists.
+remove-date:
+  cmd.run:
+    - name: rm /tmp/my-date.txt
     - require:
-        - testing2
-testing2:
+        - save-date
+    - onlyif: date +%c|grep -q "^Thu" # Execute only on Thursdays
+create-folder:
   cmd.run:
     - names:
-        - echo "I am first"
-    - pwd: /Users/breathbath/Projects
+        - mkdir /tmp/mydate
+    - unless: test -e /tmp/mydate

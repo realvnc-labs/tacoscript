@@ -2,8 +2,6 @@ package script
 
 import (
 	"context"
-	"fmt"
-
 	"github.com/cloudradar-monitoring/tacoscript/exec"
 	"github.com/cloudradar-monitoring/tacoscript/utils"
 
@@ -36,8 +34,7 @@ func RunScript(scriptPath string) error {
 
 	runner := Runner{}
 
-	res := runner.Run(context.Background(), scripts)
+	err = runner.Run(context.Background(), scripts)
 
-	fmt.Printf("%+v", res)
-	return nil
+	return err
 }

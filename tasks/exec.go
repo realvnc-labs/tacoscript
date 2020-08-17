@@ -184,7 +184,6 @@ func (crt *CmdRunTask) Execute(ctx context.Context) ExecutionResult {
 	}
 
 	if !shouldBeExecuted {
-		logrus.Info("command will be skipped")
 		execRes.IsSkipped = true
 		return execRes
 	}
@@ -218,7 +217,7 @@ func (crt *CmdRunTask) checkOnlyIfs(ctx *exec2.Context) (isSuccess bool, err err
 	if err != nil {
 		runErr, isRunErr := err.(exec2.RunError)
 		if isRunErr {
-			logrus.Infof("will skip cmd since onlyif condition has failed: %v", runErr)
+			logrus.Debugf("will skip %s since onlyif condition has failed: %v", crt, runErr)
 			return false, nil
 		}
 
@@ -253,6 +252,10 @@ func (crt *CmdRunTask) checkUnless(ctx *exec2.Context) (isExpectationSuccess boo
 	return false, nil
 }
 
+func (crt *CmdRunTask) String() string {
+	return fmt.Sprintf("task '%s' at path '%s'", crt.TypeName, crt.GetPath())
+}
+
 func (crt *CmdRunTask) shouldBeExecuted(ctx *exec2.Context) (shouldBeExecuted bool, err error) {
 	isExists, err := crt.checkMissingFileCondition()
 	if err != nil {
@@ -260,6 +263,7 @@ func (crt *CmdRunTask) shouldBeExecuted(ctx *exec2.Context) (shouldBeExecuted bo
 	}
 
 	if isExists {
+		logrus.Debugf("some files exist, will skip the execution of %s", crt)
 		return false, nil
 	}
 
@@ -269,6 +273,7 @@ func (crt *CmdRunTask) shouldBeExecuted(ctx *exec2.Context) (shouldBeExecuted bo
 	}
 
 	if !isSuccess {
+		logrus.Debugf("onlyif section has failed, will skip %s", crt)
 		return false, nil
 	}
 
@@ -278,9 +283,11 @@ func (crt *CmdRunTask) shouldBeExecuted(ctx *exec2.Context) (shouldBeExecuted bo
 	}
 
 	if !isExpectationSuccess {
+		logrus.Debugf("check of unless section was false, will skip %s", crt)
 		return false, nil
 	}
 
+	logrus.Debugf("all execution conditions are met, will continue %s", crt)
 	return true, nil
 }
 
@@ -300,7 +307,7 @@ func (crt *CmdRunTask) checkMissingFileCondition() (isExists bool, err error) {
 		}
 
 		if isExists {
-			logrus.Infof("file '%s' exists, will skip command '%s'", missingFileCondition, crt.Name)
+			logrus.Debugf("file '%s' exists", missingFileCondition)
 			return
 		}
 	}

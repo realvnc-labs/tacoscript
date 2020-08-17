@@ -58,5 +58,6 @@ func (oe OSApi) parse(userName, path string) (sysUserID, sysGroupID uint32, err 
 		return
 	}
 
+	logrus.Debugf("user parsing success: user '%s' has uid=%d and gid=%d", userName, uid, gid)
 	return uint32(uid), uint32(gid), nil
 }

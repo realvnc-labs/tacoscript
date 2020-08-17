@@ -29,7 +29,7 @@ func (fmm *OSFsManager) FileExists(filePath string) (bool, error) {
 		return false, nil
 	}
 
-	logrus.Debugf("will check if file '%s' is missing", filePath)
+	logrus.Debugf("will check if file '%s' exists", filePath)
 	_, e := os.Stat(filePath)
 	if e == nil {
 		return true, nil
