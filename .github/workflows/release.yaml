@@ -51,7 +51,6 @@ jobs:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           goos: ${{ matrix.goos }}
           goarch: ${{ matrix.goarch }}
-          project_path: "${{ env.CMD_PATH }}"
           build_flags: -v
           goversion: "https://golang.org/dl/go1.14.7.linux-amd64.tar.gz"
           binary_name: "tacoscript"
