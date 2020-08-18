@@ -1,0 +1,41 @@
+#
+# First example of a tacoscript following the syntax of Salt
+# but not implementing all options
+# https://docs.saltstack.com/en/latest/ref/states/all/salt.states.cmd.html
+#
+# unique id of the task, can be any string
+pack-result:
+  cmd.run:
+    - names:
+        - tar.exe -a -c -z -f C:\tmp\my-date.tar.gz C:\tmp\my-date.txt
+        - move C:\tmp\my-date.tar.gz C:\tmp\mydate
+    - require:
+        - save-date
+        - remove-date
+        - create-folder
+    - creates:
+        - C:\tmp\my-date.tar.gz
+    - shell: cmd.exe
+save-date:
+  # Name of the class and the module
+  cmd.run:
+    - name: date.exe /T > C:\tmp\my-date.txt
+    - cwd: C:\tmp
+    #- user: breathbath ##Use it only as root
+    - shell: cmd.exe
+    - env:
+        - PASSWORD: bunny
+    - creates: C:\tmp\my-date.txt # Don't execute if file exists.
+remove-date:
+  cmd.run:
+    - name: del C:\tmp\my-date.txt
+    - shell: cmd.exe
+    - require:
+        - save-date
+    - onlyif: date.exe /T | findstr -i "^Thu" # Execute only on Thursdays
+create-folder:
+  cmd.run:
+    - names:
+        - mkdir C:\tmp\mydate
+    - unless: dir C:\tmp\mydate
+    - shell: cmd.exe

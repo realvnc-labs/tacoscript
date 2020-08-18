@@ -11,7 +11,7 @@ func Init(isVerbose bool) {
 		FullTimestamp:   true,
 	})
 
-	logLevel := log.WarnLevel
+	logLevel := log.InfoLevel
 	if isVerbose {
 		logLevel = log.DebugLevel
 	}

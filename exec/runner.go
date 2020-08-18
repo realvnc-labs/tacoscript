@@ -103,7 +103,7 @@ func (sr SystemRunner) runCmds(cmds []*exec.Cmd) error {
 
 func (sr SystemRunner) setWorkingDir(cmd *exec.Cmd, execContext *Context) {
 	if execContext.WorkingDir != "" {
-		logrus.Debugf("will set working dir %s", execContext.WorkingDir)
+		logrus.Debugf("will set working dir %s to command %s", execContext.WorkingDir, cmd)
 		cmd.Dir = execContext.WorkingDir
 	}
 }
@@ -158,7 +158,7 @@ func (sr SystemRunner) setEnvs(cmd *exec.Cmd, execContext *Context) {
 	}
 
 	envs := execContext.Envs.ToEqualSignStrings()
-	logrus.Debugf("will set %d env variables: %s", len(envs), envs)
+	logrus.Debugf("will set %d env variables: %s to command '%s'", len(envs), envs, cmd)
 	cmd.Env = append(os.Environ(), envs...)
 }
 
@@ -235,6 +235,7 @@ func (sr SystemRunner) addCShellParamIfNeeded(shellParam *ShellParam) {
 }
 
 func (sr SystemRunner) setIO(cmd *exec.Cmd, stdOutWriter, stdErrWriter io.Writer) {
+	logrus.Debugf("will set stdout and stderr to cmd '%s'", cmd)
 	stdOutLoggedWriter := io2.FuncWriter{
 		Callback: func(p []byte) (n int, err error) {
 			logrus.Infof(string(p))

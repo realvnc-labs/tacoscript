@@ -23,7 +23,7 @@ func (oe OSApi) SetUser(userName, path string, cmd *exec.Cmd) error {
 	if userName == "" {
 		return nil
 	}
-	logrus.Debugf("will set user %s", userName)
+	logrus.Debugf("will set user %s to cmd %s", userName, cmd)
 
 	uid, gid, err := oe.parse(userName, path)
 	if err != nil {
