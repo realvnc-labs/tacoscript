@@ -1,0 +1,58 @@
+on:
+  release:
+    types: [created]
+
+jobs:
+  releases-matrix:
+    name: Release Go Binary
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        # build and publish in parallel: linux/386, linux/amd64, windows/386, windows/amd64, darwin/386, darwin/amd64
+        goos: [linux, windows, darwin]
+        goarch: ["386", amd64, arm64, mips64, mips64le, mipsle, mips, s390x]
+        exclude:
+          - goarch: "386"
+            goos: darwin
+          - goarch: "arm64"
+            goos: windows
+          - goarch: "mips64"
+            goos: darwin
+          - goarch: "mips64"
+            goos: windows
+          - goarch: "mips64le"
+            goos: darwin
+          - goarch: "mips64le"
+            goos: windows
+          - goarch: "mipsle"
+            goos: darwin
+          - goarch: "mipsle"
+            goos: windows
+          - goarch: "mips"
+            goos: darwin
+          - goarch: "mips"
+            goos: windows
+          - goarch: "s390x"
+            goos: darwin
+          - goarch: "s390x"
+            goos: windows
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Set APP_VERSION env
+        run: echo ::set-env name=APP_VERSION::$(echo ${GITHUB_REF} | rev | cut -d'/' -f 1 | rev )
+      - name: Set BUILD_TIME env
+        run: echo ::set-env name=BUILD_TIME::$(date)
+      - name: Environment Printer
+        uses: managedkaos/print-env@v1.0
+
+      - uses: wangyoucao577/go-release-action@master
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          goos: ${{ matrix.goos }}
+          goarch: ${{ matrix.goarch }}
+          project_path: "${{ env.CMD_PATH }}"
+          build_flags: -v
+          goversion: "https://golang.org/dl/go1.14.7.linux-amd64.tar.gz"
+          binary_name: "tacoscript"
+          ldflags: -X "cmd.Version=${{ env.APP_VERSION }}" -X "cmd.BuildTime=${{ env.BUILD_TIME }}" -X cmd.GitCommit=${{ github.sha }} -X cmd.GitRef=${{ github.ref }}
