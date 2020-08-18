@@ -1,3 +1,4 @@
+name: Release artefacts
 on:
   release:
     types: [created]
@@ -13,6 +14,8 @@ jobs:
         goarch: ["386", amd64, arm64, mips64, mips64le, mipsle, mips, s390x]
         exclude:
           - goarch: "386"
+            goos: darwin
+          - goarch: "arm64"
             goos: darwin
           - goarch: "arm64"
             goos: windows
@@ -52,6 +55,6 @@ jobs:
           goos: ${{ matrix.goos }}
           goarch: ${{ matrix.goarch }}
           build_flags: -v
-          goversion: "https://golang.org/dl/go1.14.7.linux-amd64.tar.gz"
+          goversion: "1.14"
           binary_name: "tacoscript"
           ldflags: -X "cmd.Version=${{ env.APP_VERSION }}" -X "cmd.BuildTime=${{ env.BUILD_TIME }}" -X cmd.GitCommit=${{ github.sha }} -X cmd.GitRef=${{ github.ref }}
