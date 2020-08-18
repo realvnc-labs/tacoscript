@@ -248,7 +248,7 @@ func (crt *CmdRunTask) checkUnless(ctx *exec2.Context) (isExpectationSuccess boo
 		return false, err
 	}
 
-	logrus.Infof("will stop cmd since all unless conditions din't fail")
+	logrus.Infof("any unless condition didn't fail for task '%s'", crt)
 	return false, nil
 }
 
@@ -273,7 +273,6 @@ func (crt *CmdRunTask) shouldBeExecuted(ctx *exec2.Context) (shouldBeExecuted bo
 	}
 
 	if !isSuccess {
-		logrus.Debugf("onlyif section has failed, will skip %s", crt)
 		return false, nil
 	}
 
@@ -310,6 +309,7 @@ func (crt *CmdRunTask) checkMissingFileCondition() (isExists bool, err error) {
 			logrus.Debugf("file '%s' exists", missingFileCondition)
 			return
 		}
+		logrus.Debugf("file '%s' doesn't exist", missingFileCondition)
 	}
 
 	return

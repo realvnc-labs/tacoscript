@@ -90,11 +90,12 @@ func (sr SystemRunner) Run(execContext *Context) error {
 
 func (sr SystemRunner) runCmds(cmds []*exec.Cmd) error {
 	for _, cmd := range cmds {
-		logrus.Infof("will run cmd %s", cmd.String())
+		logrus.Debugf("will run cmd '%s'", cmd.String())
 		err := sr.SystemAPI.Run(cmd)
 		if err != nil {
 			return err
 		}
+		logrus.Debugf("execution success for '%s'", cmd.String())
 	}
 
 	return nil
@@ -242,7 +243,7 @@ func (sr SystemRunner) setIO(cmd *exec.Cmd, stdOutWriter, stdErrWriter io.Writer
 	}
 	stdErrLoggedWriter := io2.FuncWriter{
 		Callback: func(p []byte) (n int, err error) {
-			logrus.Errorf(string(p))
+			logrus.Warn(string(p))
 			return len(p), nil
 		},
 	}

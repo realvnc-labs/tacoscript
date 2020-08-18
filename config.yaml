@@ -20,7 +20,7 @@ save-date:
   cmd.run:
     - name: /bin/date > /tmp/my-date.txt
     - cwd: /tmp
-    #- user: breathbath
+    #- user: breathbath ##Execute it only as root
     - shell: bash
     - env:
         - PASSWORD: bunny
@@ -28,6 +28,7 @@ save-date:
 remove-date:
   cmd.run:
     - name: rm /tmp/my-date.txt
+    - shell: bash
     - require:
         - save-date
     - onlyif: date +%c|grep -q "^Thu" # Execute only on Thursdays
