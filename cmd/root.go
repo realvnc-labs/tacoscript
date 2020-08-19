@@ -12,7 +12,7 @@ var (
 		Short:   "Tacoscript is a state-driven scripted task executor",
 		Args:    cobra.ArbitraryArgs,
 		RunE:    exeCmd.RunE,
-		Version: Version,
+		Version: version(),
 	}
 )
 
