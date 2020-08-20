@@ -72,7 +72,7 @@ Double click on the tacoscript.exe and allow it's execution:
 
 ## As a go binary:
 
-
+    go get github.com/cloudradar-monitoring/tacoscript
 
 ## Program execution
 
@@ -104,9 +104,9 @@ On Windows
 
 ## Configuration
 
-The configuration file has yaml format. The file consists of a list of scripts which define a single desired state of the host system. A desired state can be an installed program or a file at certain location or a running daemon. 
+The configuration file has yaml format. The file consists of a list of scripts which define a single desired state of the host system. A desired state can be an installed program or a file or a running service. 
 
-Here is the minimal tacoscript.yaml:
+Here is the minimal possible tacoscript.yaml:
 
 
     # unique id of the script, can be any string
@@ -118,19 +118,19 @@ Here is the minimal tacoscript.yaml:
 We can read the script as:
 
     
-    We have a script with the name `create-file`. It has 1 task of type `cmd.run` which executes `touch /tmp/somefile.txt` in a command line. The desired result of this script execution would be an empty file at `/tmp/somefile.txt`.
+    We have a script with the name `create-file`. It has 1 task of type `cmd.run` which executes `touch /tmp/somefile.txt` command. The desired result of this script execution would be an empty file at `/tmp/somefile.txt`.
     
 
 ### Scripts
-The tacoscript.yaml file contains a collection of scripts, where each script defines a desired state of the target system. You can add as many scripts as you want. The tacoscript binary will execute scripts one after another rather than parallel. If any script fails, the execution will be stopped and the error will be given in the (stderr) output with a non-zero exit code.
+The tacoscript.yaml file contains a collection of scripts. Each script defines a desired state of the host system. You can add as many scripts as you want. The tacoscript binary will execute scripts from file sequentially. If any script failures, the program will stop the execution.
 
 ### Tasks
-Each script contains a collection of tasks. Each task has a unique type id which identifies the kind of operation the task is doing. Each task gets parameters list specified under it as input e.g. from the example above the task `cmd.run` gets array of names with one element `touch /tmp/somefile.txt` as it's input. The parameters specify the execution details of a task.  
+Each script contains a collection of tasks. Each task has a unique type id which identifies the kind of operation the task can do. Each task gets parameters list specified under it as input data. In the example above the task `cmd.run` receives parameter -name with value `/tmp/somefile.txt` and interprets it as a command which should be executed.  
 
 ### Task types
 
 _cmd.run_
-Executes an arbitrary command in a shell of a host system. Here is the `cmd.run` task with all possible parameters:
+Executes an arbitrary command in a shell of a host system. The `cmd.run` task can have following parameters:
 
 
     create-file:
@@ -152,18 +152,19 @@ Executes an arbitrary command in a shell of a host system. Here is the `cmd.run`
         - unless: service backup-runner status
         - onlyif: date +%c|grep -q "^Thu"
 
-You can read interpret this file as following:
+You can interpret this script as following:
 
-The desired state of the script 'create-file' is a file at /tmp/data2001-01-01.txt. To achieve this the tacoscript binary should execute a task of type 'cmd.run', which means execution of command `echo 'data to backup' >> /tmp/data2001-01-01.txt` in the shell of the host system.
-The second desired state of the script 'backup-data' is 2 files: archive of `/tmp/data2001-01-01.txt` under `/dumps/data2001-01-01.txt.tar.gz` and it's md5 sum file at `/dumps/data2001-01-01.txt.tar.gz.md5`.
-It should be achieved by executing a task of type 'cmd.run' which requires 2 shell operations to be executed:
+The desired state of the script 'create-file' is a file at /tmp/data2001-01-01.txt. To achieve it, the tacoscript binary should execute a task of type 'cmd.run'. This task type executes command `echo 'data to backup' >> /tmp/data2001-01-01.txt` in the shell of the host system.
+The second desired state of the script 'backup-data' is creation of 2 files: `/dumps/data2001-01-01.txt.tar.gz` and it's md5 sum file at `/dumps/data2001-01-01.txt.tar.gz.md5`.
+
+It should be achieved by executing a task of type 'cmd.run' which requires 2 shell commands:
 
 - `tar czf /dumps/data2001-01-01.txt.tar.gz /tmp/data2001-01-01.txt`
 - `md5sum /dumps/data2001-01-01.txt.tar.gz >> /dumps/data2001-01-01.txt.tar.gz.md5`
 
 The commands will be executed in the following context:
 - current working directory (cwd) will be `/tmp`
-- context with env variables will contain PASSWORD with value `bunny`
+- env variables list will contain PASSWORD with value `bunny`
 - as shell `bash` will be selected
 
 Both commands will be only executed after `create-file` script. So the tacoscript interpreter will make sure that the `create-file` script is executed before `backup-data` and only if it was successful.
@@ -287,9 +288,9 @@ You can also change your working directory and use relative paths to get the sam
       - name: echo 123
       - creates: file1.txt
 
-The `creates` parameter identifies the files which should be missing to run the current task. We can put it another way and say that if any of the files in the `creates` section exist, the task will never run. 
+The `creates` parameter identifies the files which should be missing if you want to run the current task. In other words if any of the files in the `creates` section exist, the task will never run. 
 
-A typical example use case for this parameter would be an exclusive access to a file, for example we don't run the backup if the file is locked by another process:
+A typical example use case for this parameter would be an exclusive access to a file, e.g. we don't run the backup, if the file is locked by another process:
 
     backup-data:
       cmd.run:
@@ -299,7 +300,7 @@ A typical example use case for this parameter would be an exclusive access to a 
         - rm serviceALock.txt
       - creates: serviceALock.txt
       
-In this situation we expect the the script is running periodically, so at some point the lock will be removed, and the backup-data script get a chance to make a backup.
+In this situation we expect that the script is running periodically, so at some point the lock will be removed, and the backup-data script get a chance to make a backup.
 
 
 ### shell
@@ -343,6 +344,27 @@ will run as:
 
     cmd.exe \C date.exe /T > C:\tmp\my-date.txt
 
+### user
+[string] type
+
+    create-user-file:
+      cmd.run:
+        - user: www-data
+        - touch: data.txt
+
+The `user` parameter allows to run commands as a specific user. In Linux systems this will require sudo rights for the tacoscript binary. In Windows this command will be ignored.
+  Switching users allows to create resources (file, services, folders etc) with the ownership of the specified user. 
+
+After running the above script, tacoscript will create a `data.txt` file with the ownership of `www-data` user.
+
+    sudo tacoscript tacoscript.yaml
+    ls -la
+    #output will be
+    -rw-r--r--    4 root  root          128 Jul 15  2019 tacoscript.yaml
+    -rw-r--r--    1 root  root          3550 Oct 30  2019 tacoscript
+    -rw-r--r--@   1 www-data  www-data  0 Apr 23 09:22 data.txt
+    
+    
 ### env
 [keyValue] type 
 
@@ -377,7 +399,7 @@ In this example the psql will read login and password from the corresponding env
             - service zookeeper status
             - test -e messages.txt
 
-The `onlyif` parameter gives a list of commands which will be executed before the actual task and if any of them fails (returns non zero exit code), the task will be skipped. However the failures won't stop the program execution. The `onlyif` checks are given to prove that the task should run, in case of failure the task will be completely ignored.
+The `onlyif` parameter gives a list of commands which will be executed before the actual task and if any of them fails (returns non zero exit code), the task will be skipped. However, the failures won't stop the program execution. The `onlyif` checks are given to prove that the task should run, in case of failure the task will be completely ignored.
 
 In the example above the command `kafka-console-producer.sh --broker-list localhost:9092 --topic my_topic --new-producer < my_file.txt` won't be triggered, if tacoscript detects, that kafka or zookeeper services are not running or `messages.txt` file doesn't exist.
 
@@ -406,3 +428,32 @@ The `unless` is a reverted `onlyif` parameter which means the task will run only
 The above examples show some use cases for this parameter. In the first one we execute the command `service myservice start` only if we detect that there are no critical logs. A typical use case is to stop an endless startup loop for a service when we detect some critical logs from it.
 
 The second example demonstrates a check for some required configs. If tacoscript detects any missing config from the list, it will send an email to the server's adminstrator. 
+
+### Known limitations
+- to use shell pipes, redirects or glob expands, please specify a `shell` parameter
+- `user` parameter will require sudo rights for tacoscript, in Windows this parameter is ignored
+- if you use cmd.run tasks in Windows, you'd better specify the shell parameter as `cmd.exe`, otherwise you will get errors like:
+    `exec: "xxx": executable file not found in %PATH%`
+
+## Development instructions
+
+### You can run unit-tests as:
+
+    make test
+    
+### Execute static code analytic tools
+
+1. Install golangci-lint using instructions from [this site](https://golangci-lint.run/usage/install/)
+
+2. Run the tool
+
+
+    make sca
+
+### Compile tacoscript binary for your host OS
+
+    make build
+    
+### Compile tacoscript binary for Windows
+
+    make build-win
