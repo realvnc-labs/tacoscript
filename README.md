@@ -38,12 +38,13 @@ Tacoscript is written in GO, so its provided as an executable binary for a big v
     #On Windows assuming you're in the directory with the donwloaded file
      CertUtil -hashfile tacoscript-latest-linux-amd64.tar.gz MD5
     
-    # The output will be :
+    #The output will be :
      MD5 hash of tacoscript-0.0.4pre-windows-amd64.zip:
      7103fcda170a54fa39cf92fe816833d1
      CertUtil: -hashfile command completed successfully.
     
     #Compare the command output to the contents of file tacoscript-latest-windows-amd64.zip.md5 they should match
+  
     
 _Note: if the checksums didn't match please don't continue the installation!_
 
@@ -53,6 +54,7 @@ _Note: if the checksums didn't match please don't continue the installation!_
     #On linux/MacOS
     tar -xzvOf tacoscript-0.0.4pre-darwin-amd64.tar.gz >> /usr/local/bin/tacoscript
     chmod +x /usr/local/bin/tacoscript
+    
     
 - On Windows
 
@@ -70,7 +72,7 @@ Double click on the tacoscript.exe and allow it's execution:
 
 ![C:\Program Files\Tacoscript\tacoscript.exe](docs/AllowRun.png?raw=true "AllowRun")
 
-## As a go binary:
+## Install as a go binary:
 
     go get github.com/cloudradar-monitoring/tacoscript
 
