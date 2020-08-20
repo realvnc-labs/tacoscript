@@ -1,11 +1,13 @@
 [![Coverage Status](https://coveralls.io/repos/github/cloudradar-monitoring/tacoscript/badge.svg)](https://coveralls.io/github/cloudradar-monitoring/tacoscript)
 [![Actions Status](https://github.com/cloudradar-monitoring/tacoscript/workflows/Go/badge.svg)](https://github.com/cloudradar-monitoring/tacoscript/actions)
 ## Overview
-This library provides functionality for remote server provisioning. Practically it's a command line tool which is installed as a binary on Windows/.nix servers. Further on it accepts a list of commands as a simple yaml file and executes them on the host system. As a result you get a fully provisioned remote machine.
+Tacoscript library provides functionality for provisioning of remote servers and local machines running on any OS. Tacoscript can be installed as a binary therefore it doesn't require any additional tools or programs on the host system. 
 
-The idea was inspired by projects like Salt-Stack or Ansible, however they have a limited possibility to work on Windows. Salt requires the installation of Python and Ansible has no Windows support. 
+Tacoscript provisions host systems from simple yaml files written in a [SaltStack](https://www.saltstack.com/) driven configuration language. 
 
-The project targets beginners and semi-professionals. They would be overwhelmed with Ansible or Salt. This project provides a  Go driven, binary based implementation which doesn't require additional tools on the host system and has a full Windows support. 
+Why we need another provisioning tool? Unfortunately the next competitors like Puppet, Ansible or Salt have a limited support for Windows or require installation of additional tools which is not always convenient.
+
+Tacoscript is written in GO, so its provided as an executable binary for a big variety of host OS and platforms and it requires no additional tools to be installed in the host system. You can find the list of supported OS and architectures [here](https://golang.org/doc/install/source#environment). 
 
 ## Installation
 
@@ -67,6 +69,10 @@ Copy the tacoscript.exe binary to `C:\Program Files\Tacoscript`
 Double click on the tacoscript.exe and allow it's execution:
 
 ![C:\Program Files\Tacoscript\tacoscript.exe](docs/AllowRun.png?raw=true "AllowRun")
+
+## As a go binary:
+
+
 
 ## Program execution
 
@@ -281,19 +287,122 @@ You can also change your working directory and use relative paths to get the sam
       - name: echo 123
       - creates: file1.txt
 
-The `creates` parameter contains the file path(s) which should be missing if you want the script to be executed. This is a quire useful option, when you want to protect a file from being overwritten. 
-Imagine following scenario:
+The `creates` parameter identifies the files which should be missing to run the current task. We can put it another way and say that if any of the files in the `creates` section exist, the task will never run. 
+
+A typical example use case for this parameter would be an exclusive access to a file, for example we don't run the backup if the file is locked by another process:
 
     backup-data:
       cmd.run:
-      - name: echo 123
-      - creates:
-        - file1.txt
-        - file2.txt
+      - names:
+        - touch serviceALock.txt
+        - tar cvf somedata.txt.tar somedata.txt
+        - rm serviceALock.txt
+      - creates: serviceALock.txt
+      
+In this situation we expect the the script is running periodically, so at some point the lock will be removed, and the backup-data script get a chance to make a backup.
+
+
+### shell
+[string] type
+
+Shell is a program that takes commands from input and gives them to the operating system to perform. Known Linux shells are [bash](https://www.gnu.org/software/bash/), [sh](https://www.gnu.org/software/bash/), [zsh](https://ohmyz.sh/) etc. Windows supports [cmd.exe](https://ss64.com/nt/cmd.html) shell. 
+
+If you don't specify this parameter, tacoscript will use the default golang [exec function](https://golang.org/pkg/os/exec/)
+which intentionally does not invoke the system shell and does not expand any glob patterns or handle other expansions, pipelines, or redirections typically done by shells.
+ 
+ To expand glob patterns, you can specify the `shell` parameter, in this case you should take care to escape any dangerous input.
+ 
+ **Note that if you use `cmd.run` task type without the `shell` parameter, usual patterns like pipelines and redirections won't work.** 
+ 
+ If you specify a `shell` parameter, tacoscript will run your task commands as a '-c' parameter under Unix and '/C' parameter under Windows:
+ 
+ The script below:
+ 
+     backup-data:
+       cmd.run:
+       - names:
+         - touch serviceALock.txt
+         - tar cvf somedata.txt.tar somedata.txt
+         - rm serviceALock.txt
+       - shell: bash
+       
+will run as:
+
+    bash -c touch serviceALock.txt
+    bash -c tar cvf somedata.txt.tar somedata.txt
+    bash -c rm serviceALock.txt
+    
+The script below:
+ 
+     backup-data:
+       cmd.run:
+       - name: date.exe /T > C:\tmp\my-date.txt
+       - shell: cmd.exe
+       
+will run as:
+
+    cmd.exe \C date.exe /T > C:\tmp\my-date.txt
+
+### env
+[keyValue] type 
+
+The `env` parameter is a list of key value parameters where key represents the name of an environment variable and value it's content. Env variables are parameters which are set from the outside of a running program and can be used as configuration data.
+
+    save-date:
+      cmd.run:
+        - name: psql
+        - env:
+            - PGUSER: bunny
+            - PGPASSWORD: bug
+
+In this example the psql will read login and password from the corresponding env variables and connect to the database without any input parameters or configuration data.
+
+### onlyif
+[string] and [array] type
+
+`onlyif` parameter can be both string and array e.g.
+
+    publish-kafka-message:
+      cmd.run:
+        - name: kafka-console-producer.sh --broker-list localhost:9092 --topic my_topic --new-producer < my_file.txt
+        - onlyif: test -e my_file
 
     #or
-    backup-data:
+    
+    publish-kafka-message:
       cmd.run:
-      - name: echo 123
-      - creates: file1.txt
+        - name: kafka-console-producer.sh --broker-list localhost:9092 --topic my_topic --new-producer < messages.txt
+        - onlyif: 
+            - service kafka status
+            - service zookeeper status
+            - test -e messages.txt
 
+The `onlyif` parameter gives a list of commands which will be executed before the actual task and if any of them fails (returns non zero exit code), the task will be skipped. However the failures won't stop the program execution. The `onlyif` checks are given to prove that the task should run, in case of failure the task will be completely ignored.
+
+In the example above the command `kafka-console-producer.sh --broker-list localhost:9092 --topic my_topic --new-producer < my_file.txt` won't be triggered, if tacoscript detects, that kafka or zookeeper services are not running or `messages.txt` file doesn't exist.
+
+### unless
+[string] and [array] type
+
+`unless` parameter can be both string and array e.g.
+
+    start-myservice:
+      cmd.run:
+        - name: service myservice start
+        - unless: test -e myservice_fatallogs.txt
+
+    #or
+    
+    report-failure:
+      cmd.run:
+        - name: mail -s "Some configs are missing, check what is going on" admin@admin.com
+        - unless:
+            - test -e criticalConfigOne.txt
+            - test -e criticalConfigTwo.txt
+            - test -e criticalConfigThree.txt
+
+The `unless` is a reverted `onlyif` parameter which means the task will run only of the `unless` condition failes (returns a non zero exit code). However if multiple `unless` parameters are used, tacoscript will execute the task only if **one** `unless` condition fails (the `onlyif` parameters should be all successful to unblock the task). 
+
+The above examples show some use cases for this parameter. In the first one we execute the command `service myservice start` only if we detect that there are no critical logs. A typical use case is to stop an endless startup loop for a service when we detect some critical logs from it.
+
+The second example demonstrates a check for some required configs. If tacoscript detects any missing config from the list, it will send an email to the server's adminstrator. 

@@ -15,6 +15,10 @@ var cParamShells = map[string]string{
 	"zsh":     "-c",
 	"bash":    "-c",
 	"sh":      "-c",
+	"csh":     "-c",
+	"tcsh":    "-c",
+	"ksh":     "-c",
+	"fish":    "-c",
 	"cmd.exe": "/C",
 }
 
