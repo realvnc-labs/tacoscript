@@ -1,7 +1,6 @@
 package tasks
 
 import (
-	"context"
 	"fmt"
 	"time"
 )
@@ -15,7 +14,6 @@ type Script struct {
 
 type Task interface {
 	GetName() string
-	Execute(ctx context.Context) ExecutionResult
 	Validate() error
 	GetPath() string
 	GetRequirements() []string

@@ -9,6 +9,7 @@ import (
 )
 
 type Runner struct {
+	ExecutorRouter tasks.ExecutorRouter
 }
 
 func (r Runner) Run(ctx context.Context, scripts tasks.Scripts) error {
@@ -17,8 +18,14 @@ func (r Runner) Run(ctx context.Context, scripts tasks.Scripts) error {
 	for _, script := range scripts {
 		logrus.Infof("will run script '%s'", script.ID)
 		for _, task := range script.Tasks {
+			executr, err := r.ExecutorRouter.GetExecutor(task)
+			if err != nil {
+				return err
+			}
+
 			logrus.Debugf("will run task '%s' at path '%s'", task.GetName(), task.GetPath())
-			res := task.Execute(ctx)
+			res := executr.Execute(ctx, task)
+
 			logrus.Infof("finished task '%s' at path '%s', result: %s", task.GetName(), task.GetPath(), res)
 			if res.Err != nil {
 				return res.Err

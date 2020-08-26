@@ -57,7 +57,6 @@ func TestCmdRunTaskBuilder(t *testing.T) {
 				MissingFilesCondition: []string{"somefile.txt"},
 				Errors:                &utils.Errors{},
 				OnlyIf:                []string{"one condition"},
-				FsManager:             &utils.FsManagerMock{},
 			},
 		},
 		{
@@ -77,7 +76,6 @@ func TestCmdRunTaskBuilder(t *testing.T) {
 						fmt.Errorf("key value array expected at 'somePathWithErrors' but got '123'"),
 					},
 				},
-				FsManager: &utils.FsManagerMock{},
 			},
 		},
 		{
@@ -99,7 +97,6 @@ func TestCmdRunTaskBuilder(t *testing.T) {
 						errors.New(`wrong key value element at 'somePathWithErrors2': '"one"'`),
 					},
 				},
-				FsManager: &utils.FsManagerMock{},
 			},
 		},
 		{
@@ -124,8 +121,7 @@ func TestCmdRunTaskBuilder(t *testing.T) {
 					"name one",
 					"name two",
 				},
-				Errors:    &utils.Errors{},
-				FsManager: &utils.FsManagerMock{},
+				Errors: &utils.Errors{},
 			},
 		},
 		{
@@ -171,7 +167,6 @@ func TestCmdRunTaskBuilder(t *testing.T) {
 					"OnlyIf two",
 					"OnlyIf three",
 				},
-				FsManager: &utils.FsManagerMock{},
 			},
 		},
 		{
@@ -191,7 +186,6 @@ func TestCmdRunTaskBuilder(t *testing.T) {
 				Unless: []string{
 					"unless one",
 				},
-				FsManager: &utils.FsManagerMock{},
 			},
 		},
 		{
@@ -217,7 +211,6 @@ func TestCmdRunTaskBuilder(t *testing.T) {
 					"Unless two",
 					"Unless three",
 				},
-				FsManager: &utils.FsManagerMock{},
 			},
 		},
 	}
@@ -225,9 +218,7 @@ func TestCmdRunTaskBuilder(t *testing.T) {
 	for _, testCase := range testCases {
 		tc := testCase
 		t.Run(tc.typeName, func(t *testing.T) {
-			cmdBuilder := CmdRunTaskBuilder{
-				FsManager: &utils.FsManagerMock{},
-			}
+			cmdBuilder := CmdRunTaskBuilder{}
 			actualTask, err := cmdBuilder.Build(
 				tc.typeName,
 				tc.path,

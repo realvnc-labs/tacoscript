@@ -18,13 +18,26 @@ func RunScript(scriptPath string) error {
 	parser := Builder{
 		DataProvider: fileDataProvider,
 		TaskBuilder: tasks.NewBuilderRouter(map[string]tasks.Builder{
-			tasks.TaskTypeCmdRun: &tasks.CmdRunTaskBuilder{
+			tasks.TaskTypeCmdRun: &tasks.CmdRunTaskBuilder{},
+			tasks.FileManaged:    &tasks.FileManagedTaskBuilder{},
+		}),
+	}
+
+	execRouter := tasks.ExecutorRouter{
+		Executors: map[string]tasks.Executor{
+			tasks.TaskTypeCmdRun: &tasks.CmdRunTaskExecutor{
 				Runner: exec.SystemRunner{
 					SystemAPI: exec.OSApi{},
 				},
 				FsManager: &utils.OSFsManager{},
 			},
-		}),
+			tasks.FileManaged: &tasks.FileManagedTaskExecutor{
+				Runner: exec.SystemRunner{
+					SystemAPI: exec.OSApi{},
+				},
+				FsManager: &utils.OSFsManager{},
+			},
+		},
 	}
 
 	scripts, err := parser.BuildScripts()
@@ -33,7 +46,9 @@ func RunScript(scriptPath string) error {
 		return err
 	}
 
-	runner := Runner{}
+	runner := Runner{
+		ExecutorRouter: execRouter,
+	}
 
 	err = runner.Run(context.Background(), scripts)
 

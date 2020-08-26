@@ -61,3 +61,25 @@ func ConvertToValues(val interface{}, path string) ([]string, error) {
 
 	return res, nil
 }
+
+func ConvertToBool(val interface{}) bool {
+	boolVal, ok := val.(bool)
+	if ok {
+		return boolVal
+	}
+
+	boolValStr := fmt.Sprint(val)
+
+	switch boolValStr {
+	case "":
+		return false
+	case "false":
+		return false
+	case "0":
+		return false
+	case "null":
+		return false
+	default:
+		return true
+	}
+}

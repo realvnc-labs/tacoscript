@@ -17,18 +17,13 @@ import (
 )
 
 func TestTaskExecution(t *testing.T) {
-	systemAPIMock := &appExec.SystemAPIMock{
-		Cmds: []*exec.Cmd{},
-	}
-
-	runnerMock := &appExec.SystemRunner{SystemAPI: systemAPIMock}
-
 	testCases := []struct {
 		Task            *CmdRunTask
 		ExpectedResult  ExecutionResult
 		RunnerMock      *appExec.SystemRunner
 		ExpectedCmdStrs []string
 		Name            string
+		FileShouldExist bool
 	}{
 		{
 			Name: "test one name command with 2 envs",
@@ -45,8 +40,6 @@ func TestTaskExecution(t *testing.T) {
 					},
 				},
 				MissingFilesCondition: []string{""},
-				FsManager:             &utils.FsManagerMock{},
-				Runner:                runnerMock,
 			},
 			ExpectedResult: ExecutionResult{
 				IsSkipped: false,
@@ -69,9 +62,6 @@ func TestTaskExecution(t *testing.T) {
 				User:                  "some user",
 				Name:                  "some parser command",
 				MissingFilesCondition: []string{"somefile.txt"},
-				FsManager: &utils.FsManagerMock{
-					ExistsToReturn: true,
-				},
 			},
 			ExpectedResult: ExecutionResult{
 				IsSkipped: true,
@@ -82,13 +72,13 @@ func TestTaskExecution(t *testing.T) {
 				ErrToGive:          nil,
 				UserSetErrToReturn: errors.New("some error"),
 			}},
+			FileShouldExist: true,
 		},
 		{
 			Name: "test setting user failure",
 			Task: &CmdRunTask{
-				Name:      "echo 12345",
-				User:      "some user",
-				FsManager: &utils.FsManagerMock{},
+				Name: "echo 12345",
+				User: "some user",
 			},
 			ExpectedResult: ExecutionResult{
 				IsSkipped: false,
@@ -103,8 +93,7 @@ func TestTaskExecution(t *testing.T) {
 		{
 			Name: "same cmd execution failure",
 			Task: &CmdRunTask{
-				Name:      "lpwd",
-				FsManager: &utils.FsManagerMock{},
+				Name: "lpwd",
 			},
 			ExpectedResult: ExecutionResult{
 				IsSkipped: false,
@@ -126,7 +115,6 @@ func TestTaskExecution(t *testing.T) {
 				},
 				WorkingDir: "/many/dev",
 				User:       "usermany",
-				FsManager:  &utils.FsManagerMock{},
 			},
 			ExpectedResult: ExecutionResult{
 				IsSkipped: false,
@@ -146,7 +134,6 @@ func TestTaskExecution(t *testing.T) {
 					"file.one",
 					"file.two",
 				},
-				FsManager: &utils.FsManagerMock{},
 			},
 			ExpectedResult: ExecutionResult{
 				IsSkipped: false,
@@ -161,9 +148,8 @@ func TestTaskExecution(t *testing.T) {
 		{
 			Name: "executing one onlyif condition with success",
 			Task: &CmdRunTask{
-				Name:      "cmd lala",
-				OnlyIf:    []string{"check before lala"},
-				FsManager: &utils.FsManagerMock{},
+				Name:   "cmd lala",
+				OnlyIf: []string{"check before lala"},
 			},
 			ExpectedResult: ExecutionResult{
 				IsSkipped: false,
@@ -178,9 +164,8 @@ func TestTaskExecution(t *testing.T) {
 		{
 			Name: "executing one onlyif condition with failure",
 			Task: &CmdRunTask{
-				Name:      "cmd with OnlyIf failure",
-				OnlyIf:    []string{"check OnlyIf error"},
-				FsManager: &utils.FsManagerMock{},
+				Name:   "cmd with OnlyIf failure",
+				OnlyIf: []string{"check OnlyIf error"},
 			},
 			ExpectedResult: ExecutionResult{
 				IsSkipped: true,
@@ -202,9 +187,8 @@ func TestTaskExecution(t *testing.T) {
 		{
 			Name: "executing multiple onlyif conditions with failure",
 			Task: &CmdRunTask{
-				Name:      "cmd with multiple OnlyIf failure",
-				OnlyIf:    []string{"check OnlyIf success", "check OnlyIf failure"},
-				FsManager: &utils.FsManagerMock{},
+				Name:   "cmd with multiple OnlyIf failure",
+				OnlyIf: []string{"check OnlyIf success", "check OnlyIf failure"},
 			},
 			ExpectedResult: ExecutionResult{
 				IsSkipped: true,
@@ -226,9 +210,8 @@ func TestTaskExecution(t *testing.T) {
 		{
 			Name: "executing multiple onlyif conditions with success",
 			Task: &CmdRunTask{
-				Name:      "cmd with multiple OnlyIf success",
-				OnlyIf:    []string{"check OnlyIf success 1", "check OnlyIf success 2"},
-				FsManager: &utils.FsManagerMock{},
+				Name:   "cmd with multiple OnlyIf success",
+				OnlyIf: []string{"check OnlyIf success 1", "check OnlyIf success 2"},
 			},
 			ExpectedResult: ExecutionResult{
 				IsSkipped: false,
@@ -242,10 +225,9 @@ func TestTaskExecution(t *testing.T) {
 		{
 			Name: "executing onlyif validation error",
 			Task: &CmdRunTask{
-				Name:      "executing onlyif validation error",
-				OnlyIf:    []string{"checking onlyif validation error"},
-				FsManager: &utils.FsManagerMock{},
-				User:      "some user 123",
+				Name:   "executing onlyif validation error",
+				OnlyIf: []string{"checking onlyif validation error"},
+				User:   "some user 123",
 			},
 			ExpectedResult: ExecutionResult{
 				IsSkipped: false,
@@ -267,9 +249,8 @@ func TestTaskExecution(t *testing.T) {
 		{
 			Name: "executing one unless condition with success",
 			Task: &CmdRunTask{
-				Name:      "cmd masa",
-				Unless:    []string{"run unless masa"},
-				FsManager: &utils.FsManagerMock{},
+				Name:   "cmd masa",
+				Unless: []string{"run unless masa"},
 			},
 			ExpectedResult: ExecutionResult{
 				IsSkipped: false,
@@ -291,9 +272,8 @@ func TestTaskExecution(t *testing.T) {
 		{
 			Name: "executing one unless condition with failure",
 			Task: &CmdRunTask{
-				Name:      "cmd with unless failure",
-				Unless:    []string{"check unless failure"},
-				FsManager: &utils.FsManagerMock{},
+				Name:   "cmd with unless failure",
+				Unless: []string{"check unless failure"},
 			},
 			ExpectedResult: ExecutionResult{
 				IsSkipped: true,
@@ -307,9 +287,8 @@ func TestTaskExecution(t *testing.T) {
 		{
 			Name: "executing multiple unless conditions with all success",
 			Task: &CmdRunTask{
-				Name:      "cmd with multiple unless success",
-				Unless:    []string{"check unless one", "check unless two"},
-				FsManager: &utils.FsManagerMock{},
+				Name:   "cmd with multiple unless success",
+				Unless: []string{"check unless one", "check unless two"},
 			},
 			ExpectedResult: ExecutionResult{
 				IsSkipped: true,
@@ -323,9 +302,8 @@ func TestTaskExecution(t *testing.T) {
 		{
 			Name: "executing multiple unless conditions with at least one failure",
 			Task: &CmdRunTask{
-				Name:      "cmd with multiple unless with at least one failure",
-				Unless:    []string{"check unless 1", "check unless 2"},
-				FsManager: &utils.FsManagerMock{},
+				Name:   "cmd with multiple unless with at least one failure",
+				Unless: []string{"check unless 1", "check unless 2"},
 			},
 			ExpectedResult: ExecutionResult{
 				IsSkipped: false,
@@ -347,10 +325,9 @@ func TestTaskExecution(t *testing.T) {
 		{
 			Name: "executing unless validation error",
 			Task: &CmdRunTask{
-				Unless:    []string{"checking unless validation error"},
-				Name:      "executing unless validation error",
-				User:      "some user 345",
-				FsManager: &utils.FsManagerMock{},
+				Unless: []string{"checking unless validation error"},
+				Name:   "executing unless validation error",
+				User:   "some user 345",
 			},
 			RunnerMock: &appExec.SystemRunner{SystemAPI: &appExec.SystemAPIMock{
 				Cmds:               []*exec.Cmd{},
@@ -364,12 +341,21 @@ func TestTaskExecution(t *testing.T) {
 		},
 	}
 
+	systemAPIMock := &appExec.SystemAPIMock{
+		Cmds: []*exec.Cmd{},
+	}
+
 	for _, testCase := range testCases {
 		tc := testCase
 		t.Run(tc.Name, func(tt *testing.T) {
-			tc.Task.Runner = tc.RunnerMock
+			cmdRunExecutor := &CmdRunTaskExecutor{
+				Runner: tc.RunnerMock,
+				FsManager: &utils.FsManagerMock{
+					ExistsToReturn: tc.FileShouldExist,
+				},
+			}
 
-			res := tc.Task.Execute(context.Background())
+			res := cmdRunExecutor.Execute(context.Background(), tc.Task)
 			assert.EqualValues(tt, tc.ExpectedResult.Err, res.Err)
 			assert.EqualValues(tt, tc.ExpectedResult.IsSkipped, res.IsSkipped)
 			assert.EqualValues(tt, tc.ExpectedResult.StdOut, res.StdOut)
@@ -437,38 +423,34 @@ func TestOSCmdRunnerValidation(t *testing.T) {
 	}{
 		{
 			Task: CmdRunTask{
-				Names:     []string{"one", "two"},
-				Errors:    &utils.Errors{},
-				FsManager: &utils.FsManagerMock{},
+				Names:  []string{"one", "two"},
+				Errors: &utils.Errors{},
 			},
 			ExpectedError: "",
 		},
 		{
 			Task: CmdRunTask{
-				Name:      "three",
-				Errors:    &utils.Errors{},
-				FsManager: &utils.FsManagerMock{},
+				Name:   "three",
+				Errors: &utils.Errors{},
 			},
 			ExpectedError: "",
 		},
 		{
 			Task: CmdRunTask{
-				Name:      "four",
-				Names:     []string{"five", "six"},
-				Errors:    &utils.Errors{},
-				FsManager: &utils.FsManagerMock{},
+				Name:   "four",
+				Names:  []string{"five", "six"},
+				Errors: &utils.Errors{},
 			},
 			ExpectedError: "",
 		},
 		{
-			Task:          CmdRunTask{Errors: &utils.Errors{}, FsManager: &utils.FsManagerMock{}},
+			Task:          CmdRunTask{Errors: &utils.Errors{}},
 			ExpectedError: "empty required value at path '.name', empty required values at path '.names'",
 		},
 		{
 			Task: CmdRunTask{
-				Names:     []string{"", ""},
-				Errors:    &utils.Errors{},
-				FsManager: &utils.FsManagerMock{},
+				Names:  []string{"", ""},
+				Errors: &utils.Errors{},
 			},
 			ExpectedError: "empty required value at path '.name', empty required values at path '.names'",
 		},
