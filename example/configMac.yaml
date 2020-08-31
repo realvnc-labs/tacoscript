@@ -37,3 +37,17 @@ create-folder:
     - names:
         - mkdir /tmp/mydate
     - unless: test -e /tmp/mydate
+another-file:
+  file.managed:
+    - name: /tmp/my-file.txt
+    - contents: |
+        My file content
+        goes here
+        Funny file
+    - user: root
+    - group: www-data
+    - mode: 0755
+    - encoding: UTF-8
+    - onlyif:
+        - which apache2
+        - grep -q foo /tmp/bla

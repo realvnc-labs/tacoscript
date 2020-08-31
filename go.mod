@@ -6,8 +6,12 @@ require (
 	github.com/elliotchance/orderedmap v1.3.0
 	github.com/fatih/color v1.9.0 // indirect
 	github.com/goccy/go-yaml v1.8.0
+	github.com/goftp/file-driver v0.0.0-20180502053751-5d604a0fc0c9
+	github.com/goftp/server v0.0.0-20200708154336-f64f7c2d8a42
 	github.com/magiconair/properties v1.8.0
 	github.com/mattn/go-colorable v0.1.7 // indirect
+	github.com/pkg/sftp v1.12.0 // indirect
+	github.com/secsy/goftp v0.0.0-20200609142545-aa2de14babf4
 	github.com/sirupsen/logrus v1.6.0
 	github.com/spf13/cobra v1.0.0
 	github.com/spf13/pflag v1.0.5 // indirect

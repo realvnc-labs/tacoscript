@@ -86,22 +86,23 @@ func (fmtb FileManagedTaskBuilder) processContextItem(t *FileManagedTask, key, p
 }
 
 type FileManagedTask struct {
-	TypeName   string
-	Path       string
-	Name       string
-	Source     utils.Location
-	SourceHash string
-	MakeDirs   bool
-	Replace    bool
-	SkipVerify bool
-	Creates    []string
-	Contents   string
-	User       string
-	Group      string
-	Encoding   string
-	Mode       os.FileMode
-	OnlyIf     []string
-	Require    []string
+	TypeName     string
+	Path         string
+	Name         string
+	Source       utils.Location
+	SourceHash   string
+	MakeDirs     bool
+	Replace      bool
+	SkipVerify   bool
+	Creates      []string
+	Contents     string
+	User         string
+	Group        string
+	Encoding     string
+	Mode         os.FileMode
+	OnlyIf       []string
+	Require      []string
+	SkipTlsCheck bool
 }
 
 func (crt *FileManagedTask) GetName() string {
@@ -177,16 +178,13 @@ func (fmte *FileManagedTaskExecutor) Execute(ctx context.Context, task Task) Exe
 
 	start := time.Now()
 
-	err = fmte.Runner.Run(execCtx)
-
-	execRes.Duration = time.Since(start)
+	err = fmte.copySourceToTarget(fileManagedTask)
 	if err != nil {
 		execRes.Err = err
+		return execRes
 	}
-	logrus.Debugf("execution of %s has finished, took: %v", fileManagedTask.Name, execRes.Duration)
 
-	execRes.StdErr = stderrBuf.String()
-	execRes.StdOut = stdoutBuf.String()
+	execRes.Duration = time.Since(start)
 
 	return execRes
 }
@@ -275,4 +273,27 @@ func (fmte *FileManagedTaskExecutor) checkMissingFileCondition(fileManagedTask *
 	}
 
 	return
+}
+
+func (fmte *FileManagedTaskExecutor) copySourceToTarget(fileManagedTask *FileManagedTask) error {
+	if fileManagedTask.Source.RawLocation == "" {
+		logrus.Debug("source location is empty will ignore it")
+		return nil
+	}
+
+	source := fileManagedTask.Source
+	if !source.IsURL {
+		return utils.CopyLocalFile(source.LocalPath, fileManagedTask.Name)
+	}
+
+	switch fileManagedTask.Source.Url.Scheme {
+	case "http":
+		return utils.DownloadHttpFile(fileManagedTask.Source.Url, fileManagedTask.Name)
+	case "https":
+		return utils.DownloadHttpsFile(fileManagedTask.SkipTlsCheck, fileManagedTask.Source.Url, fileManagedTask.Name)
+	case "ftp":
+		return utils.DownloadFtpFile(fileManagedTask.Source.Url, fileManagedTask.Name)
+	default:
+		return fmt.Errorf("unknown or unsupported protocol '%s' to download data from '%s'", fileManagedTask.Source.Url.Scheme, fileManagedTask.Source.Url)
+	}
 }

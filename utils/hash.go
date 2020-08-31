@@ -6,6 +6,7 @@ import (
 	"crypto/sha256"
 	"crypto/sha512"
 	"fmt"
+	log "github.com/sirupsen/logrus"
 	"hash"
 	"io"
 	"os"
@@ -13,6 +14,17 @@ import (
 )
 
 func HashEquals(hashStr, filePath string) (bool, error) {
+	log.Debugf("will check if file %s matches hash %s", filePath, hashStr)
+
+	fileExists, err := FileExists(filePath)
+	if err != nil {
+		return false, err
+	}
+	if !fileExists {
+		log.Debugf("file %s doesn't exist, so it should be created", filePath)
+		return false, nil
+	}
+
 	f, err := os.Open(filePath)
 	if err != nil {
 		return false, err
@@ -29,7 +41,14 @@ func HashEquals(hashStr, filePath string) (bool, error) {
 		return false, err
 	}
 
-	return expectedHashStr == fmt.Sprintf("%x", hashAlgo.Sum(nil)), nil
+	isMatched := expectedHashStr == fmt.Sprintf("%x", hashAlgo.Sum(nil))
+	if isMatched {
+		log.Debugf("file hash at '%s' is matched", filePath)
+	} else {
+		log.Debugf("file hash at '%s' didn't match", filePath)
+	}
+
+	return isMatched, nil
 }
 
 func ExtractHashAlgo(hashStr string) (hash.Hash, string, error) {

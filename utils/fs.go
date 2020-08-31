@@ -1,9 +1,14 @@
 package utils
 
 import (
+	"crypto/tls"
 	"fmt"
+	"github.com/secsy/goftp"
 	"github.com/sirupsen/logrus"
+	"io"
 	"io/ioutil"
+	"net/http"
+	"net/url"
 	"os"
 )
 
@@ -90,4 +95,92 @@ func AssertFileMatchesExpectation(filePath string, fe *FileExpectation) (bool, s
 	}
 
 	return AssertFileMatchesExpectationOS(filePath, fe)
+}
+
+func CopyLocalFile(sourceFilePath, targetFilePath string) error {
+	input, err := ioutil.ReadFile(sourceFilePath)
+	if err != nil {
+		return err
+	}
+
+	err = ioutil.WriteFile(targetFilePath, input, 0644)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func DownloadHttpFile(url *url.URL, targetFilePath string) error {
+	out, err := os.Create(targetFilePath)
+	if err != nil {
+		return err
+	}
+	defer CloseResourceSecure(targetFilePath, out)
+
+	resp, err := http.Get(url.String())
+	if err != nil {
+		return err
+	}
+	defer CloseResourceSecure("http body", resp.Body)
+
+	_, err = io.Copy(out, resp.Body)
+
+	return err
+}
+
+func DownloadHttpsFile(skipTls bool, url *url.URL, targetFilePath string) error {
+	out, err := os.Create(targetFilePath)
+	if err != nil {
+		return err
+	}
+	defer CloseResourceSecure(targetFilePath, out)
+
+	client := http.Client{
+		Transport: &http.Transport{
+			TLSClientConfig: &tls.Config{
+				InsecureSkipVerify: skipTls,
+			},
+		},
+	}
+
+	resp, err := client.Get(url.String())
+	if err != nil {
+		return err
+	}
+	defer CloseResourceSecure("http body", resp.Body)
+
+	_, err = io.Copy(out, resp.Body)
+
+	return err
+}
+
+func DownloadFtpFile(url *url.URL, targetFilePath string) error {
+	ftpCfg := goftp.Config{}
+	if url.User != nil {
+		usrlLogin := url.User.Username()
+		usrPass, passIsSet := url.User.Password()
+		if passIsSet {
+			ftpCfg.User = usrlLogin
+			ftpCfg.Password = usrPass
+		}
+	}
+
+	ftpClient, err := goftp.DialConfig(ftpCfg, url.Host)
+
+	if err != nil {
+		return err
+	}
+
+	targetFile, err := os.Create(targetFilePath)
+	if err != nil {
+		return err
+	}
+
+	err = ftpClient.Retrieve(url.Path, targetFile)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
