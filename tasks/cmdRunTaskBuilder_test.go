@@ -1,12 +1,8 @@
 package tasks
 
 import (
-	"errors"
-	"fmt"
 	"strings"
 	"testing"
-
-	"github.com/cloudradar-monitoring/tacoscript/utils"
 
 	"github.com/cloudradar-monitoring/tacoscript/conv"
 
@@ -15,10 +11,11 @@ import (
 
 func TestCmdRunTaskBuilder(t *testing.T) {
 	testCases := []struct {
-		typeName     string
-		path         string
-		ctx          []map[string]interface{}
-		expectedTask *CmdRunTask
+		typeName      string
+		path          string
+		ctx           []map[string]interface{}
+		expectedTask  *CmdRunTask
+		expectedError string
 	}{
 		{
 			typeName: "someType",
@@ -55,7 +52,6 @@ func TestCmdRunTaskBuilder(t *testing.T) {
 					},
 				},
 				MissingFilesCondition: []string{"somefile.txt"},
-				Errors:                &utils.Errors{},
 				OnlyIf:                []string{"one condition"},
 			},
 		},
@@ -71,12 +67,8 @@ func TestCmdRunTaskBuilder(t *testing.T) {
 				TypeName: "someTypeWithErrors",
 				Path:     "somePathWithErrors",
 				Envs:     conv.KeyValues{},
-				Errors: &utils.Errors{
-					Errs: []error{
-						fmt.Errorf("key value array expected at 'somePathWithErrors' but got '123'"),
-					},
-				},
 			},
+			expectedError: "key value array expected at 'somePathWithErrors' but got '123'",
 		},
 		{
 			typeName: "someTypeWithErrors2",
@@ -92,12 +84,8 @@ func TestCmdRunTaskBuilder(t *testing.T) {
 				TypeName: "someTypeWithErrors2",
 				Path:     "somePathWithErrors2",
 				Envs:     conv.KeyValues{},
-				Errors: &utils.Errors{
-					Errs: []error{
-						errors.New(`wrong key value element at 'somePathWithErrors2': '"one"'`),
-					},
-				},
 			},
+			expectedError: `wrong key value element at 'somePathWithErrors2': '"one"'`,
 		},
 		{
 			typeName: "manyNamesType",
@@ -121,7 +109,6 @@ func TestCmdRunTaskBuilder(t *testing.T) {
 					"name one",
 					"name two",
 				},
-				Errors: &utils.Errors{},
 			},
 		},
 		{
@@ -151,7 +138,6 @@ func TestCmdRunTaskBuilder(t *testing.T) {
 				TypeName: "manyCreatesType",
 				Path:     "manyCreatesPath",
 				Name:     "many creates command",
-				Errors:   &utils.Errors{},
 				MissingFilesCondition: []string{
 					"create one",
 					"create two",
@@ -182,7 +168,6 @@ func TestCmdRunTaskBuilder(t *testing.T) {
 				TypeName: "oneUnlessValue",
 				Path:     "oneUnlessValuePath",
 				Name:     "one unless value",
-				Errors:   &utils.Errors{},
 				Unless: []string{
 					"unless one",
 				},
@@ -205,7 +190,6 @@ func TestCmdRunTaskBuilder(t *testing.T) {
 				TypeName: "manyUnlessValue",
 				Path:     "manyUnlessValuePath",
 				Name:     "many unless value",
-				Errors:   &utils.Errors{},
 				Unless: []string{
 					"Unless one",
 					"Unless two",
@@ -224,6 +208,11 @@ func TestCmdRunTaskBuilder(t *testing.T) {
 				tc.path,
 				tc.ctx,
 			)
+
+			if tc.expectedError != "" {
+				assert.EqualError(t, err, tc.expectedError)
+				return
+			}
 
 			assert.NoError(t, err)
 			if err != nil {
@@ -248,7 +237,6 @@ func TestCmdRunTaskBuilder(t *testing.T) {
 			assert.Equal(t, tc.expectedTask.Require, actualCmdRunTask.Require)
 			assert.Equal(t, tc.expectedTask.OnlyIf, actualCmdRunTask.OnlyIf)
 			assert.Equal(t, tc.expectedTask.Unless, actualCmdRunTask.Unless)
-			assert.EqualValues(t, tc.expectedTask.Errors, actualCmdRunTask.Errors)
 		})
 	}
 }

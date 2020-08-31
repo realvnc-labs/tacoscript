@@ -416,7 +416,7 @@ func AssertCmdsPartiallyMatch(t *testing.T, expectedCmds []string, actualExecute
 	)
 }
 
-func TestOSCmdRunnerValidation(t *testing.T) {
+func TestCmdRunTaskValidation(t *testing.T) {
 	testCases := []struct {
 		Task          CmdRunTask
 		ExpectedError string
@@ -424,14 +424,12 @@ func TestOSCmdRunnerValidation(t *testing.T) {
 		{
 			Task: CmdRunTask{
 				Names:  []string{"one", "two"},
-				Errors: &utils.Errors{},
 			},
 			ExpectedError: "",
 		},
 		{
 			Task: CmdRunTask{
 				Name:   "three",
-				Errors: &utils.Errors{},
 			},
 			ExpectedError: "",
 		},
@@ -439,18 +437,16 @@ func TestOSCmdRunnerValidation(t *testing.T) {
 			Task: CmdRunTask{
 				Name:   "four",
 				Names:  []string{"five", "six"},
-				Errors: &utils.Errors{},
 			},
 			ExpectedError: "",
 		},
 		{
-			Task:          CmdRunTask{Errors: &utils.Errors{}},
+			Task:          CmdRunTask{},
 			ExpectedError: "empty required value at path '.name', empty required values at path '.names'",
 		},
 		{
 			Task: CmdRunTask{
 				Names:  []string{"", ""},
-				Errors: &utils.Errors{},
 			},
 			ExpectedError: "empty required value at path '.name', empty required values at path '.names'",
 		},

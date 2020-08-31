@@ -26,7 +26,6 @@ type CmdRunTask struct {
 	Envs                  conv.KeyValues
 	MissingFilesCondition []string
 	Require               []string
-	Errors                *utils.Errors
 	OnlyIf                []string
 	Unless                []string
 }
@@ -38,11 +37,12 @@ func (crtb CmdRunTaskBuilder) Build(typeName, path string, ctx []map[string]inte
 	t := &CmdRunTask{
 		TypeName: typeName,
 		Path:     path,
-		Errors:   &utils.Errors{},
 	}
 
+	errs := utils.Errors{}
 	for _, contextItem := range ctx {
 		for key, val := range contextItem {
+			var err error
 			switch key {
 			case NameField:
 				t.Name = fmt.Sprint(val)
@@ -54,25 +54,29 @@ func (crtb CmdRunTaskBuilder) Build(typeName, path string, ctx []map[string]inte
 				t.Shell = fmt.Sprint(val)
 			case EnvField:
 				envs, err := conv.ConvertToKeyValues(val, path)
-				t.Errors.Add(err)
+				errs.Add(err)
 				t.Envs = envs
 			case CreatesField:
-				t.MissingFilesCondition = parseCreatesField(val, path, t.Errors)
+				t.MissingFilesCondition, err = parseCreatesField(val, path)
+				errs.Add(err)
 			case NamesField:
 				names, err := conv.ConvertToValues(val, path)
-				t.Errors.Add(err)
+				errs.Add(err)
 				t.Names = names
 			case RequireField:
-				t.Require = parseRequireField(val, path, t.Errors)
+				t.Require, err = parseRequireField(val, path)
+				errs.Add(err)
 			case OnlyIf:
-				t.OnlyIf = parseOnlyIfField(val, path, t.Errors)
+				t.OnlyIf, err = parseOnlyIfField(val, path)
+				errs.Add(err)
 			case Unless:
-				t.Unless = parseUnlessField(val, path, t.Errors)
+				t.Unless, err = parseUnlessField(val, path)
+				errs.Add(err)
 			}
 		}
 	}
 
-	return t, nil
+	return t, errs.ToError()
 }
 
 func (crt *CmdRunTask) GetName() string {
@@ -84,13 +88,14 @@ func (crt *CmdRunTask) GetRequirements() []string {
 }
 
 func (crt *CmdRunTask) Validate() error {
+	errs := &utils.Errors{}
 	err1 := ValidateRequired(crt.Name, crt.Path+"."+NameField)
 	err2 := ValidateRequiredMany(crt.Names, crt.Path+"."+NamesField)
 
 	if err1 != nil && err2 != nil {
-		crt.Errors.Add(err1)
-		crt.Errors.Add(err2)
-		return crt.Errors.ToError()
+		errs.Add(err1)
+		errs.Add(err2)
+		return errs.ToError()
 	}
 
 	return nil

@@ -4,6 +4,8 @@ import (
 	"bytes"
 	"context"
 	"fmt"
+	"os"
+	"strconv"
 	"time"
 
 	"github.com/cloudradar-monitoring/tacoscript/conv"
@@ -22,34 +24,39 @@ func (fmtb FileManagedTaskBuilder) Build(typeName, path string, ctx []map[string
 	t := &FileManagedTask{
 		TypeName: typeName,
 		Path:     path,
-		Errors:   &utils.Errors{},
 	}
 
+	errs := &utils.Errors{}
 	for _, contextItem := range ctx {
 		for key, val := range contextItem {
-			fmtb.processContextItem(t, key, path, val)
+			err := fmtb.processContextItem(t, key, path, val)
+			errs.Add(err)
 		}
 	}
 
-	return t, nil
+	return t, errs.ToError()
 }
 
-func (fmtb FileManagedTaskBuilder) processContextItem(t *FileManagedTask, key, path string, val interface{}) {
+func (fmtb FileManagedTaskBuilder) processContextItem(t *FileManagedTask, key, path string, val interface{}) error {
+	var err error
 	switch key {
 	case NameField:
 		t.Name = fmt.Sprint(val)
 	case UserField:
 		t.User = fmt.Sprint(val)
 	case CreatesField:
-		t.Creates = parseCreatesField(val, path, t.Errors)
+		t.Creates, err = parseCreatesField(val, path)
+		return err
 	case RequireField:
-		t.Require = parseRequireField(val, path, t.Errors)
+		t.Require, err = parseRequireField(val, path)
+		return err
 	case OnlyIf:
-		t.OnlyIf = parseOnlyIfField(val, path, t.Errors)
+		t.OnlyIf, err = parseOnlyIfField(val, path)
+		return err
 	case SkipVerifyField:
 		t.SkipVerify = conv.ConvertToBool(val)
 	case SourceField:
-		t.Source = fmt.Sprint(val)
+		t.Source = utils.ParseLocation(fmt.Sprint(val))
 	case SourceHashField:
 		t.SourceHash = fmt.Sprint(val)
 	case MakeDirsField:
@@ -57,19 +64,32 @@ func (fmtb FileManagedTaskBuilder) processContextItem(t *FileManagedTask, key, p
 	case GroupField:
 		t.Group = fmt.Sprint(val)
 	case ModeField:
-		t.Mode = fmt.Sprint(val)
+		fileUint, ok := val.(int)
+		if ok {
+			t.Mode = os.FileMode(fileUint)
+			return nil
+		}
+
+		valStr := fmt.Sprint(val)
+		i64, err := strconv.ParseInt(valStr, 8, 32)
+		if err != nil {
+			return fmt.Errorf(`invalid file mode value '%s' at path 'invalid_filemode_path.%s'`, valStr, ModeField)
+		}
+		t.Mode = os.FileMode(i64)
 	case EncodingField:
 		t.Encoding = fmt.Sprint(val)
 	case ContentsField:
 		t.Contents = fmt.Sprint(val)
 	}
+
+	return nil
 }
 
 type FileManagedTask struct {
 	TypeName   string
 	Path       string
 	Name       string
-	Source     string
+	Source     utils.Location
 	SourceHash string
 	MakeDirs   bool
 	Replace    bool
@@ -79,12 +99,9 @@ type FileManagedTask struct {
 	User       string
 	Group      string
 	Encoding   string
-	Mode       string
+	Mode       os.FileMode
 	OnlyIf     []string
-	Runner     exec2.Runner
-	FsManager  utils.FsManager
 	Require    []string
-	Errors     *utils.Errors
 }
 
 func (crt *FileManagedTask) GetName() string {
@@ -96,10 +113,24 @@ func (crt *FileManagedTask) GetRequirements() []string {
 }
 
 func (crt *FileManagedTask) Validate() error {
-	err1 := ValidateRequired(crt.Name, crt.Path+"."+NameField)
-	crt.Errors.Add(err1)
+	errs := &utils.Errors{}
 
-	return nil
+	err1 := ValidateRequired(crt.Name, crt.Path+"."+NameField)
+	errs.Add(err1)
+
+	if crt.Source.IsURL && crt.SourceHash == "" {
+		errs.Add(
+			fmt.Errorf(
+				`empty '%s' field at path '%s.%s' for remote url source '%s'`,
+				SourceHashField,
+				crt.Path,
+				SourceHashField,
+				crt.Source.RawLocation,
+			),
+		)
+	}
+
+	return errs.ToError()
 }
 
 func (crt *FileManagedTask) GetPath() string {
@@ -197,6 +228,17 @@ func (fmte *FileManagedTaskExecutor) shouldBeExecuted(
 		return false, nil
 	}
 
+	if fileManagedTask.SourceHash != "" {
+		hashEquals, err := utils.HashEquals(fileManagedTask.SourceHash, fileManagedTask.Name)
+		if err != nil {
+			return false, err
+		}
+		if hashEquals {
+			logrus.Debugf("hash '%s' matches the hash sum of file at '%s', will not update it", fileManagedTask.SourceHash, fileManagedTask.Name)
+			return false, nil
+		}
+	}
+
 	isSuccess, err := fmte.checkOnlyIfs(ctx, fileManagedTask)
 	if err != nil {
 		return false, err
@@ -219,7 +261,7 @@ func (fmte *FileManagedTaskExecutor) checkMissingFileCondition(fileManagedTask *
 		if missingFileCondition == "" {
 			continue
 		}
-		isExists, err = fileManagedTask.FsManager.FileExists(missingFileCondition)
+		isExists, err = fmte.FsManager.FileExists(missingFileCondition)
 		if err != nil {
 			err = fmt.Errorf("failed to check if file '%s' exists: %w", missingFileCondition, err)
 			return
