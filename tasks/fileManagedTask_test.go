@@ -111,7 +111,6 @@ func TestFileManagedTaskExecution(t *testing.T) {
 			},
 			ExpectedResult: ExecutionResult{
 				IsSkipped: true,
-				Err:       nil,
 			},
 			FileShouldExist: true,
 		},
@@ -124,7 +123,6 @@ func TestFileManagedTaskExecution(t *testing.T) {
 			},
 			ExpectedResult: ExecutionResult{
 				IsSkipped: true,
-				Err:       nil,
 			},
 			ContentToWrite: "one two three",
 		},
@@ -151,7 +149,7 @@ func TestFileManagedTaskExecution(t *testing.T) {
 					RawLocation: "sourceFileAtLocal.txt",
 				},
 			},
-			ExpectedResult: ExecutionResult{IsSkipped: false},
+			ExpectedResult: ExecutionResult{},
 			FileExpectation: &utils.FileExpectation{
 				FilePath:        "targetFileAtLocal.txt",
 				ShouldExist:     true,
@@ -170,11 +168,30 @@ func TestFileManagedTaskExecution(t *testing.T) {
 					RawLocation: httpSrvUrl.String(),
 				},
 			},
-			ExpectedResult: ExecutionResult{IsSkipped: false},
+			ExpectedResult: ExecutionResult{},
 			FileExpectation: &utils.FileExpectation{
 				FilePath:        "targetFileFromHttp.txt",
 				ShouldExist:     true,
 				ExpectedContent: "one two three",
+			},
+		},
+		{
+			Name: "http_source_copy_wrong_source_checksum",
+			Task: &FileManagedTask{
+				Path:       "http_source_copy_wrong_source_checksum_path",
+				Name:       "targetFileFromHttp2.txt",
+				SourceHash: "md5=dafdfdafdafdfad",
+				Source: utils.Location{
+					IsURL:       true,
+					Url:         httpSrvUrl,
+					RawLocation: httpSrvUrl.String(),
+				},
+			},
+			ExpectedResult: ExecutionResult{
+				Err: fmt.Errorf(
+					"checksum 'md5=dafdfdafdafdfad' didn't match with checksum 'md5=5e4fe0155703dde467f3ab234e6f966f' of the remote source '%s'",
+					httpSrvUrl.String(),
+				),
 			},
 		},
 		{

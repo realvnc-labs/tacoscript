@@ -97,6 +97,11 @@ func AssertFileMatchesExpectation(filePath string, fe *FileExpectation) (bool, s
 	return AssertFileMatchesExpectationOS(filePath, fe)
 }
 
+func MoveFile(sourceFilePath, targetFilePath string) error {
+	err := os.Rename(sourceFilePath, targetFilePath)
+	return err
+}
+
 func CopyLocalFile(sourceFilePath, targetFilePath string) error {
 	input, err := ioutil.ReadFile(sourceFilePath)
 	if err != nil {

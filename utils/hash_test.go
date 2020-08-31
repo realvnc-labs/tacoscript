@@ -107,7 +107,7 @@ func TestHashes(t *testing.T) {
 			return
 		}
 
-		actualMatch, err := HashEquals(testCase.inputHash, "testFile.txt")
+		actualMatch, _, err := HashEquals(testCase.inputHash, "testFile.txt")
 		if testCase.expectedError != "" {
 			assert.EqualError(t, err, testCase.expectedError)
 			continue

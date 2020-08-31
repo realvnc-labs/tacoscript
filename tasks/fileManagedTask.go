@@ -227,7 +227,7 @@ func (fmte *FileManagedTaskExecutor) shouldBeExecuted(
 	}
 
 	if fileManagedTask.SourceHash != "" {
-		hashEquals, err := utils.HashEquals(fileManagedTask.SourceHash, fileManagedTask.Name)
+		hashEquals, _, err := utils.HashEquals(fileManagedTask.SourceHash, fileManagedTask.Name)
 		if err != nil {
 			return false, err
 		}
@@ -281,19 +281,78 @@ func (fmte *FileManagedTaskExecutor) copySourceToTarget(fileManagedTask *FileMan
 		return nil
 	}
 
+	logrus.Debugf("will copy source location '%s' to target location '%s'", fileManagedTask.Source.RawLocation, fileManagedTask.Name)
+
 	source := fileManagedTask.Source
 	if !source.IsURL {
+		logrus.Debug("source location is a local file path")
+
+		hashEquals, expectedHashStr, err := utils.HashEquals(fileManagedTask.SourceHash, source.LocalPath)
+		if err != nil {
+			return err
+		}
+		if !hashEquals {
+			return fmt.Errorf(
+				"checksum '%s' didn't match with checksum '%s' of the local source '%s'",
+				fileManagedTask.SourceHash,
+				expectedHashStr,
+				source.LocalPath,
+			)
+		}
+
 		return utils.CopyLocalFile(source.LocalPath, fileManagedTask.Name)
 	}
 
+	tempTargetPath := fileManagedTask.Name + "_temp"
+	defer func() {
+		err := os.Remove(tempTargetPath)
+		if err != nil {
+			logrus.Warn(err)
+		}
+	}()
+
+	logrus.Debug("source location is a remote file path")
+
+	var err error
 	switch fileManagedTask.Source.Url.Scheme {
 	case "http":
-		return utils.DownloadHttpFile(fileManagedTask.Source.Url, fileManagedTask.Name)
+		err = utils.DownloadHttpFile(fileManagedTask.Source.Url, tempTargetPath)
 	case "https":
-		return utils.DownloadHttpsFile(fileManagedTask.SkipTlsCheck, fileManagedTask.Source.Url, fileManagedTask.Name)
+		err = utils.DownloadHttpsFile(fileManagedTask.SkipTlsCheck, fileManagedTask.Source.Url, tempTargetPath)
 	case "ftp":
-		return utils.DownloadFtpFile(fileManagedTask.Source.Url, fileManagedTask.Name)
+		err = utils.DownloadFtpFile(fileManagedTask.Source.Url, tempTargetPath)
 	default:
-		return fmt.Errorf("unknown or unsupported protocol '%s' to download data from '%s'", fileManagedTask.Source.Url.Scheme, fileManagedTask.Source.Url)
+		err = fmt.Errorf("unknown or unsupported protocol '%s' to download data from '%s'", fileManagedTask.Source.Url.Scheme, fileManagedTask.Source.Url)
 	}
+
+	if err != nil {
+		return err
+	}
+
+	logrus.Debugf("copied remove source '%s' to a temp location '%s', will check the hash", source.RawLocation, tempTargetPath)
+
+	hashEquals, expectedHashStr, err := utils.HashEquals(fileManagedTask.SourceHash, tempTargetPath)
+	if err != nil {
+		return err
+	}
+	if !hashEquals {
+		return fmt.Errorf(
+			"checksum '%s' didn't match with checksum '%s' of the remote source '%s'",
+			fileManagedTask.SourceHash,
+			expectedHashStr,
+			source.RawLocation,
+		)
+	}
+
+	logrus.Debug("checksum file at temp location matched with the expected one")
+	logrus.Debugf("will move file from temp location '%s' to the expected location '%s'", tempTargetPath, fileManagedTask.Name)
+
+	err = utils.MoveFile(tempTargetPath, fileManagedTask.Name)
+	if err != nil {
+		return err
+	}
+
+	logrus.Debugf("copied field from temp location '%s' to the expected location '%s'", tempTargetPath, fileManagedTask.Name)
+
+	return nil
 }
