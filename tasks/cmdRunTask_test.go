@@ -423,20 +423,20 @@ func TestCmdRunTaskValidation(t *testing.T) {
 	}{
 		{
 			Task: CmdRunTask{
-				Names:  []string{"one", "two"},
+				Names: []string{"one", "two"},
 			},
 			ExpectedError: "",
 		},
 		{
 			Task: CmdRunTask{
-				Name:   "three",
+				Name: "three",
 			},
 			ExpectedError: "",
 		},
 		{
 			Task: CmdRunTask{
-				Name:   "four",
-				Names:  []string{"five", "six"},
+				Name:  "four",
+				Names: []string{"five", "six"},
 			},
 			ExpectedError: "",
 		},
@@ -446,7 +446,7 @@ func TestCmdRunTaskValidation(t *testing.T) {
 		},
 		{
 			Task: CmdRunTask{
-				Names:  []string{"", ""},
+				Names: []string{"", ""},
 			},
 			ExpectedError: "empty required value at path '.name', empty required values at path '.names'",
 		},

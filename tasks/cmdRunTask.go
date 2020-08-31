@@ -53,14 +53,16 @@ func (crtb CmdRunTaskBuilder) Build(typeName, path string, ctx []map[string]inte
 			case ShellField:
 				t.Shell = fmt.Sprint(val)
 			case EnvField:
-				envs, err := conv.ConvertToKeyValues(val, path)
+				var envs conv.KeyValues
+				envs, err = conv.ConvertToKeyValues(val, path)
 				errs.Add(err)
 				t.Envs = envs
 			case CreatesField:
 				t.MissingFilesCondition, err = parseCreatesField(val, path)
 				errs.Add(err)
 			case NamesField:
-				names, err := conv.ConvertToValues(val, path)
+				var names []string
+				names, err = conv.ConvertToValues(val, path)
 				errs.Add(err)
 				t.Names = names
 			case RequireField:

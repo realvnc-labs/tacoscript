@@ -5,7 +5,6 @@ import (
 	"context"
 	"fmt"
 	"os"
-	"strconv"
 	"time"
 
 	"github.com/cloudradar-monitoring/tacoscript/conv"
@@ -64,18 +63,10 @@ func (fmtb FileManagedTaskBuilder) processContextItem(t *FileManagedTask, key, p
 	case GroupField:
 		t.Group = fmt.Sprint(val)
 	case ModeField:
-		fileUint, ok := val.(int)
-		if ok {
-			t.Mode = os.FileMode(fileUint)
-			return nil
-		}
-
-		valStr := fmt.Sprint(val)
-		i64, err := strconv.ParseInt(valStr, 8, 32)
+		t.Mode, err = conv.ConvertToFileMode(val)
 		if err != nil {
-			return fmt.Errorf(`invalid file mode value '%s' at path 'invalid_filemode_path.%s'`, valStr, ModeField)
+			return err
 		}
-		t.Mode = os.FileMode(i64)
 	case EncodingField:
 		t.Encoding = fmt.Sprint(val)
 	case ContentsField:
@@ -86,23 +77,23 @@ func (fmtb FileManagedTaskBuilder) processContextItem(t *FileManagedTask, key, p
 }
 
 type FileManagedTask struct {
-	TypeName     string
-	Path         string
-	Name         string
-	Source       utils.Location
-	SourceHash   string
 	MakeDirs     bool
 	Replace      bool
 	SkipVerify   bool
-	Creates      []string
+	SkipTLSCheck bool
+	Mode         os.FileMode
+	TypeName     string
+	Path         string
+	Name         string
+	SourceHash   string
 	Contents     string
 	User         string
 	Group        string
 	Encoding     string
-	Mode         os.FileMode
+	Source       utils.Location
+	Creates      []string
 	OnlyIf       []string
 	Require      []string
-	SkipTlsCheck bool
 }
 
 func (crt *FileManagedTask) GetName() string {
@@ -178,7 +169,7 @@ func (fmte *FileManagedTaskExecutor) Execute(ctx context.Context, task Task) Exe
 
 	start := time.Now()
 
-	err = fmte.copySourceToTarget(fileManagedTask)
+	err = fmte.copySourceToTarget(ctx, fileManagedTask)
 	if err != nil {
 		execRes.Err = err
 		return execRes
@@ -227,7 +218,8 @@ func (fmte *FileManagedTaskExecutor) shouldBeExecuted(
 	}
 
 	if fileManagedTask.SourceHash != "" {
-		hashEquals, _, err := utils.HashEquals(fileManagedTask.SourceHash, fileManagedTask.Name)
+		var hashEquals bool
+		hashEquals, _, err = utils.HashEquals(fileManagedTask.SourceHash, fileManagedTask.Name)
 		if err != nil {
 			return false, err
 		}
@@ -275,7 +267,7 @@ func (fmte *FileManagedTaskExecutor) checkMissingFileCondition(fileManagedTask *
 	return
 }
 
-func (fmte *FileManagedTaskExecutor) copySourceToTarget(fileManagedTask *FileManagedTask) error {
+func (fmte *FileManagedTaskExecutor) copySourceToTarget(ctx context.Context, fileManagedTask *FileManagedTask) error {
 	if fileManagedTask.Source.RawLocation == "" {
 		logrus.Debug("source location is empty will ignore it")
 		return nil
@@ -314,15 +306,19 @@ func (fmte *FileManagedTaskExecutor) copySourceToTarget(fileManagedTask *FileMan
 	logrus.Debug("source location is a remote file path")
 
 	var err error
-	switch fileManagedTask.Source.Url.Scheme {
+	switch fileManagedTask.Source.URL.Scheme {
 	case "http":
-		err = utils.DownloadHttpFile(fileManagedTask.Source.Url, tempTargetPath)
+		err = utils.DownloadHTTPFile(ctx, fileManagedTask.Source.URL, tempTargetPath)
 	case "https":
-		err = utils.DownloadHttpsFile(fileManagedTask.SkipTlsCheck, fileManagedTask.Source.Url, tempTargetPath)
+		err = utils.DownloadHTTPSFile(ctx, fileManagedTask.SkipTLSCheck, fileManagedTask.Source.URL, tempTargetPath)
 	case "ftp":
-		err = utils.DownloadFtpFile(fileManagedTask.Source.Url, tempTargetPath)
+		err = utils.DownloadFtpFile(ctx, fileManagedTask.Source.URL, tempTargetPath)
 	default:
-		err = fmt.Errorf("unknown or unsupported protocol '%s' to download data from '%s'", fileManagedTask.Source.Url.Scheme, fileManagedTask.Source.Url)
+		err = fmt.Errorf(
+			"unknown or unsupported protocol '%s' to download data from '%s'",
+			fileManagedTask.Source.URL.Scheme,
+			fileManagedTask.Source.URL,
+		)
 	}
 
 	if err != nil {

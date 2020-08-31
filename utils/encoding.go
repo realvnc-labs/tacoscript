@@ -2,11 +2,56 @@ package utils
 
 import (
 	"fmt"
-	"golang.org/x/text/encoding/charmap"
 	"io/ioutil"
 	"os"
 	"strings"
+
+	"golang.org/x/text/encoding/charmap"
 )
+
+var charMaps = map[string]*charmap.Charmap{
+	"codepage037":       charmap.CodePage037,
+	"codepage1047":      charmap.CodePage1047,
+	"codepage1140":      charmap.CodePage1140,
+	"codepage437":       charmap.CodePage437,
+	"codepage850":       charmap.CodePage850,
+	"codepage852":       charmap.CodePage852,
+	"codepage855":       charmap.CodePage855,
+	"codepage858":       charmap.CodePage858,
+	"codepage860":       charmap.CodePage860,
+	"codepage862":       charmap.CodePage862,
+	"codepage863":       charmap.CodePage863,
+	"codepage865":       charmap.CodePage865,
+	"codepage866":       charmap.CodePage866,
+	"iso8859_1":         charmap.ISO8859_1,
+	"iso8859_10":        charmap.ISO8859_10,
+	"iso8859_13":        charmap.ISO8859_13,
+	"iso8859_14":        charmap.ISO8859_14,
+	"iso8859_15":        charmap.ISO8859_15,
+	"iso8859_16":        charmap.ISO8859_16,
+	"iso8859_2":         charmap.ISO8859_2,
+	"iso8859_3":         charmap.ISO8859_3,
+	"iso8859_4":         charmap.ISO8859_4,
+	"iso8859_5":         charmap.ISO8859_5,
+	"iso8859_6":         charmap.ISO8859_6,
+	"iso8859_7":         charmap.ISO8859_7,
+	"iso8859_8":         charmap.ISO8859_8,
+	"iso8859_9":         charmap.ISO8859_9,
+	"koi8r":             charmap.KOI8R,
+	"koi8u":             charmap.KOI8U,
+	"macintosh":         charmap.Macintosh,
+	"macintoshcyrillic": charmap.MacintoshCyrillic,
+	"windows1250":       charmap.Windows1250,
+	"windows1251":       charmap.Windows1251,
+	"windows1252":       charmap.Windows1252,
+	"windows1253":       charmap.Windows1253,
+	"windows1254":       charmap.Windows1254,
+	"windows1255":       charmap.Windows1255,
+	"windows1256":       charmap.Windows1256,
+	"windows1257":       charmap.Windows1257,
+	"windows1258":       charmap.Windows1258,
+	"windows874":        charmap.Windows874,
+}
 
 func Encode(encodingName, contentsUtf8 string) ([]byte, error) {
 	cm, err := DetectCharMap(encodingName)
@@ -33,97 +78,12 @@ func Decode(encodingName string, data []byte) (string, error) {
 }
 
 func DetectCharMap(encodingName string) (*charmap.Charmap, error) {
-	var cm *charmap.Charmap
-	var err error
-
-	switch strings.ToLower(encodingName) {
-	case "codepage037":
-		cm = charmap.CodePage037
-	case "codepage1047":
-		cm = charmap.CodePage1047
-	case "codepage1140":
-		cm = charmap.CodePage1140
-	case "codepage437":
-		cm = charmap.CodePage437
-	case "codepage850":
-		cm = charmap.CodePage850
-	case "codepage852":
-		cm = charmap.CodePage852
-	case "codepage855":
-		cm = charmap.CodePage855
-	case "codepage858":
-		cm = charmap.CodePage858
-	case "codepage860":
-		cm = charmap.CodePage860
-	case "codepage862":
-		cm = charmap.CodePage862
-	case "codepage863":
-		cm = charmap.CodePage863
-	case "codepage865":
-		cm = charmap.CodePage865
-	case "codepage866":
-		cm = charmap.CodePage866
-	case "iso8859_1":
-		cm = charmap.ISO8859_1
-	case "iso8859_10":
-		cm = charmap.ISO8859_10
-	case "iso8859_13":
-		cm = charmap.ISO8859_13
-	case "iso8859_14":
-		cm = charmap.ISO8859_14
-	case "iso8859_15":
-		cm = charmap.ISO8859_15
-	case "iso8859_16":
-		cm = charmap.ISO8859_16
-	case "iso8859_2":
-		cm = charmap.ISO8859_2
-	case "iso8859_3":
-		cm = charmap.ISO8859_3
-	case "iso8859_4":
-		cm = charmap.ISO8859_4
-	case "iso8859_5":
-		cm = charmap.ISO8859_5
-	case "iso8859_6":
-		cm = charmap.ISO8859_6
-	case "iso8859_7":
-		cm = charmap.ISO8859_7
-	case "iso8859_8":
-		cm = charmap.ISO8859_8
-	case "iso8859_9":
-		cm = charmap.ISO8859_9
-	case "koi8r":
-		cm = charmap.KOI8R
-	case "koi8u":
-		cm = charmap.KOI8U
-	case "macintosh":
-		cm = charmap.Macintosh
-	case "macintoshcyrillic":
-		cm = charmap.MacintoshCyrillic
-	case "windows1250":
-		cm = charmap.Windows1250
-	case "windows1251":
-		cm = charmap.Windows1251
-	case "windows1252":
-		cm = charmap.Windows1252
-	case "windows1253":
-		cm = charmap.Windows1253
-	case "windows1254":
-		cm = charmap.Windows1254
-	case "windows1255":
-		cm = charmap.Windows1255
-	case "windows1256":
-		cm = charmap.Windows1256
-	case "windows1257":
-		cm = charmap.Windows1257
-	case "windows1258":
-		cm = charmap.Windows1258
-	case "windows874":
-		cm = charmap.Windows874
-	default:
-		err = fmt.Errorf("unknown encoding: '%s'", encodingName)
+	cm, ok := charMaps[strings.ToLower(encodingName)]
+	if !ok {
+		return nil, fmt.Errorf("unknown encoding: '%s'", encodingName)
 	}
 
-	return cm, err
+	return cm, nil
 }
 
 func WriteEncodedFile(encodingName, contentsUtf8, fileName string, perm os.FileMode) error {

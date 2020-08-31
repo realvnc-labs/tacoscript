@@ -1,8 +1,9 @@
 package utils
 
 import (
-	log "github.com/sirupsen/logrus"
 	"io"
+
+	log "github.com/sirupsen/logrus"
 )
 
 func CloseResourceSecure(name string, c io.Closer) {

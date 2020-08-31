@@ -2,6 +2,11 @@
 
 package utils
 
+import (
+	"os"
+	"strings"
+)
+
 func AssertFileMatchesExpectationOS(filePath string, fe *FileExpectation) (bool, string, error) {
 	return true, "", nil
 }

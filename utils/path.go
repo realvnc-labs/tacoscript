@@ -9,7 +9,7 @@ import (
 
 type Location struct {
 	IsURL       bool
-	Url         *url.URL
+	URL         *url.URL
 	LocalPath   string
 	RawLocation string
 }
@@ -21,7 +21,7 @@ func ParseLocation(rawLocation string) Location {
 		(strings.HasPrefix(locationStr, string(os.PathSeparator)) || filepath.IsAbs(locationStr)) {
 		return Location{
 			IsURL:       false,
-			Url:         nil,
+			URL:         nil,
 			LocalPath:   locationStr,
 			RawLocation: rawLocation,
 		}
@@ -39,14 +39,14 @@ func ParseLocation(rawLocation string) Location {
 	if u.Host != "" || u.Scheme != "" {
 		return Location{
 			IsURL:       true,
-			Url:         u,
+			URL:         u,
 			RawLocation: rawLocation,
 		}
 	}
 
 	return Location{
 		IsURL:       false,
-		Url:         nil,
+		URL:         nil,
 		LocalPath:   locationStr,
 		RawLocation: rawLocation,
 	}

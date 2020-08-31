@@ -6,14 +6,15 @@ import (
 	"crypto/sha256"
 	"crypto/sha512"
 	"fmt"
-	log "github.com/sirupsen/logrus"
 	"hash"
 	"io"
 	"os"
 	"regexp"
+
+	log "github.com/sirupsen/logrus"
 )
 
-func HashEquals(hashStr, filePath string) (bool, string, error) {
+func HashEquals(hashStr, filePath string) (hashEquals bool, actualCache string, err error) {
 	log.Debugf("will check if file %s matches hash %s", filePath, hashStr)
 
 	fileExists, err := FileExists(filePath)
@@ -54,10 +55,11 @@ func HashEquals(hashStr, filePath string) (bool, string, error) {
 }
 
 func ExtractHashAlgo(hashStr string) (hChecker hash.Hash, hashAlgo, hashSum string, err error) {
+	const expectedRegexParts = 3
 	reg := regexp.MustCompile(`^(\w*)=(.+)$`)
 	regParts := reg.FindStringSubmatch(hashStr)
 
-	if len(regParts) != 3 {
+	if len(regParts) != expectedRegexParts {
 		return nil, "", "", fmt.Errorf("invalid hash string '%s'", hashStr)
 	}
 

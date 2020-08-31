@@ -2,10 +2,11 @@ package tasks
 
 import (
 	"fmt"
-	"github.com/cloudradar-monitoring/tacoscript/utils"
 	"net/url"
 	"os"
 	"testing"
+
+	"github.com/cloudradar-monitoring/tacoscript/utils"
 
 	"github.com/stretchr/testify/assert"
 )
@@ -38,7 +39,7 @@ func TestFileManagedTaskBuilder(t *testing.T) {
 				Name:     "C:\temp\npp.7.8.8.Installer.x64.exe",
 				Source: utils.Location{
 					IsURL: true,
-					Url: &url.URL{
+					URL: &url.URL{
 						Scheme: "https",
 						Host:   "github.com",
 						Path:   "/notepad-plus-plus/notepad-plus-plus/releases/download/v7.8.8/npp.7.8.8.Installer.x64.exe",
@@ -191,7 +192,7 @@ Funny file`,
 				Path:     "http(s)urlPath",
 				Source: utils.Location{
 					IsURL: true,
-					Url: &url.URL{
+					URL: &url.URL{
 						Host: "github.com",
 						Path: "/some/path",
 					},
@@ -221,8 +222,8 @@ Funny file`,
 			expectedTask: &FileManagedTask{
 				TypeName: "correct_string_mode",
 				Path:     "correct_string_mode_path",
-				Mode: os.FileMode(0777),
-				Name: "correct_string_mode.txt",
+				Mode:     os.FileMode(0777),
+				Name:     "correct_string_mode.txt",
 			},
 		},
 	}

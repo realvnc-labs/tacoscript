@@ -43,15 +43,15 @@ maintain-another-file:
 					ID: "maintain-my-file",
 					Tasks: []tasks.Task{
 						&tasks.FileManagedTask{
-							TypeName:   tasks.FileManaged,
-							Path:       "maintain-my-file.file.managed[1]",
-							Name:       "C:\\temp\\npp.7.8.8.Installer.x64.exe",
-							Source:    utils.Location{
-								IsURL:       true,
-								Url:         &url.URL{
-									Scheme:     "https",
-									Host:       "github.com",
-									Path:       "/notepad-plus-plus",
+							TypeName: tasks.FileManaged,
+							Path:     "maintain-my-file.file.managed[1]",
+							Name:     "C:\\temp\\npp.7.8.8.Installer.x64.exe",
+							Source: utils.Location{
+								IsURL: true,
+								URL: &url.URL{
+									Scheme: "https",
+									Host:   "github.com",
+									Path:   "/notepad-plus-plus",
 								},
 								RawLocation: "https://github.com/notepad-plus-plus",
 							},
@@ -77,7 +77,7 @@ maintain-another-file:
 							TypeName:   tasks.FileManaged,
 							Path:       "maintain-another-file.file.managed[1]",
 							Name:       "/tmp/my-file.txt",
-							Contents:    `ddd`,
+							Contents:   `ddd`,
 							MakeDirs:   false,
 							Replace:    false,
 							SkipVerify: false,

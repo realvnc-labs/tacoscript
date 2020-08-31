@@ -11,7 +11,7 @@ import (
 	"syscall"
 )
 
-func AssertFileMatchesExpectationOS(filePath string, fe *FileExpectation) (bool, string, error) {
+func AssertFileMatchesExpectationOS(filePath string, fe *FileExpectation) (isMatched bool, reason string, err error) {
 	info, err := os.Stat(filePath)
 	if err != nil {
 		return false, "", err
@@ -40,7 +40,6 @@ func AssertFileMatchesExpectationOS(filePath string, fe *FileExpectation) (bool,
 		}
 		fileGroup = fileGroupI.Name
 	}
-
 
 	if fe.ExpectedUser != "" && fileUser != fe.ExpectedUser {
 		return false, fmt.Sprintf("file '%s' should have '%s' as owner but has '%s'", filePath, fe.ExpectedUser, fileUser), nil

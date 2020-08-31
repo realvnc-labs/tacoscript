@@ -4,8 +4,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"github.com/goftp/server"
-	log "github.com/sirupsen/logrus"
 	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
@@ -13,6 +11,9 @@ import (
 	"os"
 	"testing"
 	"time"
+
+	"github.com/goftp/server"
+	log "github.com/sirupsen/logrus"
 
 	appExec "github.com/cloudradar-monitoring/tacoscript/exec"
 
@@ -39,20 +40,20 @@ func TestFileManagedTaskExecution(t *testing.T) {
 
 	const ftpPort = 3021
 
-	ftpUrl, err := startFTPServer(ctx, ftpPort)
+	ftpURL, err := startFTPServer(ctx, ftpPort)
 	assert.NoError(t, err)
 	if err != nil {
 		return
 	}
 
-	httpSrvUrl, httpSrv, err := startHTTPServer(false)
+	httpSrvURL, httpSrv, err := startHTTPServer(false)
 	assert.NoError(t, err)
 	if err != nil {
 		return
 	}
 	defer httpSrv.Close()
 
-	httpsSrvUrl, httpsSrv, err := startHTTPServer(true)
+	httpsSrvURL, httpsSrv, err := startHTTPServer(true)
 	assert.NoError(t, err)
 	if err != nil {
 		return
@@ -66,42 +67,34 @@ func TestFileManagedTaskExecution(t *testing.T) {
 		"sourceFileFTP.txt",
 	}
 
-	err = ioutil.WriteFile("sourceFileAtLocal.txt", []byte("one two three"), 0644)
+	err = ioutil.WriteFile("sourceFileAtLocal.txt", []byte("one two three"), 0600)
 	assert.NoError(t, err)
 	if err != nil {
 		return
 	}
 
-	err = ioutil.WriteFile("sourceFileHTTPS.txt", []byte("one two three"), 0644)
+	err = ioutil.WriteFile("sourceFileHTTPS.txt", []byte("one two three"), 0600)
 	assert.NoError(t, err)
 	if err != nil {
 		return
 	}
-	httpsSrvUrl.Path = "/sourceFileHTTPS.txt"
+	httpsSrvURL.Path = "/sourceFileHTTPS.txt"
 
-	err = ioutil.WriteFile("sourceFileHTTP.txt", []byte("one two three"), 0644)
+	err = ioutil.WriteFile("sourceFileHTTP.txt", []byte("one two three"), 0600)
 	assert.NoError(t, err)
 	if err != nil {
 		return
 	}
-	httpSrvUrl.Path = "/sourceFileHTTP.txt"
+	httpSrvURL.Path = "/sourceFileHTTP.txt"
 
-	err = ioutil.WriteFile("sourceFileFTP.txt", []byte("one two three"), 0644)
+	err = ioutil.WriteFile("sourceFileFTP.txt", []byte("one two three"), 0600)
 	assert.NoError(t, err)
 	if err != nil {
 		return
 	}
-	ftpUrl.Path = "sourceFileFTP.txt"
+	ftpURL.Path = "sourceFileFTP.txt"
 
-	testCases := []struct {
-		Task            *FileManagedTask
-		ExpectedResult  ExecutionResult
-		RunnerMock      *appExec.SystemRunner
-		Name            string
-		FileShouldExist bool
-		ContentToWrite  string
-		FileExpectation *utils.FileExpectation
-	}{
+	testCases := []fileManagedTestCase{
 		{
 			Name: "test creates field",
 			Task: &FileManagedTask{
@@ -164,8 +157,8 @@ func TestFileManagedTaskExecution(t *testing.T) {
 				SourceHash: "md5=5e4fe0155703dde467f3ab234e6f966f",
 				Source: utils.Location{
 					IsURL:       true,
-					Url:         httpSrvUrl,
-					RawLocation: httpSrvUrl.String(),
+					URL:         httpSrvURL,
+					RawLocation: httpSrvURL.String(),
 				},
 			},
 			ExpectedResult: ExecutionResult{},
@@ -183,14 +176,14 @@ func TestFileManagedTaskExecution(t *testing.T) {
 				SourceHash: "md5=dafdfdafdafdfad",
 				Source: utils.Location{
 					IsURL:       true,
-					Url:         httpSrvUrl,
-					RawLocation: httpSrvUrl.String(),
+					URL:         httpSrvURL,
+					RawLocation: httpSrvURL.String(),
 				},
 			},
 			ExpectedResult: ExecutionResult{
 				Err: fmt.Errorf(
 					"checksum 'md5=dafdfdafdafdfad' didn't match with checksum 'md5=5e4fe0155703dde467f3ab234e6f966f' of the remote source '%s'",
-					httpSrvUrl.String(),
+					httpSrvURL.String(),
 				),
 			},
 		},
@@ -202,10 +195,10 @@ func TestFileManagedTaskExecution(t *testing.T) {
 				SourceHash: "md5=5e4fe0155703dde467f3ab234e6f966f",
 				Source: utils.Location{
 					IsURL:       true,
-					Url:         httpsSrvUrl,
-					RawLocation: httpsSrvUrl.String(),
+					URL:         httpsSrvURL,
+					RawLocation: httpsSrvURL.String(),
 				},
-				SkipTlsCheck: true,
+				SkipTLSCheck: true,
 			},
 			ExpectedResult: ExecutionResult{IsSkipped: false},
 			FileExpectation: &utils.FileExpectation{
@@ -222,8 +215,8 @@ func TestFileManagedTaskExecution(t *testing.T) {
 				SourceHash: "md5=5e4fe0155703dde467f3ab234e6f966f",
 				Source: utils.Location{
 					IsURL:       true,
-					Url:         ftpUrl,
-					RawLocation: ftpUrl.String(),
+					URL:         ftpURL,
+					RawLocation: ftpURL.String(),
 				},
 			},
 			ExpectedResult: ExecutionResult{IsSkipped: false},
@@ -238,7 +231,7 @@ func TestFileManagedTaskExecution(t *testing.T) {
 	for _, testCase := range testCases {
 		tc := testCase
 		t.Run(tc.Name, func(tt *testing.T) {
-			assertTestCase(tt, tc)
+			assertTestCase(tt, &tc)
 			filesToDelete = append(filesToDelete, tc.Task.Name)
 		})
 	}
@@ -249,9 +242,9 @@ func TestFileManagedTaskExecution(t *testing.T) {
 	}
 }
 
-func assertTestCase(t *testing.T, tc fileManagedTestCase) {
+func assertTestCase(t *testing.T, tc *fileManagedTestCase) {
 	if tc.ContentToWrite != "" {
-		err := ioutil.WriteFile(tc.Task.Name, []byte(tc.ContentToWrite), 0644)
+		err := ioutil.WriteFile(tc.Task.Name, []byte(tc.ContentToWrite), 0600)
 		assert.NoError(t, err)
 	}
 	runner := tc.RunnerMock
@@ -311,14 +304,18 @@ func TestFileManagedTaskValidation(t *testing.T) {
 				Path: "somepath1",
 				Source: utils.Location{
 					IsURL: true,
-					Url: &url.URL{
+					URL: &url.URL{
 						Scheme: "http",
 						Host:   "ya.ru",
 					},
 					RawLocation: "http://ya.ru",
 				},
 			},
-			ExpectedError: fmt.Sprintf(`empty '%s' field at path 'somepath1.%s' for remote url source 'http://ya.ru'`, SourceHashField, SourceHashField),
+			ExpectedError: fmt.Sprintf(
+				`empty '%s' field at path 'somepath1.%s' for remote url source 'http://ya.ru'`,
+				SourceHashField,
+				SourceHashField,
+			),
 		},
 		{
 			Task: FileManagedTask{
@@ -326,14 +323,18 @@ func TestFileManagedTaskValidation(t *testing.T) {
 				Path: "somepath2",
 				Source: utils.Location{
 					IsURL: true,
-					Url: &url.URL{
+					URL: &url.URL{
 						Scheme: "ftp",
 						Host:   "ya.ru",
 					},
 					RawLocation: "ftp://ya.ru",
 				},
 			},
-			ExpectedError: fmt.Sprintf(`empty '%s' field at path 'somepath2.%s' for remote url source 'ftp://ya.ru'`, SourceHashField, SourceHashField),
+			ExpectedError: fmt.Sprintf(
+				`empty '%s' field at path 'somepath2.%s' for remote url source 'ftp://ya.ru'`,
+				SourceHashField,
+				SourceHashField,
+			),
 		},
 		{
 			Task: FileManagedTask{
@@ -367,8 +368,8 @@ func deleteFiles(files []string) error {
 	return errs.ToError()
 }
 
-func startHTTPServer(isHttps bool) (u *url.URL, srv *httptest.Server, err error) {
-	if isHttps {
+func startHTTPServer(isHTTPS bool) (u *url.URL, srv *httptest.Server, err error) {
+	if isHTTPS {
 		srv = httptest.NewTLSServer(http.FileServer(http.Dir(".")))
 	} else {
 		srv = httptest.NewServer(http.FileServer(http.Dir(".")))

@@ -1,15 +1,17 @@
 package utils
 
 import (
+	"context"
 	"crypto/tls"
 	"fmt"
-	"github.com/secsy/goftp"
-	"github.com/sirupsen/logrus"
 	"io"
 	"io/ioutil"
 	"net/http"
 	"net/url"
 	"os"
+
+	"github.com/secsy/goftp"
+	"github.com/sirupsen/logrus"
 )
 
 type FsManager interface {
@@ -28,12 +30,12 @@ func (fmm *FsManagerMock) FileExists(filePath string) (bool, error) {
 }
 
 type FileExpectation struct {
-	FilePath         string
 	ShouldExist      bool
+	ExpectedMode     os.FileMode
+	FilePath         string
 	ExpectedContent  string
 	ExpectedUser     string
 	ExpectedGroup    string
-	ExpectedMode     os.FileMode
 	ExpectedEncoding string
 }
 
@@ -61,7 +63,7 @@ func FileExists(filePath string) (bool, error) {
 	return false, fmt.Errorf("failed to check if file '%s' exists: %w", filePath, e)
 }
 
-func AssertFileMatchesExpectation(filePath string, fe *FileExpectation) (bool, string, error) {
+func AssertFileMatchesExpectation(filePath string, fe *FileExpectation) (isExpectationMatched bool, nonMatchedReason string, err error) {
 	fileExists, err := FileExists(filePath)
 	if err != nil {
 		return false, "", err
@@ -91,7 +93,12 @@ func AssertFileMatchesExpectation(filePath string, fe *FileExpectation) (bool, s
 	}
 
 	if fe.ExpectedContent != fileContents {
-		return false, fmt.Sprintf("file contents '%s' at '%s' didn't match the expected one '%s'", fileContents, filePath, fe.ExpectedContent), nil
+		return false,
+			fmt.Sprintf("file contents '%s' at '%s' didn't match the expected one '%s'",
+				fileContents,
+				filePath,
+				fe.ExpectedContent,
+			), nil
 	}
 
 	return AssertFileMatchesExpectationOS(filePath, fe)
@@ -108,7 +115,7 @@ func CopyLocalFile(sourceFilePath, targetFilePath string) error {
 		return err
 	}
 
-	err = ioutil.WriteFile(targetFilePath, input, 0644)
+	err = ioutil.WriteFile(targetFilePath, input, 0600)
 	if err != nil {
 		return err
 	}
@@ -116,14 +123,19 @@ func CopyLocalFile(sourceFilePath, targetFilePath string) error {
 	return nil
 }
 
-func DownloadHttpFile(url *url.URL, targetFilePath string) error {
+func DownloadHTTPFile(ctx context.Context, u fmt.Stringer, targetFilePath string) error {
 	out, err := os.Create(targetFilePath)
 	if err != nil {
 		return err
 	}
 	defer CloseResourceSecure(targetFilePath, out)
 
-	resp, err := http.Get(url.String())
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, u.String(), nil)
+	if err != nil {
+		return nil
+	}
+
+	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
 		return err
 	}
@@ -134,7 +146,7 @@ func DownloadHttpFile(url *url.URL, targetFilePath string) error {
 	return err
 }
 
-func DownloadHttpsFile(skipTls bool, url *url.URL, targetFilePath string) error {
+func DownloadHTTPSFile(ctx context.Context, skipTLS bool, u fmt.Stringer, targetFilePath string) error {
 	out, err := os.Create(targetFilePath)
 	if err != nil {
 		return err
@@ -144,12 +156,17 @@ func DownloadHttpsFile(skipTls bool, url *url.URL, targetFilePath string) error 
 	client := http.Client{
 		Transport: &http.Transport{
 			TLSClientConfig: &tls.Config{
-				InsecureSkipVerify: skipTls,
+				InsecureSkipVerify: skipTLS,
 			},
 		},
 	}
 
-	resp, err := client.Get(url.String())
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, u.String(), nil)
+	if err != nil {
+		return nil
+	}
+
+	resp, err := client.Do(req)
 	if err != nil {
 		return err
 	}
@@ -160,18 +177,18 @@ func DownloadHttpsFile(skipTls bool, url *url.URL, targetFilePath string) error 
 	return err
 }
 
-func DownloadFtpFile(url *url.URL, targetFilePath string) error {
+func DownloadFtpFile(ctx context.Context, u *url.URL, targetFilePath string) error {
 	ftpCfg := goftp.Config{}
-	if url.User != nil {
-		usrlLogin := url.User.Username()
-		usrPass, passIsSet := url.User.Password()
+	if u.User != nil {
+		usrlLogin := u.User.Username()
+		usrPass, passIsSet := u.User.Password()
 		if passIsSet {
 			ftpCfg.User = usrlLogin
 			ftpCfg.Password = usrPass
 		}
 	}
 
-	ftpClient, err := goftp.DialConfig(ftpCfg, url.Host)
+	ftpClient, err := goftp.DialConfig(ftpCfg, u.Host)
 
 	if err != nil {
 		return err
@@ -182,7 +199,7 @@ func DownloadFtpFile(url *url.URL, targetFilePath string) error {
 		return err
 	}
 
-	err = ftpClient.Retrieve(url.Path, targetFile)
+	err = ftpClient.Retrieve(u.Path, targetFile)
 	if err != nil {
 		return err
 	}

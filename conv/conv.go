@@ -1,6 +1,10 @@
 package conv
 
-import "fmt"
+import (
+	"fmt"
+	"os"
+	"strconv"
+)
 
 type KeyValues []KeyValue
 
@@ -82,4 +86,19 @@ func ConvertToBool(val interface{}) bool {
 	default:
 		return true
 	}
+}
+
+func ConvertToFileMode(val interface{}) (os.FileMode, error) {
+	fileUint, ok := val.(int)
+	if ok {
+		return os.FileMode(fileUint), nil
+	}
+
+	valStr := fmt.Sprint(val)
+	i64, err := strconv.ParseInt(valStr, 8, 32)
+	if err != nil {
+		return 0, fmt.Errorf(`invalid file mode value '%s' at path 'invalid_filemode_path.mode'`, valStr)
+	}
+
+	return os.FileMode(i64), nil
 }
