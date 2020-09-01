@@ -9,6 +9,8 @@ import (
 	"net/http/httptest"
 	"net/url"
 	"os"
+	"os/exec"
+	"strings"
 	"testing"
 	"time"
 
@@ -32,6 +34,7 @@ type fileManagedTestCase struct {
 	FileShouldExist bool
 	ContentToWrite  string
 	FileExpectation *utils.FileExpectation
+	ExpectedCmdStrs []string
 }
 
 func TestFileManagedTaskExecution(t *testing.T) {
@@ -226,6 +229,53 @@ func TestFileManagedTaskExecution(t *testing.T) {
 				ExpectedContent: "one two three",
 			},
 		},
+		{
+			Name: "executing_onlyif_condition_failure",
+			Task: &FileManagedTask{
+				Name:   "cmd with OnlyIf failure",
+				OnlyIf: []string{"check OnlyIf error"},
+			},
+			ExpectedResult: ExecutionResult{
+				IsSkipped: true,
+			},
+			ExpectedCmdStrs: []string{"check OnlyIf error"},
+			RunnerMock: &appExec.SystemRunner{
+				SystemAPI: &appExec.SystemAPIMock{
+					Cmds: []*exec.Cmd{},
+					Callback: func(cmd *exec.Cmd) error {
+						cmdStr := cmd.String()
+						if strings.Contains(cmdStr, "cmd with OnlyIf failure") {
+							return nil
+						}
+
+						return appExec.RunError{Err: errors.New("some OnlyIfFailure")}
+					},
+				},
+			},
+		},
+		{
+			Name: "executing_onlyif_condition_success",
+			Task: &FileManagedTask{
+				Name:   "onlyIfConditionTrue.txt",
+				OnlyIf: []string{"check OnlyIf success 1", "check OnlyIf success 2"},
+				Source: utils.Location{
+					IsURL:       false,
+					LocalPath:   "sourceFileAtLocal.txt",
+					RawLocation: "sourceFileAtLocal.txt",
+				},
+				SourceHash: "md5=5e4fe0155703dde467f3ab234e6f966f",
+			},
+			ExpectedResult: ExecutionResult{},
+			ExpectedCmdStrs: []string{"check OnlyIf success 1", "check OnlyIf success 2"},
+			RunnerMock: &appExec.SystemRunner{SystemAPI: &appExec.SystemAPIMock{
+				Cmds:      []*exec.Cmd{},
+			}},
+			FileExpectation: &utils.FileExpectation{
+				FilePath:        "onlyIfConditionTrue.txt",
+				ShouldExist:     true,
+				ExpectedContent: "one two three",
+			},
+		},
 	}
 
 	for _, testCase := range testCases {
@@ -264,14 +314,13 @@ func assertTestCase(t *testing.T, tc *fileManagedTestCase) {
 	assert.EqualValues(t, tc.ExpectedResult.StdOut, res.StdOut)
 	assert.EqualValues(t, tc.ExpectedResult.StdErr, res.StdErr)
 
-	if tc.ExpectedResult.Err != nil {
-		return
+	var cmds []*exec.Cmd
+	if tc.RunnerMock != nil {
+		systemAPIMock := tc.RunnerMock.SystemAPI.(*appExec.SystemAPIMock)
+		cmds = systemAPIMock.Cmds
 	}
 
-	if tc.ExpectedResult.IsSkipped {
-		return
-	}
-
+	AssertCmdsPartiallyMatch(t, tc.ExpectedCmdStrs, cmds)
 	if tc.FileExpectation == nil {
 		return
 	}

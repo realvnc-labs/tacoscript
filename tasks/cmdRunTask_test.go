@@ -183,7 +183,8 @@ func TestTaskExecution(t *testing.T) {
 					return appExec.RunError{Err: errors.New("some OnlyIfFailure")}
 				},
 			},
-			}},
+			},
+		},
 		{
 			Name: "executing multiple onlyif conditions with failure",
 			Task: &CmdRunTask{
