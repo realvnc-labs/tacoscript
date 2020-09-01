@@ -1,6 +1,7 @@
 package script
 
 import (
+	"database/sql"
 	"net/url"
 	"os"
 	"testing"
@@ -60,7 +61,6 @@ maintain-another-file:
 							Replace:    false,
 							SkipVerify: true,
 							Creates:    []string{"C:\\Program Files\\notepad++\\notepad++.exe"},
-							Contents:   "",
 							User:       "",
 							Group:      "",
 							Encoding:   "",
@@ -74,10 +74,13 @@ maintain-another-file:
 					ID: "maintain-another-file",
 					Tasks: []tasks.Task{
 						&tasks.FileManagedTask{
-							TypeName:   tasks.FileManaged,
-							Path:       "maintain-another-file.file.managed[1]",
-							Name:       "/tmp/my-file.txt",
-							Contents:   `ddd`,
+							TypeName: tasks.FileManaged,
+							Path:     "maintain-another-file.file.managed[1]",
+							Name:     "/tmp/my-file.txt",
+							Contents: sql.NullString{
+								Valid:  true,
+								String: `ddd`,
+							},
 							MakeDirs:   false,
 							Replace:    false,
 							SkipVerify: false,

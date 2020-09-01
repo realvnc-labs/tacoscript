@@ -2,6 +2,7 @@ package tasks
 
 import (
 	"context"
+	"database/sql"
 	"errors"
 	"fmt"
 	"io/ioutil"
@@ -265,10 +266,10 @@ func TestFileManagedTaskExecution(t *testing.T) {
 				},
 				SourceHash: "md5=5e4fe0155703dde467f3ab234e6f966f",
 			},
-			ExpectedResult: ExecutionResult{},
+			ExpectedResult:  ExecutionResult{},
 			ExpectedCmdStrs: []string{"check OnlyIf success 1", "check OnlyIf success 2"},
 			RunnerMock: &appExec.SystemRunner{SystemAPI: &appExec.SystemAPIMock{
-				Cmds:      []*exec.Cmd{},
+				Cmds: []*exec.Cmd{},
 			}},
 			FileExpectation: &utils.FileExpectation{
 				FilePath:        "onlyIfConditionTrue.txt",
@@ -338,16 +339,20 @@ func assertTestCase(t *testing.T, tc *fileManagedTestCase) {
 
 func TestFileManagedTaskValidation(t *testing.T) {
 	testCases := []struct {
-		Task          FileManagedTask
+		Name          string
 		ExpectedError string
+		Task          FileManagedTask
 	}{
 		{
+			Name: "missing_name",
 			Task: FileManagedTask{
 				Path: "somepath",
+				Source: utils.Location{RawLocation: "some location"},
 			},
 			ExpectedError: fmt.Sprintf("empty required value at path 'somepath.%s'", NameField),
 		},
 		{
+			Name: "missing_hash_for_url",
 			Task: FileManagedTask{
 				Name: "task1",
 				Path: "somepath1",
@@ -367,6 +372,7 @@ func TestFileManagedTaskValidation(t *testing.T) {
 			),
 		},
 		{
+			Name: "missing_hash_for_ftp",
 			Task: FileManagedTask{
 				Name: "task2",
 				Path: "somepath2",
@@ -386,23 +392,44 @@ func TestFileManagedTaskValidation(t *testing.T) {
 			),
 		},
 		{
+			Name: "valid_task",
 			Task: FileManagedTask{
 				Name: "some p",
 				Source: utils.Location{
-					IsURL:     false,
-					LocalPath: "/somepath",
+					RawLocation: "some location",
+				},
+			},
+		},
+		{
+			Name: "missing_source_and_content",
+			Task: FileManagedTask{
+				Name: "task missing source",
+				Path: "some task missing source",
+			},
+			ExpectedError: `either content or source should be provided for the task at path 'some task missing source'`,
+		},
+		{
+			Name: "empty_content",
+			Task: FileManagedTask{
+				Name: "task empty_content",
+				Contents: sql.NullString{
+					Valid: true,
+					String: "",
 				},
 			},
 		},
 	}
 
 	for _, testCase := range testCases {
-		err := testCase.Task.Validate()
-		if testCase.ExpectedError == "" {
-			assert.NoError(t, err)
-		} else {
-			assert.EqualError(t, err, testCase.ExpectedError)
-		}
+		tc := testCase
+		t.Run(tc.Name, func(t *testing.T) {
+			err := tc.Task.Validate()
+			if tc.ExpectedError == "" {
+				assert.NoError(t, err)
+			} else {
+				assert.EqualError(t, err, tc.ExpectedError)
+			}
+		})
 	}
 }
 

@@ -3,6 +3,7 @@ package tasks
 import (
 	"bytes"
 	"context"
+	"database/sql"
 	"fmt"
 	"os"
 	"time"
@@ -70,7 +71,14 @@ func (fmtb FileManagedTaskBuilder) processContextItem(t *FileManagedTask, key, p
 	case EncodingField:
 		t.Encoding = fmt.Sprint(val)
 	case ContentsField:
-		t.Contents = fmt.Sprint(val)
+		isValid := false
+		if val != nil {
+			isValid = true
+		}
+		t.Contents = sql.NullString{
+			String: fmt.Sprint(val),
+			Valid:  isValid,
+		}
 	}
 
 	return nil
@@ -86,7 +94,7 @@ type FileManagedTask struct {
 	Path         string
 	Name         string
 	SourceHash   string
-	Contents     string
+	Contents     sql.NullString
 	User         string
 	Group        string
 	Encoding     string
@@ -120,6 +128,13 @@ func (crt *FileManagedTask) Validate() error {
 				crt.Source.RawLocation,
 			),
 		)
+	}
+
+	if crt.Source.RawLocation == "" && !crt.Contents.Valid {
+		errs.Add(fmt.Errorf(
+			`either content or source should be provided for the task at path '%s'`,
+			crt.Path,
+		))
 	}
 
 	return errs.ToError()

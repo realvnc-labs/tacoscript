@@ -1,6 +1,7 @@
 package tasks
 
 import (
+	"database/sql"
 	"fmt"
 	"net/url"
 	"os"
@@ -72,9 +73,12 @@ Funny file`,
 				TypeName: "fileManagedType2",
 				Path:     "fileManagedPath2",
 				Name:     "/tmp/my-file.txt",
-				Contents: `My file content
+				Contents: sql.NullString{
+					Valid:  true,
+					String:`My file content
 goes here
 Funny file`,
+				},
 				User:     "root",
 				Group:    "www-data",
 				Mode:     0755,
@@ -217,6 +221,7 @@ Funny file`,
 				{
 					NameField: "correct_string_mode.txt",
 					ModeField: "0777",
+					ContentsField: "",
 				},
 			},
 			expectedTask: &FileManagedTask{
@@ -224,6 +229,28 @@ Funny file`,
 				Path:     "correct_string_mode_path",
 				Mode:     os.FileMode(0777),
 				Name:     "correct_string_mode.txt",
+				Contents: sql.NullString{
+					Valid: true,
+					String: "",
+				},
+			},
+		},
+		{
+			typeName: "missing_content_field",
+			path:     "missing_content_field_path",
+			ctx: []map[string]interface{}{
+				{
+					NameField: "missing_content_field.txt",
+				},
+			},
+			expectedTask: &FileManagedTask{
+				Contents: sql.NullString{
+					Valid: false,
+					String: "",
+				},
+				TypeName: "missing_content_field",
+				Path:     "missing_content_field_path",
+				Name:     "missing_content_field.txt",
 			},
 		},
 	}
