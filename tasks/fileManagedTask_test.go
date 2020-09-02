@@ -15,6 +15,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/cloudradar-monitoring/tacoscript/applog"
+
 	"github.com/goftp/server"
 	log "github.com/sirupsen/logrus"
 
@@ -27,13 +29,18 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+func init() {
+	applog.Init(true)
+}
+
 type fileManagedTestCase struct {
+	FileShouldExist bool
+	Name            string
+	ContentToWrite  string
+	LogExpectation  string
 	Task            *FileManagedTask
 	ExpectedResult  ExecutionResult
 	RunnerMock      *appExec.SystemRunner
-	Name            string
-	FileShouldExist bool
-	ContentToWrite  string
 	FileExpectation *utils.FileExpectation
 	ExpectedCmdStrs []string
 }
@@ -277,12 +284,88 @@ func TestFileManagedTaskExecution(t *testing.T) {
 				ExpectedContent: "one two three",
 			},
 		},
+		{
+			Name: "saving_contents_to_file",
+			Task: &FileManagedTask{
+				Name: "contentsToFile.txt",
+				Path: "saving_contents_to_file",
+				Contents: sql.NullString{
+					Valid: true,
+					String: `one
+two
+three`,
+				},
+			},
+			ContentToWrite: "one two three",
+			ExpectedResult: ExecutionResult{},
+			FileExpectation: &utils.FileExpectation{
+				FilePath:    "contentsToFile.txt",
+				ShouldExist: true,
+				ExpectedContent: `one
+two
+three`,
+			},
+			LogExpectation: `-one
+-two
+-three
++one two three
+`,
+		},
+		{
+			Name: "skipping_content_on_empty_diff",
+			Task: &FileManagedTask{
+				Name: "contentsToFile.txt",
+				Path: "saving_contents_to_file",
+				Contents: sql.NullString{
+					Valid: true,
+					String: `one
+two
+three`,
+				},
+			},
+			ContentToWrite: `one
+two
+three`,
+			ExpectedResult: ExecutionResult{IsSkipped: true},
+			FileExpectation: &utils.FileExpectation{
+				FilePath:    "contentsToFile2.txt",
+				ShouldExist: true,
+				ExpectedContent: `one
+two
+three`,
+			},
+		},
 	}
+
+	logsCollection := &applog.BufferedLogs{
+		Messages: []string{},
+	}
+	log.AddHook(logsCollection)
 
 	for _, testCase := range testCases {
 		tc := testCase
+		lc := logsCollection
 		t.Run(tc.Name, func(tt *testing.T) {
-			assertTestCase(tt, &tc)
+			if tc.ContentToWrite != "" {
+				e := ioutil.WriteFile(tc.Task.Name, []byte(tc.ContentToWrite), 0600)
+				assert.NoError(t, e)
+			}
+			runner := tc.RunnerMock
+			if runner == nil {
+				runner = &appExec.SystemRunner{SystemAPI: &appExec.SystemAPIMock{}}
+			}
+			fileManagedExecutor := &FileManagedTaskExecutor{
+				Runner: runner,
+				FsManager: &utils.FsManagerMock{
+					ExistsToReturn: tc.FileShouldExist,
+				},
+			}
+
+			lc.Messages = []string{}
+
+			res := fileManagedExecutor.Execute(context.Background(), tc.Task)
+
+			assertTestCase(tt, &tc, res, lc)
 			filesToDelete = append(filesToDelete, tc.Task.Name)
 		})
 	}
@@ -293,23 +376,7 @@ func TestFileManagedTaskExecution(t *testing.T) {
 	}
 }
 
-func assertTestCase(t *testing.T, tc *fileManagedTestCase) {
-	if tc.ContentToWrite != "" {
-		err := ioutil.WriteFile(tc.Task.Name, []byte(tc.ContentToWrite), 0600)
-		assert.NoError(t, err)
-	}
-	runner := tc.RunnerMock
-	if runner == nil {
-		runner = &appExec.SystemRunner{SystemAPI: &appExec.SystemAPIMock{}}
-	}
-	fileManagedExecutor := &FileManagedTaskExecutor{
-		Runner: runner,
-		FsManager: &utils.FsManagerMock{
-			ExistsToReturn: tc.FileShouldExist,
-		},
-	}
-
-	res := fileManagedExecutor.Execute(context.Background(), tc.Task)
+func assertTestCase(t *testing.T, tc *fileManagedTestCase, res ExecutionResult, logs *applog.BufferedLogs) {
 	assert.EqualValues(t, tc.ExpectedResult.Err, res.Err)
 	assert.EqualValues(t, tc.ExpectedResult.IsSkipped, res.IsSkipped)
 	assert.EqualValues(t, tc.ExpectedResult.StdOut, res.StdOut)
@@ -320,8 +387,12 @@ func assertTestCase(t *testing.T, tc *fileManagedTestCase) {
 		systemAPIMock := tc.RunnerMock.SystemAPI.(*appExec.SystemAPIMock)
 		cmds = systemAPIMock.Cmds
 	}
-
 	AssertCmdsPartiallyMatch(t, tc.ExpectedCmdStrs, cmds)
+
+	if tc.LogExpectation != "" {
+		assertLogExpectation(t, tc.LogExpectation, logs)
+	}
+
 	if tc.FileExpectation == nil {
 		return
 	}
@@ -337,6 +408,22 @@ func assertTestCase(t *testing.T, tc *fileManagedTestCase) {
 	}
 }
 
+func assertLogExpectation(t *testing.T, expectedLog string, logs *applog.BufferedLogs) {
+	for _, msg := range logs.Messages {
+		if strings.Contains(msg, expectedLog) {
+			return
+		}
+	}
+
+	assert.Failf(
+		t,
+		"failed log expectation",
+		"didn't find expected log '%s' in the actual logs '%s'",
+		expectedLog,
+		logs.Messages,
+	)
+}
+
 func TestFileManagedTaskValidation(t *testing.T) {
 	testCases := []struct {
 		Name          string
@@ -346,7 +433,7 @@ func TestFileManagedTaskValidation(t *testing.T) {
 		{
 			Name: "missing_name",
 			Task: FileManagedTask{
-				Path: "somepath",
+				Path:   "somepath",
 				Source: utils.Location{RawLocation: "some location"},
 			},
 			ExpectedError: fmt.Sprintf("empty required value at path 'somepath.%s'", NameField),
@@ -413,7 +500,7 @@ func TestFileManagedTaskValidation(t *testing.T) {
 			Task: FileManagedTask{
 				Name: "task empty_content",
 				Contents: sql.NullString{
-					Valid: true,
+					Valid:  true,
 					String: "",
 				},
 			},

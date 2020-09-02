@@ -74,8 +74,8 @@ Funny file`,
 				Path:     "fileManagedPath2",
 				Name:     "/tmp/my-file.txt",
 				Contents: sql.NullString{
-					Valid:  true,
-					String:`My file content
+					Valid: true,
+					String: `My file content
 goes here
 Funny file`,
 				},
@@ -219,8 +219,8 @@ Funny file`,
 			path:     "correct_string_mode_path",
 			ctx: []map[string]interface{}{
 				{
-					NameField: "correct_string_mode.txt",
-					ModeField: "0777",
+					NameField:     "correct_string_mode.txt",
+					ModeField:     "0777",
 					ContentsField: "",
 				},
 			},
@@ -230,7 +230,7 @@ Funny file`,
 				Mode:     os.FileMode(0777),
 				Name:     "correct_string_mode.txt",
 				Contents: sql.NullString{
-					Valid: true,
+					Valid:  true,
 					String: "",
 				},
 			},
@@ -245,7 +245,7 @@ Funny file`,
 			},
 			expectedTask: &FileManagedTask{
 				Contents: sql.NullString{
-					Valid: false,
+					Valid:  false,
 					String: "",
 				},
 				TypeName: "missing_content_field",

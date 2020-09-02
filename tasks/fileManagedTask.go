@@ -5,6 +5,7 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"io/ioutil"
 	"os"
 	"time"
 
@@ -71,17 +72,21 @@ func (fmtb FileManagedTaskBuilder) processContextItem(t *FileManagedTask, key, p
 	case EncodingField:
 		t.Encoding = fmt.Sprint(val)
 	case ContentsField:
-		isValid := false
-		if val != nil {
-			isValid = true
-		}
-		t.Contents = sql.NullString{
-			String: fmt.Sprint(val),
-			Valid:  isValid,
-		}
+		t.Contents = fmtb.parseContentsField(val)
 	}
 
 	return nil
+}
+
+func (fmtb FileManagedTaskBuilder) parseContentsField(val interface{}) sql.NullString {
+	isValid := false
+	if val != nil {
+		isValid = true
+	}
+	return sql.NullString{
+		String: fmt.Sprint(val),
+		Valid:  isValid,
+	}
 }
 
 type FileManagedTask struct {
@@ -154,6 +159,7 @@ type FileManagedTaskExecutor struct {
 }
 
 func (fmte *FileManagedTaskExecutor) Execute(ctx context.Context, task Task) ExecutionResult {
+	logrus.Debugf("will trigger '%s' task", task.GetPath())
 	execRes := ExecutionResult{}
 
 	fileManagedTask, ok := task.(*FileManagedTask)
@@ -170,7 +176,7 @@ func (fmte *FileManagedTaskExecutor) Execute(ctx context.Context, task Task) Exe
 		User:         fileManagedTask.User,
 		Path:         fileManagedTask.Path,
 	}
-
+	logrus.Debugf("will check if the task '%s' should be executed", task.GetPath())
 	shouldBeExecuted, err := fmte.shouldBeExecuted(execCtx, fileManagedTask)
 	if err != nil {
 		execRes.Err = err
@@ -178,6 +184,7 @@ func (fmte *FileManagedTaskExecutor) Execute(ctx context.Context, task Task) Exe
 	}
 
 	if !shouldBeExecuted {
+		logrus.Debugf("the task '%s' will be be skipped", task.GetPath())
 		execRes.IsSkipped = true
 		return execRes
 	}
@@ -190,8 +197,15 @@ func (fmte *FileManagedTaskExecutor) Execute(ctx context.Context, task Task) Exe
 		return execRes
 	}
 
+	err = fmte.copyContentToTarget(fileManagedTask)
+	if err != nil {
+		execRes.Err = err
+		return execRes
+	}
+
 	execRes.Duration = time.Since(start)
 
+	logrus.Debugf("the task '%s' is finished for %v", task.GetPath(), execRes.Duration)
 	return execRes
 }
 
@@ -250,6 +264,14 @@ func (fmte *FileManagedTaskExecutor) shouldBeExecuted(
 	}
 
 	if !isSuccess {
+		return false, nil
+	}
+
+	shouldSkip, err := fmte.shouldSkipForContentExpectation(fileManagedTask)
+	if err != nil {
+		return false, err
+	}
+	if shouldSkip {
 		return false, nil
 	}
 
@@ -366,4 +388,59 @@ func (fmte *FileManagedTaskExecutor) copySourceToTarget(ctx context.Context, fil
 	logrus.Debugf("copied field from temp location '%s' to the expected location '%s'", tempTargetPath, fileManagedTask.Name)
 
 	return nil
+}
+
+func (fmte *FileManagedTaskExecutor) copyContentToTarget(fileManagedTask *FileManagedTask) error {
+	const DefaultFileMode = 0600
+
+	if !fileManagedTask.Contents.Valid {
+		logrus.Debug("contents field is empty, will not copy data")
+		return nil
+	}
+
+	mode := os.FileMode(DefaultFileMode)
+	logrus.Debugf("will write contents to target file '%s'", fileManagedTask.Name)
+	err := ioutil.WriteFile(fileManagedTask.Name, []byte(fileManagedTask.Contents.String), mode)
+
+	if err == nil {
+		logrus.Debugf("written contents to '%s'", fileManagedTask.Name)
+	}
+
+	return err
+}
+
+func (fmte *FileManagedTaskExecutor) shouldSkipForContentExpectation(fileManagedTask *FileManagedTask) (bool, error) {
+	if !fileManagedTask.Contents.Valid {
+		logrus.Debug("contents section is missing, won't check the content")
+		return false, nil
+	}
+
+	logrus.Debugf("will compare contents of file '%s' with the provided contents", fileManagedTask.Name)
+	actualContents := ""
+
+	fileExists, err := utils.FileExists(fileManagedTask.Name)
+	if err != nil {
+		return false, err
+	}
+
+	if fileExists {
+		actualContentsBytes, err := ioutil.ReadFile(fileManagedTask.Name)
+		if err != nil {
+			return false, err
+		}
+		actualContents = string(actualContentsBytes)
+	}
+
+	contentDiff := utils.Diff(fileManagedTask.Contents.String, actualContents)
+	if contentDiff == "" {
+		logrus.Debugf("file '%s' matched with the expected contents, will skip the execution", fileManagedTask.Name)
+		return true, nil
+	}
+
+	logrus.WithFields(
+		logrus.Fields{
+			"multiline": contentDiff,
+		}).Infof(`file '%s' differs from the expected content field, will copy diff to file`, fileManagedTask.Name)
+
+	return false, nil
 }

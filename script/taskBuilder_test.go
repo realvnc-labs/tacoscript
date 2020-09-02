@@ -30,7 +30,10 @@ func TestTaskBuilderFromRawYaml(t *testing.T) {
 maintain-another-file:
   file.managed:
     - name: /tmp/my-file.txt
-    - contents: ddd
+    - contents: |
+       My file content
+       goes here
+       Funny file
     - user: root
     - group: www-data
     - mode: 0755
@@ -78,8 +81,11 @@ maintain-another-file:
 							Path:     "maintain-another-file.file.managed[1]",
 							Name:     "/tmp/my-file.txt",
 							Contents: sql.NullString{
-								Valid:  true,
-								String: `ddd`,
+								Valid: true,
+								String: `My file content
+goes here
+Funny file
+`,
 							},
 							MakeDirs:   false,
 							Replace:    false,
