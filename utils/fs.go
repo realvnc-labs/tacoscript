@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"net/url"
 	"os"
+	"path/filepath"
 
 	"github.com/secsy/goftp"
 	"github.com/sirupsen/logrus"
@@ -75,6 +76,10 @@ func AssertFileMatchesExpectation(filePath string, fe *FileExpectation) (isExpec
 
 	if !fe.ShouldExist && fileExists {
 		return false, fmt.Sprintf("file '%s' exists but it shouldn't", filePath), nil
+	}
+
+	if !fe.ShouldExist && !fileExists {
+		return true, "", nil
 	}
 
 	fileContentsBytes, err := ioutil.ReadFile(filePath)
@@ -202,6 +207,16 @@ func DownloadFtpFile(ctx context.Context, u *url.URL, targetFilePath string) err
 	err = ftpClient.Retrieve(u.Path, targetFile)
 	if err != nil {
 		return err
+	}
+
+	return nil
+}
+
+func CreateDirPathIfNeeded(targetFilePath string, mode os.FileMode) error {
+	targetFileDir := filepath.Dir(targetFilePath)
+	if targetFileDir != "" {
+		logrus.Debugf("will create dirs tree '%s", targetFileDir)
+		return os.MkdirAll(targetFileDir, mode)
 	}
 
 	return nil

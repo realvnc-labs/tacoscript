@@ -6,25 +6,20 @@ import (
 	"errors"
 	"fmt"
 	"io/ioutil"
-	"net/http"
-	"net/http/httptest"
 	"net/url"
-	"os"
 	"os/exec"
 	"strings"
 	"testing"
-	"time"
 
 	"github.com/cloudradar-monitoring/tacoscript/applog"
 
-	"github.com/goftp/server"
 	log "github.com/sirupsen/logrus"
 
 	appExec "github.com/cloudradar-monitoring/tacoscript/exec"
 
-	"github.com/cloudradar-monitoring/tacoscript/utils"
+	"github.com/cloudradar-monitoring/tacoscript/apptest"
 
-	filedriver "github.com/goftp/file-driver"
+	"github.com/cloudradar-monitoring/tacoscript/utils"
 
 	"github.com/stretchr/testify/assert"
 )
@@ -34,15 +29,16 @@ func init() {
 }
 
 type fileManagedTestCase struct {
-	FileShouldExist bool
-	Name            string
-	ContentToWrite  string
-	LogExpectation  string
-	Task            *FileManagedTask
-	ExpectedResult  ExecutionResult
-	RunnerMock      *appExec.SystemRunner
-	FileExpectation *utils.FileExpectation
-	ExpectedCmdStrs []string
+	FileShouldExist  bool
+	Name             string
+	ContentToWrite   string
+	LogExpectation   string
+	Task             *FileManagedTask
+	ExpectedResult   ExecutionResult
+	RunnerMock       *appExec.SystemRunner
+	FileExpectation  *utils.FileExpectation
+	ExpectedCmdStrs  []string
+	ErrorExpectation *apptest.ErrorExpectation
 }
 
 func TestFileManagedTaskExecution(t *testing.T) {
@@ -51,20 +47,20 @@ func TestFileManagedTaskExecution(t *testing.T) {
 
 	const ftpPort = 3021
 
-	ftpURL, err := startFTPServer(ctx, ftpPort)
+	ftpURL, err := apptest.StartFTPServer(ctx, ftpPort)
 	assert.NoError(t, err)
 	if err != nil {
 		return
 	}
 
-	httpSrvURL, httpSrv, err := startHTTPServer(false)
+	httpSrvURL, httpSrv, err := apptest.StartHTTPServer(false)
 	assert.NoError(t, err)
 	if err != nil {
 		return
 	}
 	defer httpSrv.Close()
 
-	httpsSrvURL, httpsSrv, err := startHTTPServer(true)
+	httpsSrvURL, httpsSrv, err := apptest.StartHTTPServer(true)
 	assert.NoError(t, err)
 	if err != nil {
 		return
@@ -335,6 +331,47 @@ two
 three`,
 			},
 		},
+		{
+			Name: "make_dirs_success",
+			Task: &FileManagedTask{
+				MakeDirs:   true,
+				Name:       "sub/dir/sourceFileAtLocal.txt",
+				Path:       "make_dirs_success_path",
+				SourceHash: "md5=5e4fe0155703dde467f3ab234e6f966f",
+				Source: utils.Location{
+					IsURL:       false,
+					LocalPath:   "sourceFileAtLocal.txt",
+					RawLocation: "sourceFileAtLocal.txt",
+				},
+			},
+			ExpectedResult: ExecutionResult{},
+			FileExpectation: &utils.FileExpectation{
+				FilePath:        "sub/dir/sourceFileAtLocal.txt",
+				ShouldExist:     true,
+				ExpectedContent: `one two three`,
+			},
+		},
+		{
+			Name: "make_dirs_fail",
+			Task: &FileManagedTask{
+				MakeDirs:   false,
+				Name:       "dfasdfaf/sourceFileAtLocal2.txt",
+				Path:       "make_dirs_fail_path",
+				SourceHash: "md5=5e4fe0155703dde467f3ab234e6f966f",
+				Source: utils.Location{
+					IsURL:       false,
+					LocalPath:   "sourceFileAtLocal.txt",
+					RawLocation: "sourceFileAtLocal.txt",
+				},
+			},
+			FileExpectation: &utils.FileExpectation{
+				FilePath:    "dfasdfaf/sourceFileAtLocal2.txt",
+				ShouldExist: false,
+			},
+			ErrorExpectation: &apptest.ErrorExpectation{
+				PartialText: "dfasdfaf/sourceFileAtLocal2.txt",
+			},
+		},
 	}
 
 	logsCollection := &applog.BufferedLogs{
@@ -363,21 +400,31 @@ three`,
 
 			lc.Messages = []string{}
 
+			filesToDelete = append(filesToDelete, tc.Task.Name)
+
 			res := fileManagedExecutor.Execute(context.Background(), tc.Task)
 
 			assertTestCase(tt, &tc, res, lc)
-			filesToDelete = append(filesToDelete, tc.Task.Name)
 		})
 	}
 
-	err = deleteFiles(filesToDelete)
+	err = apptest.DeleteFiles(filesToDelete)
 	if err != nil {
 		log.Warn(err)
 	}
 }
 
 func assertTestCase(t *testing.T, tc *fileManagedTestCase, res ExecutionResult, logs *applog.BufferedLogs) {
-	assert.EqualValues(t, tc.ExpectedResult.Err, res.Err)
+	if tc.ErrorExpectation != nil {
+		apptest.AssertErrorExpectation(t, res.Err, tc.ErrorExpectation)
+	} else {
+		if tc.ExpectedResult.Err == nil {
+			assert.NoError(t, res.Err)
+		} else {
+			assert.EqualError(t, tc.ExpectedResult.Err, res.Err.Error())
+		}
+	}
+
 	assert.EqualValues(t, tc.ExpectedResult.IsSkipped, res.IsSkipped)
 	assert.EqualValues(t, tc.ExpectedResult.StdOut, res.StdOut)
 	assert.EqualValues(t, tc.ExpectedResult.StdErr, res.StdErr)
@@ -387,7 +434,7 @@ func assertTestCase(t *testing.T, tc *fileManagedTestCase, res ExecutionResult, 
 		systemAPIMock := tc.RunnerMock.SystemAPI.(*appExec.SystemAPIMock)
 		cmds = systemAPIMock.Cmds
 	}
-	AssertCmdsPartiallyMatch(t, tc.ExpectedCmdStrs, cmds)
+	apptest.AssertCmdsPartiallyMatch(t, tc.ExpectedCmdStrs, cmds)
 
 	if tc.LogExpectation != "" {
 		assertLogExpectation(t, tc.LogExpectation, logs)
@@ -517,80 +564,5 @@ func TestFileManagedTaskValidation(t *testing.T) {
 				assert.EqualError(t, err, tc.ExpectedError)
 			}
 		})
-	}
-}
-
-func deleteFiles(files []string) error {
-	errs := &utils.Errors{
-		Errs: []error{},
-	}
-	for _, file := range files {
-		errs.Add(os.Remove(file))
-	}
-
-	return errs.ToError()
-}
-
-func startHTTPServer(isHTTPS bool) (u *url.URL, srv *httptest.Server, err error) {
-	if isHTTPS {
-		srv = httptest.NewTLSServer(http.FileServer(http.Dir(".")))
-	} else {
-		srv = httptest.NewServer(http.FileServer(http.Dir(".")))
-	}
-
-	u, err = url.Parse(srv.URL)
-
-	return
-}
-
-func startFTPServer(ctx context.Context, port int) (*url.URL, error) {
-	path, err := os.Getwd()
-	if err != nil {
-		return nil, err
-	}
-
-	ftpHost := fmt.Sprintf("ftp://root:root@localhost:%d", port)
-	ftpHostURL, err := url.Parse(ftpHost)
-	if err != nil {
-		return nil, err
-	}
-
-	factory := &filedriver.FileDriverFactory{
-		RootPath: path,
-		Perm:     server.NewSimplePerm("user", "group"),
-	}
-
-	opts := &server.ServerOpts{
-		Factory:  factory,
-		Port:     port,
-		Hostname: "localhost",
-		Auth:     &server.SimpleAuth{Name: "root", Password: "root"},
-	}
-
-	log.Printf("Starting ftp server on %v:%v", opts.Hostname, opts.Port)
-	ftpSrvr := server.NewServer(opts)
-
-	go func() {
-		<-ctx.Done()
-		err := ftpSrvr.Shutdown()
-		if err != nil {
-			log.Error(err)
-		}
-	}()
-
-	errChan := make(chan error, 1)
-	go func() {
-		defer close(errChan)
-		err := ftpSrvr.ListenAndServe()
-		if err != nil {
-			errChan <- err
-		}
-	}()
-
-	select {
-	case err := <-errChan:
-		return ftpHostURL, err
-	case <-time.After(time.Millisecond * 300):
-		return ftpHostURL, nil
 	}
 }

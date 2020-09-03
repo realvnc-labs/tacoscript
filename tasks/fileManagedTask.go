@@ -18,6 +18,8 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
+const DefaultFileMode = 0744
+
 type FileManagedTaskBuilder struct {
 }
 
@@ -190,6 +192,12 @@ func (fmte *FileManagedTaskExecutor) Execute(ctx context.Context, task Task) Exe
 	}
 
 	start := time.Now()
+
+	err = fmte.createDirPathIfNeeded(fileManagedTask)
+	if err != nil {
+		execRes.Err = err
+		return execRes
+	}
 
 	err = fmte.copySourceToTarget(ctx, fileManagedTask)
 	if err != nil {
@@ -391,8 +399,6 @@ func (fmte *FileManagedTaskExecutor) copySourceToTarget(ctx context.Context, fil
 }
 
 func (fmte *FileManagedTaskExecutor) copyContentToTarget(fileManagedTask *FileManagedTask) error {
-	const DefaultFileMode = 0600
-
 	if !fileManagedTask.Contents.Valid {
 		logrus.Debug("contents field is empty, will not copy data")
 		return nil
@@ -443,4 +449,21 @@ func (fmte *FileManagedTaskExecutor) shouldSkipForContentExpectation(fileManaged
 		}).Infof(`file '%s' differs from the expected content field, will copy diff to file`, fileManagedTask.Name)
 
 	return false, nil
+}
+
+func (fmte *FileManagedTaskExecutor) createDirPathIfNeeded(fileManagedTask *FileManagedTask) error {
+	if !fileManagedTask.MakeDirs {
+		return nil
+	}
+
+	logrus.Debugf("will create dirs for '%s' if needed", fileManagedTask.Name)
+
+	var mode os.FileMode
+	if fileManagedTask.Mode == 0 {
+		mode = DefaultFileMode
+	} else {
+		mode = fileManagedTask.Mode
+	}
+
+	return utils.CreateDirPathIfNeeded(fileManagedTask.Name, mode)
 }

@@ -19,8 +19,9 @@ func HashEquals(hashStr, filePath string) (hashEquals bool, actualCache string, 
 
 	fileExists, err := FileExists(filePath)
 	if err != nil {
-		return false, "", err
+		log.Warnf("file exists check failure: %v", err)
 	}
+
 	if !fileExists {
 		log.Debugf("file %s doesn't exist, so it should be created", filePath)
 		return false, "", nil
