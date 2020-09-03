@@ -10,6 +10,7 @@ import (
 	"os/exec"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/cloudradar-monitoring/tacoscript/applog"
 
@@ -47,7 +48,7 @@ func TestFileManagedTaskExecution(t *testing.T) {
 
 	const ftpPort = 3021
 
-	ftpURL, err := apptest.StartFTPServer(ctx, ftpPort)
+	ftpURL, err := apptest.StartFTPServer(ctx, ftpPort, time.Millisecond*300)
 	assert.NoError(t, err)
 	if err != nil {
 		return
@@ -387,8 +388,8 @@ three`,
 			},
 			ContentToWrite: "one two three",
 			FileExpectation: &utils.FileExpectation{
-				FilePath:    "existingFileToReplace.txt",
-				ShouldExist: true,
+				FilePath:        "existingFileToReplace.txt",
+				ShouldExist:     true,
 				ExpectedContent: `one two three`,
 			},
 		},
@@ -406,8 +407,8 @@ three`,
 			},
 			ContentToWrite: "one",
 			FileExpectation: &utils.FileExpectation{
-				FilePath:    "existingFileToReplace2.txt",
-				ShouldExist: true,
+				FilePath:        "existingFileToReplace2.txt",
+				ShouldExist:     true,
 				ExpectedContent: `one two three`,
 			},
 		},

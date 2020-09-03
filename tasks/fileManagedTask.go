@@ -23,6 +23,71 @@ const DefaultFileMode = 0744
 type FileManagedTaskBuilder struct {
 }
 
+type contextProc func(t *FileManagedTask, path string, val interface{}) error
+
+var contextProcMap = map[string]contextProc{
+	NameField: func(t *FileManagedTask, path string, val interface{}) error {
+		t.Name = fmt.Sprint(val)
+		return nil
+	},
+	UserField: func(t *FileManagedTask, path string, val interface{}) error {
+		t.User = fmt.Sprint(val)
+		return nil
+	},
+	CreatesField: func(t *FileManagedTask, path string, val interface{}) error {
+		var err error
+		t.Creates, err = parseCreatesField(val, path)
+		return err
+	},
+	RequireField: func(t *FileManagedTask, path string, val interface{}) error {
+		var err error
+		t.Require, err = parseRequireField(val, path)
+		return err
+	},
+	OnlyIf: func(t *FileManagedTask, path string, val interface{}) error {
+		var err error
+		t.OnlyIf, err = parseOnlyIfField(val, path)
+		return err
+	},
+	SkipVerifyField: func(t *FileManagedTask, path string, val interface{}) error {
+		t.SkipVerify = conv.ConvertToBool(val)
+		return nil
+	},
+	SourceField: func(t *FileManagedTask, path string, val interface{}) error {
+		t.Source = utils.ParseLocation(fmt.Sprint(val))
+		return nil
+	},
+	SourceHashField: func(t *FileManagedTask, path string, val interface{}) error {
+		t.SourceHash = fmt.Sprint(val)
+		return nil
+	},
+	MakeDirsField: func(t *FileManagedTask, path string, val interface{}) error {
+		t.MakeDirs = conv.ConvertToBool(val)
+		return nil
+	},
+	GroupField: func(t *FileManagedTask, path string, val interface{}) error {
+		t.Group = fmt.Sprint(val)
+		return nil
+	},
+	ModeField: func(t *FileManagedTask, path string, val interface{}) error {
+		var err error
+		t.Mode, err = conv.ConvertToFileMode(val)
+		return err
+	},
+	EncodingField: func(t *FileManagedTask, path string, val interface{}) error {
+		t.Encoding = fmt.Sprint(val)
+		return nil
+	},
+	ContentsField: func(t *FileManagedTask, path string, val interface{}) error {
+		t.Contents = parseContentsField(val)
+		return nil
+	},
+	ReplaceField: func(t *FileManagedTask, path string, val interface{}) error {
+		t.Replace = conv.ConvertToBool(val)
+		return nil
+	},
+}
+
 func (fmtb FileManagedTaskBuilder) Build(typeName, path string, ctx []map[string]interface{}) (Task, error) {
 	t := &FileManagedTask{
 		TypeName: typeName,
@@ -33,57 +98,18 @@ func (fmtb FileManagedTaskBuilder) Build(typeName, path string, ctx []map[string
 	errs := &utils.Errors{}
 	for _, contextItem := range ctx {
 		for key, val := range contextItem {
-			err := fmtb.processContextItem(t, key, path, val)
-			errs.Add(err)
+			f, ok := contextProcMap[key]
+			if !ok {
+				continue
+			}
+			errs.Add(f(t, path, val))
 		}
 	}
 
 	return t, errs.ToError()
 }
 
-func (fmtb FileManagedTaskBuilder) processContextItem(t *FileManagedTask, key, path string, val interface{}) error {
-	var err error
-	switch key {
-	case NameField:
-		t.Name = fmt.Sprint(val)
-	case UserField:
-		t.User = fmt.Sprint(val)
-	case CreatesField:
-		t.Creates, err = parseCreatesField(val, path)
-		return err
-	case RequireField:
-		t.Require, err = parseRequireField(val, path)
-		return err
-	case OnlyIf:
-		t.OnlyIf, err = parseOnlyIfField(val, path)
-		return err
-	case SkipVerifyField:
-		t.SkipVerify = conv.ConvertToBool(val)
-	case SourceField:
-		t.Source = utils.ParseLocation(fmt.Sprint(val))
-	case SourceHashField:
-		t.SourceHash = fmt.Sprint(val)
-	case MakeDirsField:
-		t.MakeDirs = conv.ConvertToBool(val)
-	case GroupField:
-		t.Group = fmt.Sprint(val)
-	case ModeField:
-		t.Mode, err = conv.ConvertToFileMode(val)
-		if err != nil {
-			return err
-		}
-	case EncodingField:
-		t.Encoding = fmt.Sprint(val)
-	case ContentsField:
-		t.Contents = fmtb.parseContentsField(val)
-	case ReplaceField:
-		t.Replace = conv.ConvertToBool(val)
-	}
-
-	return nil
-}
-
-func (fmtb FileManagedTaskBuilder) parseContentsField(val interface{}) sql.NullString {
+func parseContentsField(val interface{}) sql.NullString {
 	isValid := false
 	if val != nil {
 		isValid = true

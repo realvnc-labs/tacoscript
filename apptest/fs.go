@@ -1,8 +1,9 @@
 package apptest
 
 import (
-	"github.com/cloudradar-monitoring/tacoscript/utils"
 	"os"
+
+	"github.com/cloudradar-monitoring/tacoscript/utils"
 )
 
 func DeleteFiles(files []string) error {

@@ -1,10 +1,11 @@
 package apptest
 
 import (
-	"github.com/cloudradar-monitoring/tacoscript/conv"
-	"github.com/stretchr/testify/assert"
 	"strings"
 	"testing"
+
+	"github.com/cloudradar-monitoring/tacoscript/conv"
+	"github.com/stretchr/testify/assert"
 )
 
 func BuildExpectedEnvs(expectedEnvs map[interface{}]interface{}) []interface{} {

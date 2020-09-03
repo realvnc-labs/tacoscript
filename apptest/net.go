@@ -3,14 +3,15 @@ package apptest
 import (
 	"context"
 	"fmt"
-	filedriver "github.com/goftp/file-driver"
-	"github.com/goftp/server"
-	log "github.com/sirupsen/logrus"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
 	"os"
 	"time"
+
+	filedriver "github.com/goftp/file-driver"
+	"github.com/goftp/server"
+	log "github.com/sirupsen/logrus"
 )
 
 func StartHTTPServer(isHTTPS bool) (u *url.URL, srv *httptest.Server, err error) {
@@ -25,7 +26,7 @@ func StartHTTPServer(isHTTPS bool) (u *url.URL, srv *httptest.Server, err error)
 	return
 }
 
-func StartFTPServer(ctx context.Context, port int) (*url.URL, error) {
+func StartFTPServer(ctx context.Context, port int, waitForStarting time.Duration) (*url.URL, error) {
 	path, err := os.Getwd()
 	if err != nil {
 		return nil, err
@@ -72,7 +73,7 @@ func StartFTPServer(ctx context.Context, port int) (*url.URL, error) {
 	select {
 	case err := <-errChan:
 		return ftpHostURL, err
-	case <-time.After(time.Millisecond * 300):
+	case <-time.After(waitForStarting):
 		return ftpHostURL, nil
 	}
 }
