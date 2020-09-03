@@ -88,7 +88,7 @@ Funny file
 `,
 							},
 							MakeDirs:   false,
-							Replace:    false,
+							Replace:    true,
 							SkipVerify: false,
 							User:       "root",
 							Group:      "www-data",

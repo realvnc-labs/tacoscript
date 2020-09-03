@@ -284,13 +284,14 @@ func TestFileManagedTaskExecution(t *testing.T) {
 			Name: "saving_contents_to_file",
 			Task: &FileManagedTask{
 				Name: "contentsToFile.txt",
-				Path: "saving_contents_to_file",
+				Path: "saving_contents_to_file_path",
 				Contents: sql.NullString{
 					Valid: true,
 					String: `one
 two
 three`,
 				},
+				Replace: true,
 			},
 			ContentToWrite: "one two three",
 			ExpectedResult: ExecutionResult{},
@@ -311,7 +312,7 @@ three`,
 			Name: "skipping_content_on_empty_diff",
 			Task: &FileManagedTask{
 				Name: "contentsToFile.txt",
-				Path: "saving_contents_to_file",
+				Path: "skipping_content_on_empty_diff_file",
 				Contents: sql.NullString{
 					Valid: true,
 					String: `one
@@ -370,6 +371,25 @@ three`,
 			},
 			ErrorExpectation: &apptest.ErrorExpectation{
 				PartialText: "dfasdfaf/sourceFileAtLocal2.txt",
+			},
+		},
+		{
+			Name: "replace_false",
+			Task: &FileManagedTask{
+				Replace:    false,
+				Name:       "existingFileToReplace.txt",
+				Path:       "replace_false_path",
+				SourceHash: "md5=111",
+				Contents: sql.NullString{
+					String: "content to ignore",
+					Valid:  true,
+				},
+			},
+			ContentToWrite: "one two three",
+			FileExpectation: &utils.FileExpectation{
+				FilePath:    "existingFileToReplace.txt",
+				ShouldExist: true,
+				ExpectedContent: `one two three`,
 			},
 		},
 	}

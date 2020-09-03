@@ -27,6 +27,7 @@ func (fmtb FileManagedTaskBuilder) Build(typeName, path string, ctx []map[string
 	t := &FileManagedTask{
 		TypeName: typeName,
 		Path:     path,
+		Replace:  true,
 	}
 
 	errs := &utils.Errors{}
@@ -75,6 +76,8 @@ func (fmtb FileManagedTaskBuilder) processContextItem(t *FileManagedTask, key, p
 		t.Encoding = fmt.Sprint(val)
 	case ContentsField:
 		t.Contents = fmtb.parseContentsField(val)
+	case ReplaceField:
+		t.Replace = conv.ConvertToBool(val)
 	}
 
 	return nil
@@ -193,28 +196,54 @@ func (fmte *FileManagedTaskExecutor) Execute(ctx context.Context, task Task) Exe
 
 	start := time.Now()
 
-	err = fmte.createDirPathIfNeeded(fileManagedTask)
+	fileShouldBeReplaced, err := fmte.fileShouldBeReplaced(fileManagedTask)
 	if err != nil {
 		execRes.Err = err
 		return execRes
 	}
 
-	err = fmte.copySourceToTarget(ctx, fileManagedTask)
-	if err != nil {
-		execRes.Err = err
-		return execRes
-	}
+	if fileShouldBeReplaced {
+		err = fmte.createDirPathIfNeeded(fileManagedTask)
+		if err != nil {
+			execRes.Err = err
+			return execRes
+		}
 
-	err = fmte.copyContentToTarget(fileManagedTask)
-	if err != nil {
-		execRes.Err = err
-		return execRes
+		err = fmte.copySourceToTarget(ctx, fileManagedTask)
+		if err != nil {
+			execRes.Err = err
+			return execRes
+		}
+
+		err = fmte.copyContentToTarget(fileManagedTask)
+		if err != nil {
+			execRes.Err = err
+			return execRes
+		}
 	}
 
 	execRes.Duration = time.Since(start)
 
 	logrus.Debugf("the task '%s' is finished for %v", task.GetPath(), execRes.Duration)
 	return execRes
+}
+
+func (fmte *FileManagedTaskExecutor) fileShouldBeReplaced(fileManagedTask *FileManagedTask) (bool, error) {
+	if fileManagedTask.Replace {
+		return true, nil
+	}
+
+	fileExists, err := utils.FileExists(fileManagedTask.Name)
+	if err != nil {
+		return true, err
+	}
+
+	if fileExists {
+		logrus.Debugf("since file '%s' exists and '%s' field is set to false, file won't be changed", fileManagedTask.Name, ReplaceField)
+		return false, nil
+	}
+
+	return true, nil
 }
 
 func (fmte *FileManagedTaskExecutor) checkOnlyIfs(ctx *exec2.Context, fileManagedTask *FileManagedTask) (isSuccess bool, err error) {
