@@ -141,7 +141,7 @@ func TestFileManagedTaskExecution(t *testing.T) {
 			Name: "local_source_copy_success",
 			Task: &FileManagedTask{
 				Path:       "local_source_copy_success_path",
-				Name:       "targetFileAtLocal.txt",
+				Name:       "targetFileAtLocalCopy.txt",
 				SourceHash: "md5=5e4fe0155703dde467f3ab234e6f966f",
 				Source: utils.Location{
 					IsURL:       false,
@@ -151,7 +151,7 @@ func TestFileManagedTaskExecution(t *testing.T) {
 			},
 			ExpectedResult: ExecutionResult{},
 			FileExpectation: &utils.FileExpectation{
-				FilePath:        "targetFileAtLocal.txt",
+				FilePath:        "targetFileAtLocalCopy.txt",
 				ShouldExist:     true,
 				ExpectedContent: "one two three",
 			},
@@ -388,6 +388,25 @@ three`,
 			ContentToWrite: "one two three",
 			FileExpectation: &utils.FileExpectation{
 				FilePath:    "existingFileToReplace.txt",
+				ShouldExist: true,
+				ExpectedContent: `one two three`,
+			},
+		},
+		{
+			Name: "replace_true",
+			Task: &FileManagedTask{
+				Replace:    true,
+				Name:       "existingFileToReplace2.txt",
+				Path:       "replace_true_path",
+				SourceHash: "md5=5e4fe0155703dde467f3ab234e6f966f",
+				Contents: sql.NullString{
+					String: "one two three",
+					Valid:  true,
+				},
+			},
+			ContentToWrite: "one",
+			FileExpectation: &utils.FileExpectation{
+				FilePath:    "existingFileToReplace2.txt",
 				ShouldExist: true,
 				ExpectedContent: `one two three`,
 			},
