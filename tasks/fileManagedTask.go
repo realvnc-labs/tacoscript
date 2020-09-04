@@ -388,6 +388,17 @@ func (fmte *FileManagedTaskExecutor) handleRemoteSource(ctx context.Context, fil
 
 	logrus.Debug("source location is a remote url")
 
+	defer func(f string) {
+		fileExists, err := utils.FileExists(f)
+		if !fileExists || err != nil {
+			return
+		}
+
+		err = os.Remove(f)
+		if err != nil {
+			logrus.Errorf("failed to delete '%s': %v", f, err)
+		}
+	}(tempTargetPath)
 	err := utils.DownloadFile(ctx, tempTargetPath, fileManagedTask.Source.URL, fileManagedTask.SkipTLSCheck)
 	if err != nil {
 		return err
