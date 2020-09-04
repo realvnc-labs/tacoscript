@@ -63,10 +63,10 @@ func TestFileManagedTaskBuilder(t *testing.T) {
 					ContentsField: `My file content
 goes here
 Funny file`,
-					UserField:     "root",
-					GroupField:    "www-data",
-					ModeField:     0755,
-					EncodingField: "UTF-8",
+					UserField:       "root",
+					GroupField:      "www-data",
+					ModeField:       0755,
+					EncodingField:   "UTF-8",
 					SkipVerifyField: false,
 				},
 			},

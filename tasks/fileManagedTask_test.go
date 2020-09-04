@@ -190,7 +190,9 @@ func TestFileManagedTaskExecution(t *testing.T) {
 			},
 			ExpectedResult: ExecutionResult{
 				Err: errors.New(
-					"expected hash sum 'md5=dafdfdafdafdfad' didn't match with checksum 'md5=5e4fe0155703dde467f3ab234e6f966f' of the source file 'targetFileFromHttp2.txt_temp'",
+					"expected hash sum 'md5=dafdfdafdafdfad' didn't match with " +
+						"checksum 'md5=5e4fe0155703dde467f3ab234e6f966f' of the source file " +
+						"'targetFileFromHttp2.txt_temp'",
 				),
 			},
 		},

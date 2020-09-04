@@ -47,7 +47,7 @@ func HashEquals(hashStr, filePath string) (hashEquals bool, actualCache string, 
 	return isMatched, fmt.Sprintf("%s=%s", expectedHashAlgoName, actualHashSum), nil
 }
 
-func HashSum(hashAlgoName string, filePath string) (hashSum string, err error) {
+func HashSum(hashAlgoName, filePath string) (hashSum string, err error) {
 	hashAlgo, err := ExtractHashAlgo(hashAlgoName)
 	if err != nil {
 		return "", err
@@ -59,7 +59,6 @@ func HashSum(hashAlgoName string, filePath string) (hashSum string, err error) {
 	}
 
 	defer CloseResourceSecure(filePath, f)
-
 
 	if _, err := io.Copy(hashAlgo, f); err != nil {
 		return "", err
@@ -76,7 +75,7 @@ func ParseHashAlgoAndSum(hashStr string) (algoName, sum string, err error) {
 	regParts := reg.FindStringSubmatch(hashStr)
 
 	if len(regParts) != expectedRegexParts {
-		return"", "", fmt.Errorf("invalid hash string '%s'", hashStr)
+		return "", "", fmt.Errorf("invalid hash string '%s'", hashStr)
 	}
 
 	return regParts[1], regParts[2], nil
@@ -91,7 +90,7 @@ func ExtractHashAlgo(hashAlgoName string) (hChecker hash.Hash, err error) {
 	case "sha256":
 		return sha256.New(), nil
 	case "sha224":
-		return sha256.New224(),nil
+		return sha256.New224(), nil
 	case "sha1":
 		return sha1.New(), nil
 	case "md5":

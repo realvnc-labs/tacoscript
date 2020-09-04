@@ -422,7 +422,6 @@ func (fmte *FileManagedTaskExecutor) handleRemoteSource(ctx context.Context, fil
 		return err
 	}
 
-
 	logrus.Debugf(
 		"copied field from temp location '%s' to the expected location '%s'",
 		tempTargetPath,
@@ -457,7 +456,7 @@ func (fmte *FileManagedTaskExecutor) checkIfLocalFileShouldBeCopied(fileManagedT
 		}
 		if !hashEquals {
 			logrus.Debugf(
-				"expected source hash '%s' didn't match with the source file '%s' which means source " +
+				"expected source hash '%s' didn't match with the source file '%s' which means source "+
 					"was unexpectedly modified, will report as an error",
 				fileManagedTask.SourceHash,
 				sourcePath,
