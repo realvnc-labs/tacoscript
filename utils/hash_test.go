@@ -102,7 +102,7 @@ func TestHashes(t *testing.T) {
 			isMatched:     false,
 			data:          "one two three",
 			inputHash:     "ddd=2222",
-			expectedError: "unknown hash algorithm 'ddd' in 'ddd=2222'",
+			expectedError: "unknown hash algorithm 'ddd'",
 		},
 	}
 

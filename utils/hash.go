@@ -23,61 +23,80 @@ func HashEquals(hashStr, filePath string) (hashEquals bool, actualCache string, 
 	}
 
 	if !fileExists {
-		log.Debugf("file %s doesn't exist, so it should be created", filePath)
+		log.Debugf("file '%s' doesn't exist, hash check is skipped for it", filePath)
 		return false, "", nil
 	}
 
-	f, err := os.Open(filePath)
+	expectedHashAlgoName, expectedHashSum, err := ParseHashAlgoAndSum(hashStr)
 	if err != nil {
 		return false, "", err
 	}
 
-	defer CloseResourceSecure(filePath, f)
-
-	hashAlgo, hashAlgoName, expectedHashStr, err := ExtractHashAlgo(hashStr)
+	actualHashSum, err := HashSum(expectedHashAlgoName, filePath)
 	if err != nil {
 		return false, "", err
 	}
 
-	if _, err := io.Copy(hashAlgo, f); err != nil {
-		return false, "", err
-	}
-
-	actualHashStr := fmt.Sprintf("%x", hashAlgo.Sum(nil))
-
-	isMatched := expectedHashStr == actualHashStr
+	isMatched := expectedHashSum == actualHashSum
 	if isMatched {
 		log.Debugf("file hash at '%s' is matched", filePath)
 	} else {
 		log.Debugf("file hash at '%s' didn't match", filePath)
 	}
 
-	return isMatched, fmt.Sprintf("%s=%s", hashAlgoName, actualHashStr), nil
+	return isMatched, fmt.Sprintf("%s=%s", expectedHashAlgoName, actualHashSum), nil
 }
 
-func ExtractHashAlgo(hashStr string) (hChecker hash.Hash, hashAlgo, hashSum string, err error) {
+func HashSum(hashAlgoName string, filePath string) (hashSum string, err error) {
+	hashAlgo, err := ExtractHashAlgo(hashAlgoName)
+	if err != nil {
+		return "", err
+	}
+
+	f, err := os.Open(filePath)
+	if err != nil {
+		return "", err
+	}
+
+	defer CloseResourceSecure(filePath, f)
+
+
+	if _, err := io.Copy(hashAlgo, f); err != nil {
+		return "", err
+	}
+
+	hashSum = fmt.Sprintf("%x", hashAlgo.Sum(nil))
+
+	return
+}
+
+func ParseHashAlgoAndSum(hashStr string) (algoName, sum string, err error) {
 	const expectedRegexParts = 3
 	reg := regexp.MustCompile(`^(\w*)=(.+)$`)
 	regParts := reg.FindStringSubmatch(hashStr)
 
 	if len(regParts) != expectedRegexParts {
-		return nil, "", "", fmt.Errorf("invalid hash string '%s'", hashStr)
+		return"", "", fmt.Errorf("invalid hash string '%s'", hashStr)
 	}
 
-	switch regParts[1] {
+	return regParts[1], regParts[2], nil
+}
+
+func ExtractHashAlgo(hashAlgoName string) (hChecker hash.Hash, err error) {
+	switch hashAlgoName {
 	case "sha512":
-		return sha512.New(), regParts[1], regParts[2], nil
+		return sha512.New(), nil
 	case "sha384":
-		return sha512.New384(), regParts[1], regParts[2], nil
+		return sha512.New384(), nil
 	case "sha256":
-		return sha256.New(), regParts[1], regParts[2], nil
+		return sha256.New(), nil
 	case "sha224":
-		return sha256.New224(), regParts[1], regParts[2], nil
+		return sha256.New224(),nil
 	case "sha1":
-		return sha1.New(), regParts[1], regParts[2], nil
+		return sha1.New(), nil
 	case "md5":
-		return md5.New(), regParts[1], regParts[2], nil
+		return md5.New(), nil
 	default:
-		return nil, regParts[1], "", fmt.Errorf("unknown hash algorithm '%s' in '%s'", regParts[1], hashStr)
+		return nil, fmt.Errorf("unknown hash algorithm '%s'", hashAlgoName)
 	}
 }

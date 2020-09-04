@@ -154,7 +154,7 @@ func (crt *FileManagedTask) Validate() error {
 	err1 := ValidateRequired(crt.Name, crt.Path+"."+NameField)
 	errs.Add(err1)
 
-	if crt.Source.IsURL && crt.SourceHash == "" {
+	if crt.Source.IsURL && crt.SourceHash == "" && !crt.SkipVerify {
 		errs.Add(
 			fmt.Errorf(
 				`empty '%s' field at path '%s.%s' for remote url source '%s'`,
@@ -368,89 +368,141 @@ func (fmte *FileManagedTaskExecutor) checkMissingFileCondition(fileManagedTask *
 }
 
 func (fmte *FileManagedTaskExecutor) copySourceToTarget(ctx context.Context, fileManagedTask *FileManagedTask) error {
-	if fileManagedTask.Source.RawLocation == "" {
+	source := fileManagedTask.Source
+	if source.RawLocation == "" {
 		logrus.Debug("source location is empty will ignore it")
 		return nil
 	}
 
 	logrus.Debugf("will copy source location '%s' to target location '%s'", fileManagedTask.Source.RawLocation, fileManagedTask.Name)
 
-	source := fileManagedTask.Source
 	if !source.IsURL {
-		logrus.Debug("source location is a local file path")
-
-		hashEquals, expectedHashStr, err := utils.HashEquals(fileManagedTask.SourceHash, source.LocalPath)
-		if err != nil {
-			return err
-		}
-		if !hashEquals {
-			return fmt.Errorf(
-				"checksum '%s' didn't match with checksum '%s' of the local source '%s'",
-				fileManagedTask.SourceHash,
-				expectedHashStr,
-				source.LocalPath,
-			)
-		}
-
-		return utils.CopyLocalFile(source.LocalPath, fileManagedTask.Name)
+		return fmte.handleLocalSource(fileManagedTask, source.LocalPath)
 	}
 
+	return fmte.handleRemoteSource(ctx, fileManagedTask)
+}
+
+func (fmte *FileManagedTaskExecutor) handleRemoteSource(ctx context.Context, fileManagedTask *FileManagedTask) error {
 	tempTargetPath := fileManagedTask.Name + "_temp"
-	defer func() {
-		err := os.Remove(tempTargetPath)
-		if err != nil {
-			logrus.Warn(err)
-		}
-	}()
 
-	logrus.Debug("source location is a remote file path")
+	logrus.Debug("source location is a remote url")
 
-	var err error
-	switch fileManagedTask.Source.URL.Scheme {
-	case "http":
-		err = utils.DownloadHTTPFile(ctx, fileManagedTask.Source.URL, tempTargetPath)
-	case "https":
-		err = utils.DownloadHTTPSFile(ctx, fileManagedTask.SkipTLSCheck, fileManagedTask.Source.URL, tempTargetPath)
-	case "ftp":
-		err = utils.DownloadFtpFile(ctx, fileManagedTask.Source.URL, tempTargetPath)
-	default:
-		err = fmt.Errorf(
-			"unknown or unsupported protocol '%s' to download data from '%s'",
-			fileManagedTask.Source.URL.Scheme,
-			fileManagedTask.Source.URL,
-		)
-	}
-
+	err := utils.DownloadFile(ctx, tempTargetPath, fileManagedTask.Source.URL, fileManagedTask.SkipTLSCheck)
 	if err != nil {
 		return err
 	}
+	logrus.Debugf(
+		"copied remove source '%s' to a temp location '%s', will check the hash",
+		fileManagedTask.Source.RawLocation,
+		tempTargetPath,
+	)
 
-	logrus.Debugf("copied remove source '%s' to a temp location '%s', will check the hash", source.RawLocation, tempTargetPath)
-
-	hashEquals, expectedHashStr, err := utils.HashEquals(fileManagedTask.SourceHash, tempTargetPath)
+	shouldBeCopied, err := fmte.checkIfLocalFileShouldBeCopied(fileManagedTask, tempTargetPath)
 	if err != nil {
 		return err
 	}
-	if !hashEquals {
-		return fmt.Errorf(
-			"checksum '%s' didn't match with checksum '%s' of the remote source '%s'",
-			fileManagedTask.SourceHash,
-			expectedHashStr,
-			source.RawLocation,
-		)
+	if !shouldBeCopied {
+		return nil
 	}
-
-	logrus.Debug("checksum file at temp location matched with the expected one")
-	logrus.Debugf("will move file from temp location '%s' to the expected location '%s'", tempTargetPath, fileManagedTask.Name)
 
 	err = utils.MoveFile(tempTargetPath, fileManagedTask.Name)
 	if err != nil {
 		return err
 	}
 
-	logrus.Debugf("copied field from temp location '%s' to the expected location '%s'", tempTargetPath, fileManagedTask.Name)
+
+	logrus.Debugf(
+		"copied field from temp location '%s' to the expected location '%s'",
+		tempTargetPath,
+		fileManagedTask.Name,
+	)
 
 	return nil
+}
+
+func (fmte *FileManagedTaskExecutor) handleLocalSource(fileManagedTask *FileManagedTask, sourcePath string) error {
+	logrus.Debug("source location is a local file path")
+	source := fileManagedTask.Source
+
+	shouldBeCopied, err := fmte.checkIfLocalFileShouldBeCopied(fileManagedTask, sourcePath)
+	if err != nil {
+		return err
+	}
+	if !shouldBeCopied {
+		return nil
+	}
+
+	return utils.CopyLocalFile(source.LocalPath, fileManagedTask.Name)
+}
+
+func (fmte *FileManagedTaskExecutor) checkIfLocalFileShouldBeCopied(fileManagedTask *FileManagedTask, sourcePath string) (bool, error) {
+	const defaultHashAlgoName = "sha256"
+
+	if !fileManagedTask.SkipVerify {
+		hashEquals, expectedHashStr, err := utils.HashEquals(fileManagedTask.SourceHash, sourcePath)
+		if err != nil {
+			return false, err
+		}
+		if !hashEquals {
+			logrus.Debugf(
+				"expected source hash '%s' didn't match with the source file '%s' which means source " +
+					"was unexpectedly modified, will report as an error",
+				fileManagedTask.SourceHash,
+				sourcePath,
+			)
+			return false, fmt.Errorf(
+				"expected hash sum '%s' didn't match with checksum '%s' of the source file '%s'",
+				fileManagedTask.SourceHash,
+				expectedHashStr,
+				sourcePath,
+			)
+		}
+	}
+
+	logrus.Debug("since skip verify is set to true will ignore source hash and check if the hash sum " +
+		"of the local source file matches with the hash sum of the target file")
+	sourceFileHashSum, err := utils.HashSum(defaultHashAlgoName, sourcePath)
+	if err != nil {
+		return false, err
+	}
+
+	fileExists, err := utils.FileExists(fileManagedTask.Name)
+	if err != nil {
+		return false, err
+	}
+
+	if !fileExists {
+		logrus.Debugf("since local target file '%s' doesn't exist, it should be created with the source file contents", fileManagedTask.Name)
+		return true, nil
+	}
+
+	targetFileHashSum, err := utils.HashSum(defaultHashAlgoName, fileManagedTask.Name)
+	if err != nil {
+		return false, err
+	}
+
+	if sourceFileHashSum != targetFileHashSum {
+		logrus.Debugf(
+			"target file '%s' hash sum[%s] '%s' didn't match with the source file '%s' hash sum '%s', so contents of source should be copied",
+			fileManagedTask.Name,
+			defaultHashAlgoName,
+			targetFileHashSum,
+			sourcePath,
+			sourceFileHashSum,
+		)
+		return true, nil
+	}
+
+	logrus.Debugf(
+		"target file '%s' hash sum[%s] '%s' matches with the source file '%s' hash sum, so target should not be changed",
+		fileManagedTask.Name,
+		defaultHashAlgoName,
+		targetFileHashSum,
+		sourceFileHashSum,
+	)
+
+	return false, nil
 }
 
 func (fmte *FileManagedTaskExecutor) copyContentToTarget(fileManagedTask *FileManagedTask) error {

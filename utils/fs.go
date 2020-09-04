@@ -221,3 +221,29 @@ func CreateDirPathIfNeeded(targetFilePath string, mode os.FileMode) error {
 
 	return nil
 }
+
+func DownloadFile(ctx context.Context, targetLocation string, sourceURL *url.URL, skipTLSCheck bool) error {
+	logrus.Debug("source location is a remote file path")
+
+	var err error
+	switch sourceURL.Scheme {
+	case "http":
+		err = DownloadHTTPFile(ctx, sourceURL, targetLocation)
+	case "https":
+		err = DownloadHTTPSFile(ctx, skipTLSCheck, sourceURL, targetLocation)
+	case "ftp":
+		err = DownloadFtpFile(ctx, sourceURL, targetLocation)
+	default:
+		err = fmt.Errorf(
+			"unknown or unsupported protocol '%s' to download data from '%s'",
+			sourceURL.Scheme,
+			sourceURL,
+		)
+	}
+
+	if err != nil {
+		return err
+	}
+
+	return nil
+}

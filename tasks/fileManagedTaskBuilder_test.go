@@ -67,6 +67,7 @@ Funny file`,
 					GroupField:    "www-data",
 					ModeField:     0755,
 					EncodingField: "UTF-8",
+					SkipVerifyField: false,
 				},
 			},
 			expectedTask: &FileManagedTask{

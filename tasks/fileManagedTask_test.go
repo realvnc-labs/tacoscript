@@ -128,14 +128,14 @@ func TestFileManagedTaskExecution(t *testing.T) {
 			ContentToWrite: "one two three",
 		},
 		{
-			Name: "test wrong hash format error",
+			Name: "test_wrong_hash_format_error",
 			Task: &FileManagedTask{
 				Path:       "somepath",
 				Name:       "someTempFile.txt",
 				SourceHash: "md4=5e4fe0155703dde467f3ab234e6f966f",
 			},
 			ExpectedResult: ExecutionResult{
-				Err: errors.New("unknown hash algorithm 'md4' in 'md4=5e4fe0155703dde467f3ab234e6f966f'"),
+				Err: errors.New("unknown hash algorithm 'md4'"),
 			},
 		},
 		{
@@ -189,9 +189,8 @@ func TestFileManagedTaskExecution(t *testing.T) {
 				},
 			},
 			ExpectedResult: ExecutionResult{
-				Err: fmt.Errorf(
-					"checksum 'md5=dafdfdafdafdfad' didn't match with checksum 'md5=5e4fe0155703dde467f3ab234e6f966f' of the remote source '%s'",
-					httpSrvURL.String(),
+				Err: errors.New(
+					"expected hash sum 'md5=dafdfdafdafdfad' didn't match with checksum 'md5=5e4fe0155703dde467f3ab234e6f966f' of the source file 'targetFileFromHttp2.txt_temp'",
 				),
 			},
 		},
@@ -412,6 +411,66 @@ three`,
 				ExpectedContent: `one two three`,
 			},
 		},
+		{
+			Name: "skip_verify_success_for_url",
+			Task: &FileManagedTask{
+				SkipVerify: true,
+				Replace:    true,
+				Name:       "skipVerifyFileSuccess.txt",
+				Path:       "skip_verify_success_for_url_path",
+				Source: utils.Location{
+					IsURL:       true,
+					URL:         httpSrvURL,
+					RawLocation: httpSrvURL.String(),
+				},
+			},
+			ContentToWrite: " ",
+			FileExpectation: &utils.FileExpectation{
+				FilePath:        "skipVerifyFileSuccess.txt",
+				ShouldExist:     true,
+				ExpectedContent: `one two three`,
+			},
+		},
+		{
+			Name: "skip_verify_no_content_change",
+			Task: &FileManagedTask{
+				SkipVerify: true,
+				Replace:    true,
+				Name:       "skipVerifyFileNoChange.txt",
+				Path:       "skip_verify_no_content_change_path",
+				Source: utils.Location{
+					IsURL:       true,
+					URL:         ftpURL,
+					RawLocation: ftpURL.String(),
+				},
+			},
+			ContentToWrite: "one two three",
+			FileExpectation: &utils.FileExpectation{
+				FilePath:        "skipVerifyFileNoChange.txt",
+				ShouldExist:     true,
+				ExpectedContent: `one two three`,
+			},
+		},
+		{
+			Name: "skip_verify_success_for_local",
+			Task: &FileManagedTask{
+				SkipVerify: true,
+				Replace:    true,
+				Name:       "skipVerifyFileLocalSuccess.txt",
+				Path:       "skip_verify_success_for_local_path",
+				Source: utils.Location{
+					IsURL:       true,
+					URL:         httpSrvURL,
+					RawLocation: httpSrvURL.String(),
+				},
+			},
+			ContentToWrite: " ",
+			FileExpectation: &utils.FileExpectation{
+				FilePath:        "skipVerifyFileLocalSuccess.txt",
+				ShouldExist:     true,
+				ExpectedContent: `one two three`,
+			},
+		},
 	}
 
 	logsCollection := &applog.BufferedLogs{
@@ -461,7 +520,7 @@ func assertTestCase(t *testing.T, tc *fileManagedTestCase, res ExecutionResult, 
 		if tc.ExpectedResult.Err == nil {
 			assert.NoError(t, res.Err)
 		} else {
-			assert.EqualError(t, tc.ExpectedResult.Err, res.Err.Error())
+			assert.EqualError(t, res.Err, tc.ExpectedResult.Err.Error())
 		}
 	}
 
@@ -590,6 +649,18 @@ func TestFileManagedTaskValidation(t *testing.T) {
 					Valid:  true,
 					String: "",
 				},
+			},
+		},
+		{
+			Name: "missing_hash_with_skip_verify",
+			Task: FileManagedTask{
+				Name: "missing_hash_with_skip_verify",
+				Path: "missing_hash_with_skip_verify_path",
+				Source: utils.Location{
+					IsURL:       true,
+					RawLocation: "ftp://ya.ru",
+				},
+				SkipVerify: true,
 			},
 		},
 	}
