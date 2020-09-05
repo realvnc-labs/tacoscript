@@ -17,7 +17,7 @@ func AssertFileMatchesExpectationOS(filePath string, fe *FileExpectation) (isMat
 	}
 
 	if fe.ExpectedMode > 0 && fe.ExpectedMode != info.Mode() {
-		return false, fmt.Sprintf("file '%s' has mode '%v' but '%v' was expected", filePath, info.Mode(), fe.ExpectedMode), nil
+		return false, fmt.Sprintf("file '%s' has FileMode '%v' but '%v' was expected", filePath, info.Mode(), fe.ExpectedMode), nil
 	}
 
 	if fe.ExpectedGroup == "" && fe.ExpectedUser == "" {

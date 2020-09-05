@@ -595,9 +595,9 @@ func (fmte *FileManagedTaskExecutor) createDirPathIfNeeded(fileManagedTask *File
 }
 
 func (fmte *FileManagedTaskExecutor) applyFileAttributesToTarget(fileManagedTask *FileManagedTask) error {
-	logrus.Debugf("will apply user, group and file mode attributes to target '%s'", fileManagedTask.Name)
+	logrus.Debugf("will change file attributes '%s'", fileManagedTask.Name)
 
-	info, err := os.Stat(fileManagedTask.Name)
+	info, err := fmte.FsManager.Stat(fileManagedTask.Name)
 	if err != nil {
 		return err
 	}
@@ -608,6 +608,14 @@ func (fmte *FileManagedTaskExecutor) applyFileAttributesToTarget(fileManagedTask
 			return err
 		}
 		logrus.Debugf("changed mode of '%s' to '%v'", fileManagedTask.Name, fileManagedTask.Mode)
+	}
+
+	if fileManagedTask.User != "" || fileManagedTask.Group != "" {
+		logrus.Debugf("will change user '%s' or group '%s' of file '%s'", fileManagedTask.User, fileManagedTask.Group , fileManagedTask.Name)
+		err = fmte.FsManager.Chown(fileManagedTask.Name, fileManagedTask.User, fileManagedTask.Group)
+		if err != nil {
+			return err
+		}
 	}
 
 	return nil

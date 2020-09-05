@@ -6,6 +6,7 @@ import (
 	"io/ioutil"
 	"net/url"
 	"os"
+	"time"
 
 	"github.com/cloudradar-monitoring/tacoscript/utils"
 )
@@ -78,7 +79,7 @@ func AssertFileMatchesExpectation(fe *FileExpectation) (isExpectationMatched boo
 
 	if fe.ExpectedContent != fileContents {
 		return false,
-			fmt.Sprintf("file contents '%s' at '%s' didn't match the expected one '%s'",
+			fmt.Sprintf("file Contents '%s' at '%s' didn't match the expected one '%s'",
 				fileContents,
 				fe.FilePath,
 				fe.ExpectedContent,
@@ -88,10 +89,21 @@ func AssertFileMatchesExpectation(fe *FileExpectation) (isExpectationMatched boo
 	return AssertFileMatchesExpectationOS(fe.FilePath, fe)
 }
 
+type ChownInput struct {
+	TargetFilePath string
+	UserName       string
+	GroupName      string
+}
+
 type FsManagerMock struct {
 	FileExistsInputPath      []string
 	FileExistsErrToReturn    error
 	FileExistsExistsToReturn bool
+	ChownInputs              []ChownInput
+	ChownErrorToReturn       error
+	StatInputName            []string
+	StatOutputFileInfo       os.FileInfo
+	StatOutputError          error
 }
 
 func (fmm *FsManagerMock) FileExists(filePath string) (bool, error) {
@@ -128,5 +140,55 @@ func (fmm *FsManagerMock) CreateDirPathIfNeeded(targetFilePath string, mode os.F
 }
 
 func (fmm *FsManagerMock) Chmod(targetFilePath string, mode os.FileMode) error {
+	return nil
+}
+
+func (fmm *FsManagerMock) Chown(targetFilePath string, userName, groupName string) error {
+	fmm.ChownInputs = append(fmm.ChownInputs, ChownInput{
+		TargetFilePath: targetFilePath,
+		UserName:       userName,
+		GroupName:      groupName,
+	})
+
+	return fmm.ChownErrorToReturn
+}
+
+func (fmm *FsManagerMock) Stat(name string) (os.FileInfo, error) {
+	fmm.StatInputName = append(fmm.StatInputName, name)
+	return fmm.StatOutputFileInfo, fmm.StatOutputError
+}
+
+// FakeFile implements FileLike and also os.FileInfo.
+type FakeFile struct {
+	Nam      string
+	Contents string
+	FileMode os.FileMode
+}
+
+func (f *FakeFile) Name() string {
+	return f.Nam
+}
+
+func (f *FakeFile) Size() int64 {
+	return int64(len(f.Contents))
+}
+
+func (f *FakeFile) Mode() os.FileMode {
+	return f.FileMode
+}
+
+func (f *FakeFile) ModTime() time.Time {
+	return time.Time{}
+}
+
+func (f *FakeFile) Stat() (os.FileInfo, error) {
+	return f, nil
+}
+
+func (f *FakeFile) IsDir() bool {
+	return false
+}
+
+func (f *FakeFile) Sys() interface{} {
 	return nil
 }

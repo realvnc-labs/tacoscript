@@ -582,7 +582,64 @@ func assertLogExpectation(t *testing.T, expectedLog string, logs *applog.Buffere
 }
 
 func TestFileManagedUserAndGroup(t *testing.T) {
+	testCases := []struct {
+		task               *FileManagedTask
+		chownError         string
+		expectedChownInput apptest.ChownInput
+	}{
+		{
+			task: &FileManagedTask{
+				Name:       "someFile.txt",
+				SkipVerify: true,
+				Replace:    true,
+				Contents: sql.NullString{
+					Valid:  true,
+					String: `onetwothree`,
+				},
+				User:  "someuser",
+				Group: "somegroup",
+			},
+			expectedChownInput: apptest.ChownInput{
+				TargetFilePath: "someFile.txt",
+				UserName:       "someuser",
+				GroupName:      "somegroup",
+			},
+		},
+	}
 
+	for _, testCase := range testCases {
+		fsMock := &apptest.FsManagerMock{
+			ChownInputs: []apptest.ChownInput{},
+			StatOutputFileInfo: &apptest.FakeFile{
+				FileMode: 0644,
+			},
+		}
+		if testCase.chownError != "" {
+			fsMock.ChownErrorToReturn = errors.New(testCase.chownError)
+		}
+
+		fileManagedExecutor := &FileManagedTaskExecutor{
+			FsManager:   fsMock,
+			HashManager: &utils.HashManager{},
+		}
+
+		res := fileManagedExecutor.Execute(context.Background(), testCase.task)
+		assert.False(t, res.IsSkipped)
+
+		if testCase.chownError != "" {
+			assert.EqualError(t, res.Err, testCase.chownError)
+		} else {
+			assert.NoError(t, res.Err)
+		}
+
+		assert.Len(t, fsMock.ChownInputs, 1)
+		if len(fsMock.ChownInputs) == 0 {
+			return
+		}
+
+		actualChownInput := fsMock.ChownInputs[0]
+		assert.EqualValues(t, testCase.expectedChownInput, actualChownInput)
+	}
 }
 
 func TestFileManagedTaskValidation(t *testing.T) {
