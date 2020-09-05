@@ -585,7 +585,9 @@ func TestFileManagedUserAndGroup(t *testing.T) {
 	testCases := []struct {
 		task               *FileManagedTask
 		chownError         string
-		expectedChownInput apptest.ChownInput
+		fileStatError      string
+		expectedError      string
+		expectedChownInput *apptest.ChownInput
 	}{
 		{
 			task: &FileManagedTask{
@@ -599,11 +601,46 @@ func TestFileManagedUserAndGroup(t *testing.T) {
 				User:  "someuser",
 				Group: "somegroup",
 			},
-			expectedChownInput: apptest.ChownInput{
+			expectedChownInput: &apptest.ChownInput{
 				TargetFilePath: "someFile.txt",
 				UserName:       "someuser",
 				GroupName:      "somegroup",
 			},
+		},
+		{
+			task: &FileManagedTask{
+				Name:       "someFile2.txt",
+				SkipVerify: true,
+				Replace:    true,
+				Contents: sql.NullString{
+					Valid:  true,
+					String: `onetwothree`,
+				},
+				User:  "someuser",
+				Group: "somegroup",
+			},
+			expectedChownInput: &apptest.ChownInput{
+				TargetFilePath: "someFile2.txt",
+				UserName:       "someuser",
+				GroupName:      "somegroup",
+			},
+			chownError: "some chown error",
+			expectedError: "some chown error",
+		},
+		{
+			task: &FileManagedTask{
+				Name:       "someFile3.txt",
+				SkipVerify: true,
+				Replace:    true,
+				Contents: sql.NullString{
+					Valid:  true,
+					String: `onetwothree`,
+				},
+				User:  "someuser",
+				Group: "",
+			},
+			fileStatError: "some stat error",
+			expectedError: "some stat error",
 		},
 	}
 
@@ -618,6 +655,10 @@ func TestFileManagedUserAndGroup(t *testing.T) {
 			fsMock.ChownErrorToReturn = errors.New(testCase.chownError)
 		}
 
+		if testCase.fileStatError != "" {
+			fsMock.StatOutputError = errors.New(testCase.fileStatError)
+		}
+
 		fileManagedExecutor := &FileManagedTaskExecutor{
 			FsManager:   fsMock,
 			HashManager: &utils.HashManager{},
@@ -626,19 +667,21 @@ func TestFileManagedUserAndGroup(t *testing.T) {
 		res := fileManagedExecutor.Execute(context.Background(), testCase.task)
 		assert.False(t, res.IsSkipped)
 
-		if testCase.chownError != "" {
-			assert.EqualError(t, res.Err, testCase.chownError)
+		if testCase.expectedError != "" {
+			assert.EqualError(t, res.Err, testCase.expectedError)
 		} else {
 			assert.NoError(t, res.Err)
 		}
 
-		assert.Len(t, fsMock.ChownInputs, 1)
-		if len(fsMock.ChownInputs) == 0 {
-			return
-		}
+		if testCase.expectedChownInput != nil {
+			assert.Len(t, fsMock.ChownInputs, 1)
+			if len(fsMock.ChownInputs) == 0 {
+				return
+			}
 
-		actualChownInput := fsMock.ChownInputs[0]
-		assert.EqualValues(t, testCase.expectedChownInput, actualChownInput)
+			actualChownInput := fsMock.ChownInputs[0]
+			assert.EqualValues(t, *testCase.expectedChownInput, actualChownInput)
+		}
 	}
 }
 
