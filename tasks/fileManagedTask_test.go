@@ -30,7 +30,6 @@ func init() {
 }
 
 type fileManagedTestCase struct {
-	FsManager        FsManager
 	Name             string
 	ContentToWrite   string
 	LogExpectation   string
@@ -108,13 +107,10 @@ func TestFileManagedTaskExecution(t *testing.T) {
 			Task: &FileManagedTask{
 				Path:    "somepath",
 				Name:    "some test command",
-				Creates: []string{"some file 123", "some file 345"},
+				Creates: []string{"some_file.123", "sourceFileAtLocal.txt"},
 			},
 			ExpectedResult: ExecutionResult{
 				IsSkipped: true,
-			},
-			FsManager: &apptest.FsManagerMock{
-				FileExistsExistsToReturn: true,
 			},
 		},
 		{
@@ -151,12 +147,14 @@ func TestFileManagedTaskExecution(t *testing.T) {
 					LocalPath:   "sourceFileAtLocal.txt",
 					RawLocation: "sourceFileAtLocal.txt",
 				},
+				Mode: 0777,
 			},
 			ExpectedResult: ExecutionResult{},
 			FileExpectation: &apptest.FileExpectation{
 				FilePath:        "targetFileAtLocalCopy.txt",
 				ShouldExist:     true,
 				ExpectedContent: "one two three",
+				ExpectedMode:    0777,
 			},
 		},
 		{
@@ -296,12 +294,14 @@ two
 three`,
 				},
 				Replace: true,
+				Mode:    0777,
 			},
 			ContentToWrite: "one two three",
 			ExpectedResult: ExecutionResult{},
 			FileExpectation: &apptest.FileExpectation{
-				FilePath:    "contentsToFile.txt",
-				ShouldExist: true,
+				FilePath:     "contentsToFile.txt",
+				ShouldExist:  true,
+				ExpectedMode: 0777,
 				ExpectedContent: `one
 two
 three`,
@@ -315,7 +315,7 @@ three`,
 		{
 			Name: "skipping_content_on_empty_diff",
 			Task: &FileManagedTask{
-				Name: "contentsToFile.txt",
+				Name: "skipping_content_on_empty_diff.txt",
 				Path: "skipping_content_on_empty_diff_file",
 				Contents: sql.NullString{
 					Valid: true,
@@ -329,7 +329,7 @@ two
 three`,
 			ExpectedResult: ExecutionResult{IsSkipped: true},
 			FileExpectation: &apptest.FileExpectation{
-				FilePath:    "contentsToFile2.txt",
+				FilePath:    "skipping_content_on_empty_diff.txt",
 				ShouldExist: true,
 				ExpectedContent: `one
 two
@@ -388,12 +388,14 @@ three`,
 					String: "content to ignore",
 					Valid:  true,
 				},
+				Mode: 0777,
 			},
 			ContentToWrite: "one two three",
 			FileExpectation: &apptest.FileExpectation{
 				FilePath:        "existingFileToReplace.txt",
 				ShouldExist:     true,
 				ExpectedContent: `one two three`,
+				ExpectedMode:    0777,
 			},
 		},
 		{
@@ -467,36 +469,16 @@ three`,
 					URL:         httpSrvURL,
 					RawLocation: httpSrvURL.String(),
 				},
+				Mode: 0777,
 			},
 			ContentToWrite: " ",
 			FileExpectation: &apptest.FileExpectation{
 				FilePath:        "skipVerifyFileLocalSuccess.txt",
 				ShouldExist:     true,
 				ExpectedContent: `one two three`,
+				ExpectedMode:    0777,
 			},
 		},
-		// {
-		//			Name: "set_mode_user_and_group",
-		//			Task: &FileManagedTask{
-		//				Name: "setUserAndGroup.txt",
-		//				Path: "set_user_and_group_path",
-		//				Contents: sql.NullString{
-		//					Valid: true,
-		//					String: `one
-		//two
-		//three`,
-		//				},
-		//				Group: "dd",
-		//				User:  "mama",
-		//				Mode:  0777,
-		//			},
-		//			ContentToWrite: " ",
-		//			FileExpectation: &apptest.FileExpectation{
-		//				FilePath:        "skipVerifyFileLocalSuccess.txt",
-		//				ShouldExist:     true,
-		//				ExpectedContent: `one two three`,
-		//			},
-		//		},
 	}
 
 	logsCollection := &applog.BufferedLogs{
@@ -517,13 +499,9 @@ three`,
 				runner = &appExec.SystemRunner{SystemAPI: &appExec.SystemAPIMock{}}
 			}
 
-			fsManager := tc.FsManager
-			if fsManager == nil {
-				fsManager = &utils.FsManager{}
-			}
 			fileManagedExecutor := &FileManagedTaskExecutor{
 				Runner:      runner,
-				FsManager:   fsManager,
+				FsManager:   &utils.FsManager{},
 				HashManager: &utils.HashManager{},
 			}
 
@@ -574,9 +552,9 @@ func assertTestCase(t *testing.T, tc *fileManagedTestCase, res ExecutionResult, 
 	}
 
 	isExpectationMatched, nonMatchedReason, err := apptest.AssertFileMatchesExpectation(
-		tc.Task.Name,
 		tc.FileExpectation,
 	)
+
 	assert.NoError(t, err)
 	if err != nil {
 		return
@@ -601,6 +579,10 @@ func assertLogExpectation(t *testing.T, expectedLog string, logs *applog.Buffere
 		expectedLog,
 		logs.Messages,
 	)
+}
+
+func TestFileManagedUserAndGroup(t *testing.T) {
+
 }
 
 func TestFileManagedTaskValidation(t *testing.T) {

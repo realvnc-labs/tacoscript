@@ -51,6 +51,10 @@ func (fmm *FsManager) CreateDirPathIfNeeded(targetFilePath string, mode os.FileM
 	return CreateDirPathIfNeeded(targetFilePath, mode)
 }
 
+func (fmm *FsManager) Chmod(targetFilePath string, mode os.FileMode) error {
+	return os.Chmod(targetFilePath, mode)
+}
+
 func FileExists(filePath string) (bool, error) {
 	if filePath == "" {
 		return false, nil

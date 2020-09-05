@@ -43,25 +43,25 @@ type FileExpectation struct {
 	ExpectedEncoding string
 }
 
-func AssertFileMatchesExpectation(filePath string, fe *FileExpectation) (isExpectationMatched bool, nonMatchedReason string, err error) {
-	fileExists, err := utils.FileExists(filePath)
+func AssertFileMatchesExpectation(fe *FileExpectation) (isExpectationMatched bool, nonMatchedReason string, err error) {
+	fileExists, err := utils.FileExists(fe.FilePath)
 	if err != nil {
 		return false, "", err
 	}
 
 	if fe.ShouldExist && !fileExists {
-		return false, fmt.Sprintf("file '%s' doesn't exist but it should", filePath), nil
+		return false, fmt.Sprintf("file '%s' doesn't exist but it should", fe.FilePath), nil
 	}
 
 	if !fe.ShouldExist && fileExists {
-		return false, fmt.Sprintf("file '%s' exists but it shouldn't", filePath), nil
+		return false, fmt.Sprintf("file '%s' exists but it shouldn't", fe.FilePath), nil
 	}
 
 	if !fe.ShouldExist && !fileExists {
 		return true, "", nil
 	}
 
-	fileContentsBytes, err := ioutil.ReadFile(filePath)
+	fileContentsBytes, err := ioutil.ReadFile(fe.FilePath)
 	if err != nil {
 		return false, "", err
 	}
@@ -80,12 +80,12 @@ func AssertFileMatchesExpectation(filePath string, fe *FileExpectation) (isExpec
 		return false,
 			fmt.Sprintf("file contents '%s' at '%s' didn't match the expected one '%s'",
 				fileContents,
-				filePath,
+				fe.FilePath,
 				fe.ExpectedContent,
 			), nil
 	}
 
-	return AssertFileMatchesExpectationOS(filePath, fe)
+	return AssertFileMatchesExpectationOS(fe.FilePath, fe)
 }
 
 type FsManagerMock struct {
@@ -124,5 +124,9 @@ func (fmm *FsManagerMock) ReadFile(filePath string) (content string, err error) 
 }
 
 func (fmm *FsManagerMock) CreateDirPathIfNeeded(targetFilePath string, mode os.FileMode) error {
+	return nil
+}
+
+func (fmm *FsManagerMock) Chmod(targetFilePath string, mode os.FileMode) error {
 	return nil
 }

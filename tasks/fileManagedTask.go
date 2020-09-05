@@ -252,6 +252,11 @@ func (fmte *FileManagedTaskExecutor) Execute(ctx context.Context, task Task) Exe
 			return execRes
 		}
 	}
+	err = fmte.applyFileAttributesToTarget(fileManagedTask)
+	if err != nil {
+		execRes.Err = err
+		return execRes
+	}
 
 	execRes.Duration = time.Since(start)
 
@@ -587,4 +592,23 @@ func (fmte *FileManagedTaskExecutor) createDirPathIfNeeded(fileManagedTask *File
 	}
 
 	return fmte.FsManager.CreateDirPathIfNeeded(fileManagedTask.Name, mode)
+}
+
+func (fmte *FileManagedTaskExecutor) applyFileAttributesToTarget(fileManagedTask *FileManagedTask) error {
+	logrus.Debugf("will apply user, group and file mode attributes to target '%s'", fileManagedTask.Name)
+
+	info, err := os.Stat(fileManagedTask.Name)
+	if err != nil {
+		return err
+	}
+
+	if fileManagedTask.Mode > 0 && fileManagedTask.Mode != info.Mode() {
+		err = fmte.FsManager.Chmod(fileManagedTask.Name, fileManagedTask.Mode)
+		if err != nil {
+			return err
+		}
+		logrus.Debugf("changed mode of '%s' to '%v'", fileManagedTask.Name, fileManagedTask.Mode)
+	}
+
+	return nil
 }

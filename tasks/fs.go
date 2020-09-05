@@ -15,4 +15,5 @@ type FsManager interface {
 	WriteFile(name, contents string, mode os.FileMode) error
 	ReadFile(filePath string) (content string, err error)
 	CreateDirPathIfNeeded(targetFilePath string, mode os.FileMode) error
+	Chmod(targetFilePath string, mode os.FileMode) error
 }
