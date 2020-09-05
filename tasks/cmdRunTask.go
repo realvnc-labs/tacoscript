@@ -113,7 +113,7 @@ func (crt *CmdRunTask) String() string {
 
 type CmdRunTaskExecutor struct {
 	Runner    exec2.Runner
-	FsManager utils.FsManager
+	FsManager FsManager
 }
 
 func (crte *CmdRunTaskExecutor) Execute(ctx context.Context, task Task) ExecutionResult {

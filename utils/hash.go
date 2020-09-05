@@ -14,6 +14,16 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
+type HashManager struct{}
+
+func (hm HashManager) HashEquals(hashStr, filePath string) (hashEquals bool, actualCache string, err error) {
+	return HashEquals(hashStr, filePath)
+}
+
+func (hm HashManager) HashSum(hashAlgoName, filePath string) (hashSum string, err error) {
+	return HashSum(hashAlgoName, filePath)
+}
+
 func HashEquals(hashStr, filePath string) (hashEquals bool, actualCache string, err error) {
 	log.Debugf("will check if file %s matches hash %s", filePath, hashStr)
 

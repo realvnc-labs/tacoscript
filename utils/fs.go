@@ -15,35 +15,40 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
-type FsManager interface {
-	FileExists(filePath string) (bool, error)
-}
+type FsManager struct{}
 
-type FsManagerMock struct {
-	CalledFilePaths []string
-	ErrToReturn     error
-	ExistsToReturn  bool
-}
-
-func (fmm *FsManagerMock) FileExists(filePath string) (bool, error) {
-	fmm.CalledFilePaths = append(fmm.CalledFilePaths, filePath)
-	return fmm.ExistsToReturn, fmm.ErrToReturn
-}
-
-type FileExpectation struct {
-	ShouldExist      bool
-	ExpectedMode     os.FileMode
-	FilePath         string
-	ExpectedContent  string
-	ExpectedUser     string
-	ExpectedGroup    string
-	ExpectedEncoding string
-}
-
-type OSFsManager struct{}
-
-func (fmm *OSFsManager) FileExists(filePath string) (bool, error) {
+func (fmm *FsManager) FileExists(filePath string) (bool, error) {
 	return FileExists(filePath)
+}
+
+func (fmm *FsManager) Remove(filePath string) error {
+	return os.Remove(filePath)
+}
+
+func (fmm *FsManager) DownloadFile(ctx context.Context, targetLocation string, sourceURL *url.URL, skipTLSCheck bool) error {
+	return DownloadFile(ctx, targetLocation, sourceURL, skipTLSCheck)
+}
+
+func (fmm *FsManager) MoveFile(sourceFilePath, targetFilePath string) error {
+	return MoveFile(sourceFilePath, targetFilePath)
+}
+
+func (fmm *FsManager) CopyLocalFile(sourceFilePath, targetFilePath string) error {
+	return CopyLocalFile(sourceFilePath, targetFilePath)
+}
+
+func (fmm *FsManager) WriteFile(name, contents string, mode os.FileMode) error {
+	return ioutil.WriteFile(name, []byte(contents), mode)
+}
+
+func (fmm *FsManager) ReadFile(filePath string) (content string, err error) {
+	contentsByte, err := ioutil.ReadFile(filePath)
+
+	return string(contentsByte), err
+}
+
+func (fmm *FsManager) CreateDirPathIfNeeded(targetFilePath string, mode os.FileMode) error {
+	return CreateDirPathIfNeeded(targetFilePath, mode)
 }
 
 func FileExists(filePath string) (bool, error) {
@@ -62,51 +67,6 @@ func FileExists(filePath string) (bool, error) {
 	}
 
 	return false, fmt.Errorf("failed to check if file '%s' exists: %w", filePath, e)
-}
-
-func AssertFileMatchesExpectation(filePath string, fe *FileExpectation) (isExpectationMatched bool, nonMatchedReason string, err error) {
-	fileExists, err := FileExists(filePath)
-	if err != nil {
-		return false, "", err
-	}
-
-	if fe.ShouldExist && !fileExists {
-		return false, fmt.Sprintf("file '%s' doesn't exist but it should", filePath), nil
-	}
-
-	if !fe.ShouldExist && fileExists {
-		return false, fmt.Sprintf("file '%s' exists but it shouldn't", filePath), nil
-	}
-
-	if !fe.ShouldExist && !fileExists {
-		return true, "", nil
-	}
-
-	fileContentsBytes, err := ioutil.ReadFile(filePath)
-	if err != nil {
-		return false, "", err
-	}
-
-	fileContents := ""
-	if fe.ExpectedEncoding != "" {
-		fileContents, err = Decode(fe.ExpectedEncoding, fileContentsBytes)
-		if err != nil {
-			return false, "", err
-		}
-	} else {
-		fileContents = string(fileContentsBytes)
-	}
-
-	if fe.ExpectedContent != fileContents {
-		return false,
-			fmt.Sprintf("file contents '%s' at '%s' didn't match the expected one '%s'",
-				fileContents,
-				filePath,
-				fe.ExpectedContent,
-			), nil
-	}
-
-	return AssertFileMatchesExpectationOS(filePath, fe)
 }
 
 func MoveFile(sourceFilePath, targetFilePath string) error {

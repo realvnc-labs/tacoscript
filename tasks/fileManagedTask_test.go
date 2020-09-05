@@ -30,14 +30,14 @@ func init() {
 }
 
 type fileManagedTestCase struct {
-	FileShouldExist  bool
+	FsManager        FsManager
 	Name             string
 	ContentToWrite   string
 	LogExpectation   string
 	Task             *FileManagedTask
 	ExpectedResult   ExecutionResult
 	RunnerMock       *appExec.SystemRunner
-	FileExpectation  *utils.FileExpectation
+	FileExpectation  *apptest.FileExpectation
 	ExpectedCmdStrs  []string
 	ErrorExpectation *apptest.ErrorExpectation
 }
@@ -113,7 +113,9 @@ func TestFileManagedTaskExecution(t *testing.T) {
 			ExpectedResult: ExecutionResult{
 				IsSkipped: true,
 			},
-			FileShouldExist: true,
+			FsManager: &apptest.FsManagerMock{
+				FileExistsExistsToReturn: true,
+			},
 		},
 		{
 			Name: "test hash matches",
@@ -151,7 +153,7 @@ func TestFileManagedTaskExecution(t *testing.T) {
 				},
 			},
 			ExpectedResult: ExecutionResult{},
-			FileExpectation: &utils.FileExpectation{
+			FileExpectation: &apptest.FileExpectation{
 				FilePath:        "targetFileAtLocalCopy.txt",
 				ShouldExist:     true,
 				ExpectedContent: "one two three",
@@ -170,7 +172,7 @@ func TestFileManagedTaskExecution(t *testing.T) {
 				},
 			},
 			ExpectedResult: ExecutionResult{},
-			FileExpectation: &utils.FileExpectation{
+			FileExpectation: &apptest.FileExpectation{
 				FilePath:        "targetFileFromHttp.txt",
 				ShouldExist:     true,
 				ExpectedContent: "one two three",
@@ -210,7 +212,7 @@ func TestFileManagedTaskExecution(t *testing.T) {
 				SkipTLSCheck: true,
 			},
 			ExpectedResult: ExecutionResult{IsSkipped: false},
-			FileExpectation: &utils.FileExpectation{
+			FileExpectation: &apptest.FileExpectation{
 				FilePath:        "targetFileFromHttps.txt",
 				ShouldExist:     true,
 				ExpectedContent: "one two three",
@@ -229,7 +231,7 @@ func TestFileManagedTaskExecution(t *testing.T) {
 				},
 			},
 			ExpectedResult: ExecutionResult{IsSkipped: false},
-			FileExpectation: &utils.FileExpectation{
+			FileExpectation: &apptest.FileExpectation{
 				FilePath:        "targetFileFromFtp.txt",
 				ShouldExist:     true,
 				ExpectedContent: "one two three",
@@ -276,7 +278,7 @@ func TestFileManagedTaskExecution(t *testing.T) {
 			RunnerMock: &appExec.SystemRunner{SystemAPI: &appExec.SystemAPIMock{
 				Cmds: []*exec.Cmd{},
 			}},
-			FileExpectation: &utils.FileExpectation{
+			FileExpectation: &apptest.FileExpectation{
 				FilePath:        "onlyIfConditionTrue.txt",
 				ShouldExist:     true,
 				ExpectedContent: "one two three",
@@ -297,7 +299,7 @@ three`,
 			},
 			ContentToWrite: "one two three",
 			ExpectedResult: ExecutionResult{},
-			FileExpectation: &utils.FileExpectation{
+			FileExpectation: &apptest.FileExpectation{
 				FilePath:    "contentsToFile.txt",
 				ShouldExist: true,
 				ExpectedContent: `one
@@ -326,7 +328,7 @@ three`,
 two
 three`,
 			ExpectedResult: ExecutionResult{IsSkipped: true},
-			FileExpectation: &utils.FileExpectation{
+			FileExpectation: &apptest.FileExpectation{
 				FilePath:    "contentsToFile2.txt",
 				ShouldExist: true,
 				ExpectedContent: `one
@@ -348,7 +350,7 @@ three`,
 				},
 			},
 			ExpectedResult: ExecutionResult{},
-			FileExpectation: &utils.FileExpectation{
+			FileExpectation: &apptest.FileExpectation{
 				FilePath:        "sub/dir/sourceFileAtLocal.txt",
 				ShouldExist:     true,
 				ExpectedContent: `one two three`,
@@ -367,7 +369,7 @@ three`,
 					RawLocation: "sourceFileAtLocal.txt",
 				},
 			},
-			FileExpectation: &utils.FileExpectation{
+			FileExpectation: &apptest.FileExpectation{
 				FilePath:    "dfasdfaf/sourceFileAtLocal2.txt",
 				ShouldExist: false,
 			},
@@ -388,7 +390,7 @@ three`,
 				},
 			},
 			ContentToWrite: "one two three",
-			FileExpectation: &utils.FileExpectation{
+			FileExpectation: &apptest.FileExpectation{
 				FilePath:        "existingFileToReplace.txt",
 				ShouldExist:     true,
 				ExpectedContent: `one two three`,
@@ -407,7 +409,7 @@ three`,
 				},
 			},
 			ContentToWrite: "one",
-			FileExpectation: &utils.FileExpectation{
+			FileExpectation: &apptest.FileExpectation{
 				FilePath:        "existingFileToReplace2.txt",
 				ShouldExist:     true,
 				ExpectedContent: `one two three`,
@@ -427,7 +429,7 @@ three`,
 				},
 			},
 			ContentToWrite: " ",
-			FileExpectation: &utils.FileExpectation{
+			FileExpectation: &apptest.FileExpectation{
 				FilePath:        "skipVerifyFileSuccess.txt",
 				ShouldExist:     true,
 				ExpectedContent: `one two three`,
@@ -447,7 +449,7 @@ three`,
 				},
 			},
 			ContentToWrite: "one two three",
-			FileExpectation: &utils.FileExpectation{
+			FileExpectation: &apptest.FileExpectation{
 				FilePath:        "skipVerifyFileNoChange.txt",
 				ShouldExist:     true,
 				ExpectedContent: `one two three`,
@@ -467,12 +469,34 @@ three`,
 				},
 			},
 			ContentToWrite: " ",
-			FileExpectation: &utils.FileExpectation{
+			FileExpectation: &apptest.FileExpectation{
 				FilePath:        "skipVerifyFileLocalSuccess.txt",
 				ShouldExist:     true,
 				ExpectedContent: `one two three`,
 			},
 		},
+		// {
+		//			Name: "set_mode_user_and_group",
+		//			Task: &FileManagedTask{
+		//				Name: "setUserAndGroup.txt",
+		//				Path: "set_user_and_group_path",
+		//				Contents: sql.NullString{
+		//					Valid: true,
+		//					String: `one
+		//two
+		//three`,
+		//				},
+		//				Group: "dd",
+		//				User:  "mama",
+		//				Mode:  0777,
+		//			},
+		//			ContentToWrite: " ",
+		//			FileExpectation: &apptest.FileExpectation{
+		//				FilePath:        "skipVerifyFileLocalSuccess.txt",
+		//				ShouldExist:     true,
+		//				ExpectedContent: `one two three`,
+		//			},
+		//		},
 	}
 
 	logsCollection := &applog.BufferedLogs{
@@ -492,11 +516,15 @@ three`,
 			if runner == nil {
 				runner = &appExec.SystemRunner{SystemAPI: &appExec.SystemAPIMock{}}
 			}
+
+			fsManager := tc.FsManager
+			if fsManager == nil {
+				fsManager = &utils.FsManager{}
+			}
 			fileManagedExecutor := &FileManagedTaskExecutor{
-				Runner: runner,
-				FsManager: &utils.FsManagerMock{
-					ExistsToReturn: tc.FileShouldExist,
-				},
+				Runner:      runner,
+				FsManager:   fsManager,
+				HashManager: &utils.HashManager{},
 			}
 
 			lc.Messages = []string{}
@@ -545,7 +573,10 @@ func assertTestCase(t *testing.T, tc *fileManagedTestCase, res ExecutionResult, 
 		return
 	}
 
-	isExpectationMatched, nonMatchedReason, err := utils.AssertFileMatchesExpectation(tc.Task.Name, tc.FileExpectation)
+	isExpectationMatched, nonMatchedReason, err := apptest.AssertFileMatchesExpectation(
+		tc.Task.Name,
+		tc.FileExpectation,
+	)
 	assert.NoError(t, err)
 	if err != nil {
 		return

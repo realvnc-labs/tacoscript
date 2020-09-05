@@ -7,10 +7,6 @@ import (
 	"strings"
 )
 
-func AssertFileMatchesExpectationOS(filePath string, fe *FileExpectation) (bool, string, error) {
-	return true, "", nil
-}
-
 func ParseLocationOS(rawLocation string) string {
 	if !strings.HasPrefix(rawLocation, "file:") {
 		return rawLocation

@@ -29,13 +29,14 @@ func RunScript(scriptPath string) error {
 				Runner: exec.SystemRunner{
 					SystemAPI: exec.OSApi{},
 				},
-				FsManager: &utils.OSFsManager{},
+				FsManager: &utils.FsManager{},
 			},
 			tasks.FileManaged: &tasks.FileManagedTaskExecutor{
 				Runner: exec.SystemRunner{
 					SystemAPI: exec.OSApi{},
 				},
-				FsManager: &utils.OSFsManager{},
+				FsManager:   &utils.FsManager{},
+				HashManager: &utils.HashManager{},
 			},
 		},
 	}

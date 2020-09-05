@@ -5,7 +5,6 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"time"
 
@@ -184,9 +183,15 @@ func (crt *FileManagedTask) String() string {
 	return fmt.Sprintf("task '%s' at path '%s'", crt.TypeName, crt.GetPath())
 }
 
+type HashManager interface {
+	HashEquals(hashStr, filePath string) (hashEquals bool, actualCache string, err error)
+	HashSum(hashAlgoName, filePath string) (hashSum string, err error)
+}
+
 type FileManagedTaskExecutor struct {
-	FsManager utils.FsManager
-	Runner    exec2.Runner
+	FsManager   FsManager
+	HashManager HashManager
+	Runner      exec2.Runner
 }
 
 func (fmte *FileManagedTaskExecutor) Execute(ctx context.Context, task Task) ExecutionResult {
@@ -259,7 +264,7 @@ func (fmte *FileManagedTaskExecutor) fileShouldBeReplaced(fileManagedTask *FileM
 		return true, nil
 	}
 
-	fileExists, err := utils.FileExists(fileManagedTask.Name)
+	fileExists, err := fmte.FsManager.FileExists(fileManagedTask.Name)
 	if err != nil {
 		return true, err
 	}
@@ -311,7 +316,7 @@ func (fmte *FileManagedTaskExecutor) shouldBeExecuted(
 
 	if fileManagedTask.SourceHash != "" {
 		var hashEquals bool
-		hashEquals, _, err = utils.HashEquals(fileManagedTask.SourceHash, fileManagedTask.Name)
+		hashEquals, _, err = fmte.HashManager.HashEquals(fileManagedTask.SourceHash, fileManagedTask.Name)
 		if err != nil {
 			return false, err
 		}
@@ -389,17 +394,17 @@ func (fmte *FileManagedTaskExecutor) handleRemoteSource(ctx context.Context, fil
 	logrus.Debug("source location is a remote url")
 
 	defer func(f string) {
-		fileExists, err := utils.FileExists(f)
+		fileExists, err := fmte.FsManager.FileExists(f)
 		if !fileExists || err != nil {
 			return
 		}
 
-		err = os.Remove(f)
+		err = fmte.FsManager.Remove(f)
 		if err != nil {
 			logrus.Errorf("failed to delete '%s': %v", f, err)
 		}
 	}(tempTargetPath)
-	err := utils.DownloadFile(ctx, tempTargetPath, fileManagedTask.Source.URL, fileManagedTask.SkipTLSCheck)
+	err := fmte.FsManager.DownloadFile(ctx, tempTargetPath, fileManagedTask.Source.URL, fileManagedTask.SkipTLSCheck)
 	if err != nil {
 		return err
 	}
@@ -417,7 +422,7 @@ func (fmte *FileManagedTaskExecutor) handleRemoteSource(ctx context.Context, fil
 		return nil
 	}
 
-	err = utils.MoveFile(tempTargetPath, fileManagedTask.Name)
+	err = fmte.FsManager.MoveFile(tempTargetPath, fileManagedTask.Name)
 	if err != nil {
 		return err
 	}
@@ -443,14 +448,14 @@ func (fmte *FileManagedTaskExecutor) handleLocalSource(fileManagedTask *FileMana
 		return nil
 	}
 
-	return utils.CopyLocalFile(source.LocalPath, fileManagedTask.Name)
+	return fmte.FsManager.CopyLocalFile(source.LocalPath, fileManagedTask.Name)
 }
 
 func (fmte *FileManagedTaskExecutor) checkIfLocalFileShouldBeCopied(fileManagedTask *FileManagedTask, sourcePath string) (bool, error) {
 	const defaultHashAlgoName = "sha256"
 
 	if !fileManagedTask.SkipVerify {
-		hashEquals, expectedHashStr, err := utils.HashEquals(fileManagedTask.SourceHash, sourcePath)
+		hashEquals, expectedHashStr, err := fmte.HashManager.HashEquals(fileManagedTask.SourceHash, sourcePath)
 		if err != nil {
 			return false, err
 		}
@@ -472,12 +477,12 @@ func (fmte *FileManagedTaskExecutor) checkIfLocalFileShouldBeCopied(fileManagedT
 
 	logrus.Debug("since skip verify is set to true will ignore source hash and check if the hash sum " +
 		"of the local source file matches with the hash sum of the target file")
-	sourceFileHashSum, err := utils.HashSum(defaultHashAlgoName, sourcePath)
+	sourceFileHashSum, err := fmte.HashManager.HashSum(defaultHashAlgoName, sourcePath)
 	if err != nil {
 		return false, err
 	}
 
-	fileExists, err := utils.FileExists(fileManagedTask.Name)
+	fileExists, err := fmte.FsManager.FileExists(fileManagedTask.Name)
 	if err != nil {
 		return false, err
 	}
@@ -487,7 +492,7 @@ func (fmte *FileManagedTaskExecutor) checkIfLocalFileShouldBeCopied(fileManagedT
 		return true, nil
 	}
 
-	targetFileHashSum, err := utils.HashSum(defaultHashAlgoName, fileManagedTask.Name)
+	targetFileHashSum, err := fmte.HashManager.HashSum(defaultHashAlgoName, fileManagedTask.Name)
 	if err != nil {
 		return false, err
 	}
@@ -523,7 +528,7 @@ func (fmte *FileManagedTaskExecutor) copyContentToTarget(fileManagedTask *FileMa
 
 	mode := os.FileMode(DefaultFileMode)
 	logrus.Debugf("will write contents to target file '%s'", fileManagedTask.Name)
-	err := ioutil.WriteFile(fileManagedTask.Name, []byte(fileManagedTask.Contents.String), mode)
+	err := fmte.FsManager.WriteFile(fileManagedTask.Name, fileManagedTask.Contents.String, mode)
 
 	if err == nil {
 		logrus.Debugf("written contents to '%s'", fileManagedTask.Name)
@@ -541,17 +546,16 @@ func (fmte *FileManagedTaskExecutor) shouldSkipForContentExpectation(fileManaged
 	logrus.Debugf("will compare contents of file '%s' with the provided contents", fileManagedTask.Name)
 	actualContents := ""
 
-	fileExists, err := utils.FileExists(fileManagedTask.Name)
+	fileExists, err := fmte.FsManager.FileExists(fileManagedTask.Name)
 	if err != nil {
 		return false, err
 	}
 
 	if fileExists {
-		actualContentsBytes, err := ioutil.ReadFile(fileManagedTask.Name)
+		actualContents, err = fmte.FsManager.ReadFile(fileManagedTask.Name)
 		if err != nil {
 			return false, err
 		}
-		actualContents = string(actualContentsBytes)
 	}
 
 	contentDiff := utils.Diff(fileManagedTask.Contents.String, actualContents)
@@ -582,5 +586,5 @@ func (fmte *FileManagedTaskExecutor) createDirPathIfNeeded(fileManagedTask *File
 		mode = fileManagedTask.Mode
 	}
 
-	return utils.CreateDirPathIfNeeded(fileManagedTask.Name, mode)
+	return fmte.FsManager.CreateDirPathIfNeeded(fileManagedTask.Name, mode)
 }

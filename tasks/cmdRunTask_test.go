@@ -7,9 +7,9 @@ import (
 	"strings"
 	"testing"
 
-	appExec "github.com/cloudradar-monitoring/tacoscript/exec"
+	"github.com/cloudradar-monitoring/tacoscript/apptest"
 
-	"github.com/cloudradar-monitoring/tacoscript/utils"
+	appExec "github.com/cloudradar-monitoring/tacoscript/exec"
 
 	"github.com/cloudradar-monitoring/tacoscript/conv"
 
@@ -351,8 +351,8 @@ func TestTaskExecution(t *testing.T) {
 		t.Run(tc.Name, func(tt *testing.T) {
 			cmdRunExecutor := &CmdRunTaskExecutor{
 				Runner: tc.RunnerMock,
-				FsManager: &utils.FsManagerMock{
-					ExistsToReturn: tc.FileShouldExist,
+				FsManager: &apptest.FsManagerMock{
+					FileExistsExistsToReturn: tc.FileShouldExist,
 				},
 			}
 
