@@ -55,6 +55,6 @@ another-url:
     - skip_verify: false
     - makedirs: true
     - replace: false
-    - user: root
-    - group: wheel
+    - user: Guest
+    - group: Guest
     - mode: 0777

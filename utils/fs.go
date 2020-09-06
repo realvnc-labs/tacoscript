@@ -9,9 +9,7 @@ import (
 	"net/http"
 	"net/url"
 	"os"
-	"os/user"
 	"path/filepath"
-	"strconv"
 
 	"github.com/secsy/goftp"
 	"github.com/sirupsen/logrus"
@@ -58,32 +56,7 @@ func (fmm *FsManager) Chmod(targetFilePath string, mode os.FileMode) error {
 }
 
 func (fmm *FsManager) Chown(targetFilePath, userName, groupName string) error {
-	usrID, groupID := -1, -1
-
-	if userName != "" {
-		sysUser, err := user.Lookup(userName)
-		if err != nil {
-			return err
-		}
-		usrID, err = strconv.Atoi(sysUser.Uid)
-		if err != nil {
-			return err
-		}
-	}
-
-	if groupName != "" {
-		sysGroup, err := user.LookupGroup(groupName)
-		if err != nil {
-			return err
-		}
-
-		groupID, err = strconv.Atoi(sysGroup.Gid)
-		if err != nil {
-			return err
-		}
-	}
-
-	return os.Chown(targetFilePath, usrID, groupID)
+	return Chown(targetFilePath, userName, groupName)
 }
 
 func (fmm *FsManager) Stat(name string) (os.FileInfo, error) {
