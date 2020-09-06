@@ -479,6 +479,26 @@ three`,
 				ExpectedMode:    0777,
 			},
 		},
+		{
+			Name: "encoding_success",
+			Task: &FileManagedTask{
+				Replace:    true,
+				SkipVerify: true,
+				Name:       "encodingSuccessFile.txt",
+				Path:       "encoding_success_path",
+				Contents: sql.NullString{
+					String: "一些中文内容",
+					Valid:  true,
+				},
+				Encoding: "gb18030",
+			},
+			FileExpectation: &apptest.FileExpectation{
+				FilePath:         "encodingSuccessFile.txt",
+				ShouldExist:      true,
+				ExpectedContent:  `一些中文内容`,
+				ExpectedEncoding: "gb18030",
+			},
+		},
 	}
 
 	logsCollection := &applog.BufferedLogs{
@@ -624,7 +644,7 @@ func TestFileManagedUserAndGroup(t *testing.T) {
 				UserName:       "someuser",
 				GroupName:      "somegroup",
 			},
-			chownError: "some chown error",
+			chownError:    "some chown error",
 			expectedError: "some chown error",
 		},
 		{

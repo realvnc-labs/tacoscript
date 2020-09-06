@@ -57,7 +57,7 @@ func (fmm *FsManager) Chmod(targetFilePath string, mode os.FileMode) error {
 	return os.Chmod(targetFilePath, mode)
 }
 
-func (fmm *FsManager) Chown(targetFilePath string, userName, groupName string) error {
+func (fmm *FsManager) Chown(targetFilePath, userName, groupName string) error {
 	usrID, groupID := -1, -1
 
 	if userName != "" {
@@ -81,7 +81,6 @@ func (fmm *FsManager) Chown(targetFilePath string, userName, groupName string) e
 		if err != nil {
 			return err
 		}
-
 	}
 
 	return os.Chown(targetFilePath, usrID, groupID)

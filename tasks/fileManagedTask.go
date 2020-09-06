@@ -533,7 +533,14 @@ func (fmte *FileManagedTaskExecutor) copyContentToTarget(fileManagedTask *FileMa
 
 	mode := os.FileMode(DefaultFileMode)
 	logrus.Debugf("will write contents to target file '%s'", fileManagedTask.Name)
-	err := fmte.FsManager.WriteFile(fileManagedTask.Name, fileManagedTask.Contents.String, mode)
+
+	var err error
+	if fileManagedTask.Encoding != "" {
+		logrus.Debugf("will encode file contents to '%s'", fileManagedTask.Encoding)
+		err = utils.WriteEncodedFile(fileManagedTask.Encoding, fileManagedTask.Contents.String, fileManagedTask.Name, mode)
+	} else {
+		err = fmte.FsManager.WriteFile(fileManagedTask.Name, fileManagedTask.Contents.String, mode)
+	}
 
 	if err == nil {
 		logrus.Debugf("written contents to '%s'", fileManagedTask.Name)
@@ -611,7 +618,7 @@ func (fmte *FileManagedTaskExecutor) applyFileAttributesToTarget(fileManagedTask
 	}
 
 	if fileManagedTask.User != "" || fileManagedTask.Group != "" {
-		logrus.Debugf("will change user '%s' or group '%s' of file '%s'", fileManagedTask.User, fileManagedTask.Group , fileManagedTask.Name)
+		logrus.Debugf("will change user '%s' or group '%s' of file '%s'", fileManagedTask.User, fileManagedTask.Group, fileManagedTask.Name)
 		err = fmte.FsManager.Chown(fileManagedTask.Name, fileManagedTask.User, fileManagedTask.Group)
 		if err != nil {
 			return err

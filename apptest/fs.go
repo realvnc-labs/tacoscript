@@ -143,7 +143,7 @@ func (fmm *FsManagerMock) Chmod(targetFilePath string, mode os.FileMode) error {
 	return nil
 }
 
-func (fmm *FsManagerMock) Chown(targetFilePath string, userName, groupName string) error {
+func (fmm *FsManagerMock) Chown(targetFilePath, userName, groupName string) error {
 	fmm.ChownInputs = append(fmm.ChownInputs, ChownInput{
 		TargetFilePath: targetFilePath,
 		UserName:       userName,

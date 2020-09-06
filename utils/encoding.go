@@ -6,10 +6,17 @@ import (
 	"os"
 	"strings"
 
+	"golang.org/x/text/encoding"
+	"golang.org/x/text/encoding/japanese"
+	"golang.org/x/text/encoding/korean"
+	"golang.org/x/text/encoding/simplifiedchinese"
+	"golang.org/x/text/encoding/traditionalchinese"
+	"golang.org/x/text/encoding/unicode"
+
 	"golang.org/x/text/encoding/charmap"
 )
 
-var charMaps = map[string]*charmap.Charmap{
+var charMaps = map[string]encoding.Encoding{
 	"codepage037":       charmap.CodePage037,
 	"codepage1047":      charmap.CodePage1047,
 	"codepage1140":      charmap.CodePage1140,
@@ -51,12 +58,26 @@ var charMaps = map[string]*charmap.Charmap{
 	"windows1257":       charmap.Windows1257,
 	"windows1258":       charmap.Windows1258,
 	"windows874":        charmap.Windows874,
+	"gb18030":           simplifiedchinese.GB18030,
+	"gbk":               simplifiedchinese.GBK,
+	"big5":              traditionalchinese.Big5,
+	"eucjp":             japanese.EUCJP,
+	"iso2022jp":         japanese.ISO2022JP,
+	"shiftJIS":          japanese.ShiftJIS,
+	"euckr":             korean.EUCKR,
+	"utf16be":           unicode.UTF16(unicode.BigEndian, unicode.IgnoreBOM),
+	"utf16le":           unicode.UTF16(unicode.LittleEndian, unicode.IgnoreBOM),
+	"utf8":              nil,
 }
 
 func Encode(encodingName, contentsUtf8 string) ([]byte, error) {
 	cm, err := DetectCharMap(encodingName)
 	if err != nil {
 		return []byte{}, err
+	}
+
+	if cm == nil {
+		return []byte(contentsUtf8), nil
 	}
 
 	enc := cm.NewEncoder()
@@ -71,13 +92,17 @@ func Decode(encodingName string, data []byte) (string, error) {
 		return "", err
 	}
 
+	if cm == nil {
+		return string(data), nil
+	}
+
 	enc := cm.NewDecoder()
 	out, err := enc.Bytes(data)
 
 	return string(out), err
 }
 
-func DetectCharMap(encodingName string) (*charmap.Charmap, error) {
+func DetectCharMap(encodingName string) (encoding.Encoding, error) {
 	cm, ok := charMaps[strings.ToLower(encodingName)]
 	if !ok {
 		return nil, fmt.Errorf("unknown encoding: '%s'", encodingName)
