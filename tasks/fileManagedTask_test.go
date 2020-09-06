@@ -30,15 +30,16 @@ func init() {
 }
 
 type fileManagedTestCase struct {
-	Name             string
-	ContentToWrite   string
-	LogExpectation   string
-	Task             *FileManagedTask
-	ExpectedResult   ExecutionResult
-	RunnerMock       *appExec.SystemRunner
-	FileExpectation  *apptest.FileExpectation
-	ExpectedCmdStrs  []string
-	ErrorExpectation *apptest.ErrorExpectation
+	Name                   string
+	ContentToWrite         string
+	ContentEncodingToWrite string
+	LogExpectation         string
+	Task                   *FileManagedTask
+	ExpectedResult         ExecutionResult
+	RunnerMock             *appExec.SystemRunner
+	FileExpectation        *apptest.FileExpectation
+	ExpectedCmdStrs        []string
+	ErrorExpectation       *apptest.ErrorExpectation
 }
 
 func TestFileManagedTaskExecution(t *testing.T) {
@@ -499,6 +500,33 @@ three`,
 				ExpectedEncoding: "gb18030",
 			},
 		},
+		{
+			Name: "encoding_with_content_compare",
+			Task: &FileManagedTask{
+				Name: "encodingWithContentCompare.txt",
+				Path: "encoding_with_content_compare_path",
+				Contents: sql.NullString{
+					Valid:  true,
+					String: `一些中文内容`,
+				},
+				Replace:  true,
+				Mode:     0777,
+				Encoding: "gb18030",
+			},
+			ContentToWrite:         "一些中文内",
+			ContentEncodingToWrite: "gb18030",
+			ExpectedResult:         ExecutionResult{},
+			FileExpectation: &apptest.FileExpectation{
+				FilePath:         "encodingWithContentCompare.txt",
+				ShouldExist:      true,
+				ExpectedMode:     0777,
+				ExpectedContent:  `一些中文内容`,
+				ExpectedEncoding: "gb18030",
+			},
+			LogExpectation: `-一些中文内容
++一些中文内
+`,
+		},
 	}
 
 	logsCollection := &applog.BufferedLogs{
@@ -511,7 +539,12 @@ three`,
 		lc := logsCollection
 		t.Run(tc.Name, func(tt *testing.T) {
 			if tc.ContentToWrite != "" {
-				e := ioutil.WriteFile(tc.Task.Name, []byte(tc.ContentToWrite), 0600)
+				var e error
+				if tc.ContentEncodingToWrite != "" {
+					e = utils.WriteEncodedFile(tc.ContentEncodingToWrite, tc.ContentToWrite, tc.Task.Name, 0600)
+				} else {
+					e = ioutil.WriteFile(tc.Task.Name, []byte(tc.ContentToWrite), 0600)
+				}
 				assert.NoError(t, e)
 			}
 			runner := tc.RunnerMock

@@ -143,6 +143,10 @@ func (fmm *FsManagerMock) Chmod(targetFilePath string, mode os.FileMode) error {
 	return nil
 }
 
+func (fmm *FsManagerMock) ReadEncodedFile(encodingName, fileName string) (contentsUtf8 string, err error) {
+	return
+}
+
 func (fmm *FsManagerMock) Chown(targetFilePath, userName, groupName string) error {
 	fmm.ChownInputs = append(fmm.ChownInputs, ChownInput{
 		TargetFilePath: targetFilePath,

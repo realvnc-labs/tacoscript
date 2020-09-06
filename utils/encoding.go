@@ -120,3 +120,12 @@ func WriteEncodedFile(encodingName, contentsUtf8, fileName string, perm os.FileM
 
 	return ioutil.WriteFile(fileName, encodedData, perm)
 }
+
+func ReadEncodedFile(encodingName, fileName string) (contentsUtf8 string, err error) {
+	contents, err := ioutil.ReadFile(fileName)
+	if err != nil {
+		return
+	}
+
+	return Decode(encodingName, contents)
+}

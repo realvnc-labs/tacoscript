@@ -18,4 +18,5 @@ type FsManager interface {
 	Chmod(targetFilePath string, mode os.FileMode) error
 	Chown(targetFilePath string, userName, groupName string) error
 	Stat(name string) (os.FileInfo, error)
+	ReadEncodedFile(encodingName, fileName string) (contentsUtf8 string, err error)
 }

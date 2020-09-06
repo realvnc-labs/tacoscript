@@ -90,6 +90,10 @@ func (fmm *FsManager) Stat(name string) (os.FileInfo, error) {
 	return os.Stat(name)
 }
 
+func (fmm *FsManager) ReadEncodedFile(encodingName, fileName string) (contentsUtf8 string, err error) {
+	return ReadEncodedFile(encodingName, fileName)
+}
+
 func FileExists(filePath string) (bool, error) {
 	if filePath == "" {
 		return false, nil

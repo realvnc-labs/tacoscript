@@ -561,7 +561,12 @@ func (fmte *FileManagedTaskExecutor) shouldSkipForContentExpectation(fileManaged
 	}
 
 	if fileExists {
-		actualContents, err = fmte.FsManager.ReadFile(fileManagedTask.Name)
+		if fileManagedTask.Encoding != "" {
+			actualContents, err = fmte.FsManager.ReadEncodedFile(fileManagedTask.Encoding, fileManagedTask.Name)
+		} else {
+			actualContents, err = fmte.FsManager.ReadFile(fileManagedTask.Name)
+		}
+
 		if err != nil {
 			return false, err
 		}
