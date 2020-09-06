@@ -39,3 +39,22 @@ create-folder:
         - mkdir C:\tmp\mydate
     - unless: dir C:\tmp\mydate
     - shell: cmd.exe
+another-file:
+  file.managed:
+    - name: my-file-win1251.txt
+    - contents: |
+        goes here
+        Funny file
+    - mode: 0755
+    - encoding: windows1251
+another-url:
+  file.managed:
+    - name: C:\tmp\sub\utf8-js-1.json
+    - source: https://raw.githubusercontent.com/mathiasbynens/utf8.js/master/package.json
+    - source_hash: sha256=40c5219fc82b478b1704a02d66c93cec2da90afa62dc18d7af06c6130d9966ed
+    - skip_verify: false
+    - makedirs: true
+    - replace: false
+    - user: root
+    - group: wheel
+    - mode: 0777
