@@ -449,7 +449,12 @@ func (fmte *FileManagedTaskExecutor) handleLocalSource(fileManagedTask *FileMana
 		return nil
 	}
 
-	return fmte.FsManager.CopyLocalFile(source.LocalPath, fileManagedTask.Name)
+	mode := os.FileMode(DefaultFileMode)
+	if fileManagedTask.Mode > 0 {
+		mode = fileManagedTask.Mode
+	}
+
+	return fmte.FsManager.CopyLocalFile(source.LocalPath, fileManagedTask.Name, mode)
 }
 
 func (fmte *FileManagedTaskExecutor) checkIfLocalFileShouldBeCopied(fileManagedTask *FileManagedTask, sourcePath string) (bool, error) {
@@ -529,6 +534,10 @@ func (fmte *FileManagedTaskExecutor) copyContentToTarget(fileManagedTask *FileMa
 	}
 
 	mode := os.FileMode(DefaultFileMode)
+	if fileManagedTask.Mode > 0 {
+		mode = fileManagedTask.Mode
+	}
+
 	logrus.Debugf("will write contents to target file '%s'", fileManagedTask.Name)
 
 	var err error

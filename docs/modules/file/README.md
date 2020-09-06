@@ -149,17 +149,130 @@ If `makedirs` was false and dir path at `/tmp/sub/some/dir/` doesn't exist, the 
 [bool] type, default true
 
 If set to false and the file already exists, the file will not be modified even if changes would otherwise be made. Permissions and ownership will still be enforced, however.
-Practically both scripts will be equivalent:
 
     another-url:
       file.managed:
         - name: /tmp/sub/some/dir/utf8-js-1.json
         - makedirs: true
         - replace: false
-        
+        - user: root
+        - group: root
+        - mode: 0755
+
+A similar behaviour will be enforced by the following script     
 
     another-url:
       file.managed:
         - name: /tmp/sub/some/dir/utf8-js-1.json
         - makedirs: true
         - creates:  /tmp/sub/some/dir/utf8-js-1.json
+        - user: root
+        - group: root
+        - mode: 0755
+
+however the user, group and mode changes will not be applied when `/tmp/sub/some/dir/utf8-js-1.json` exists.
+
+### skip_verify
+
+[bool] type, default false
+
+If set to true, tacoscript won't verify the hash of the source file from the `source_hash` field. The `source_hash` will be checked against the target file if it maches, the task will be skipped. Tacoscript will download source to a temp folder, calculate it's sha256 hash and compare to the sha256 hash of the target file. If they don't match, file will be replaced or created. 
+If set to false, tacoscript will check if `source_hash` matches to the hash of the source location. If not, the script will fail with an exception. Further `source_hash` will be checked for the target file. If not matched, file will be replaced/created and skipped otherwise.
+
+
+    another-url:
+      file.managed:
+        - name: /tmp/sub/utf8-js-1.json
+        - source: https://raw.githubusercontent.com/mathiasbynens/utf8.js/master/package.json
+        - source_hash: sha256=40c5219fc82b478b1704a02d66c93cec2da90afa62dc18d7af06c6130d9966ed
+        - skip_verify: true
+
+
+In this script, the file `/tmp/sub/utf8-js-1.json` will be created/replaced only if sha256 hash of source https://raw.githubusercontent.com/mathiasbynens/utf8.js/master/package.json doesn't match with /tmp/sub/utf8-js-1.json.
+
+### contents
+
+[string] type, default empty string
+
+Multiline UTF-8 encoded string which expected to be the content of the target file. This value exludes the usage of `source` field as tacoscript uses data either from source or contents field. Additionally `source_hash` and `skip_verify` are ignored, if `contents` field is provided.
+
+    another-file:
+      file.managed:
+        - name: my-file-win1251.txt
+        - contents: |
+            goes here
+            Funny file
+
+In this example we take the contents of the `my-file-win1251.txt` file and compare it with the `contents` field line by line. If they matched, no content modification will be done. If not, the target file `my-file-win1251.txt` will contain `goes here Funny file`, respecting multiline format.
+
+Additionally, you will see in logs something like (assuming that `my-file-win1251.txt` is empty)
+
+
+        expected: ""\ngoes here\nFunny file""
+        actual: """"
+        Diff:
+        --- Expected
+        +++ Actual
+        -
+        goes here
+        Funny file
+        +
+
+which shows what was changed in target file: rows with - are added and rows with + stayed unchanged.
+
+### mode
+
+[integer] type, default 0
+
+This field shows the desired filemode for the target file. This value will be ignored in Windows. If mode is not set and file exists, no file mode will be changed. If mode is not set and file is created, the defailt mode 0774 will be set to it.
+
+    another-file:
+      file.managed:
+        - name: /tmp/myfile.txt
+        - contents: one
+        - mode: 0777
+
+As a result of this execution, file `/tmp/myfile.txt` will have `rwxrwxrwx` rights (see https://en.wikipedia.org/wiki/File-system_permissions)
+    
+### user
+
+[string] type, default empty string
+
+This field shows the desired owner of the target file. This value will be ignored in Windows. By default all files are created with the ownership of the current user. However if `user` field is specified, tacoscript will try to change the ownership of the target file (no matter if it was created or updated) to the desired user name. Of course this would require to run tacoscript with sufficient rights (e.g. as a `root` user). 
+
+Additionally, tacoscript will not apply ownership changes to the target file if `onlyif`, `unless`, `creates` conditions failed or hash of the target file matches with `source_hash` value. If `skip_verify` is true and hash of target and source file matched or there was no diff between the `contents` field and the contents of the target file, tacoscript will change the ownership of the target file. 
+
+### group
+
+[string] type, default empty string
+
+This field shows the desired group of the target file. This value will be ignored in Windows. By default all files are created with the ownership of the current user and his default group. However if `group` field is specified, tacoscript will try to change the ownership of the target file (no matter if it was created or updated) to the desired group name. Of course this would require to run tacoscript with sufficient rights (e.g. as a `root` user). 
+Consider following example:
+
+
+    another-url:
+      file.managed:
+        - name: /tmp/myfile.txt
+        - contents: one,two,three
+        - user: root
+        - group: wheel
+        
+As a result of this execution (`ls -la /tmp/`), you will see the corresponding owner and group of the target file:
+
+
+       total 10536
+       drwxrwxrwt  31 root        wheel      992 Sep  6 21:10 .
+       drwxr-xr-x   6 root        wheel      192 Aug 29 09:42 ..
+       rwxr-xr-x   2 root        wheel       64 Sep  0 10:18 myfile.txt
+
+### require
+see [require](../../general/dependencies/require.md)
+
+### creates
+see [creates](../../general/conditionals/creates.md)
+
+### onlyif
+see [onlyif](../../general/conditionals/onlyif.md)
+
+### unless
+see [onlyif](../../general/conditionals/unless.md)

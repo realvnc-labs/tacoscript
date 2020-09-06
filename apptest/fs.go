@@ -123,7 +123,7 @@ func (fmm *FsManagerMock) MoveFile(sourceFilePath, targetFilePath string) error 
 	return nil
 }
 
-func (fmm *FsManagerMock) CopyLocalFile(sourceFilePath, targetFilePath string) error {
+func (fmm *FsManagerMock) CopyLocalFile(sourceFilePath, targetFilePath string, mode os.FileMode) error {
 	return nil
 }
 

@@ -33,8 +33,8 @@ func (fmm *FsManager) MoveFile(sourceFilePath, targetFilePath string) error {
 	return MoveFile(sourceFilePath, targetFilePath)
 }
 
-func (fmm *FsManager) CopyLocalFile(sourceFilePath, targetFilePath string) error {
-	return CopyLocalFile(sourceFilePath, targetFilePath)
+func (fmm *FsManager) CopyLocalFile(sourceFilePath, targetFilePath string, mode os.FileMode) error {
+	return CopyLocalFile(sourceFilePath, targetFilePath, mode)
 }
 
 func (fmm *FsManager) WriteFile(name, contents string, mode os.FileMode) error {
@@ -89,13 +89,13 @@ func MoveFile(sourceFilePath, targetFilePath string) error {
 	return err
 }
 
-func CopyLocalFile(sourceFilePath, targetFilePath string) error {
+func CopyLocalFile(sourceFilePath, targetFilePath string, mode os.FileMode) error {
 	input, err := ioutil.ReadFile(sourceFilePath)
 	if err != nil {
 		return err
 	}
 
-	err = ioutil.WriteFile(targetFilePath, input, 0600)
+	err = ioutil.WriteFile(targetFilePath, input, mode)
 	if err != nil {
 		return err
 	}
