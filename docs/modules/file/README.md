@@ -265,6 +265,25 @@ As a result of this execution (`ls -la /tmp/`), you will see the corresponding o
        drwxr-xr-x   6 root        wheel      192 Aug 29 09:42 ..
        rwxr-xr-x   2 root        wheel       64 Sep  0 10:18 myfile.txt
 
+### encoding
+[string] type, default empty string
+
+This field shows the desired encoding for the content of the target file. This field can be only used in combination with the `contents` field. Tacoscript accepts yaml file only in UTF-8 format. However user can specify a different value in `encoding` field. If target file exists, tacoscript will read it and convert from the specified encoding to UTF-8. Then the `contents` script value will be compared with the decoded contents of the target file. If target file is empty, or contents didn't match, tacoscript will convert the `contents` value to the `encoding` and write the result to the target file.
+
+        another-file:
+          file.managed:
+            - name: my-file-win1251.txt
+            - contents: One
+            - encoding: windows1251
+            
+After this script, the file `my-file-win1251.txt` will be saved in windows1251 encoding.
+
+The list of supported encoding names:
+
+codepage037, codepage1047, codepage1140, codepage437, codepage850, codepage852, codepage855, codepage858, codepage860, codepage862, codepage863, codepage865, codepage866, iso8859_1, iso8859_10, iso8859_13, iso8859_14, iso8859_15, iso8859_16, iso8859_2, iso8859_3, iso8859_4, iso8859_5, iso8859_6, iso8859_7, iso8859_8, iso8859_9, koi8r, koi8u, macintosh, macintoshcyrillic, windows1250, windows1251, windows1252, windows1253, windows1254, windows1255, windows1256, windows1257, windows1258, windows874, gb18030, gbk, big5, eucjp, iso2022jp, shiftJIS, euckr, utf16be, utf16le, utf8, utf-8 
+
+Tacoscript will fail, if an unsupported encoding is provided.
+
 ### require
 see [require](../../general/dependencies/require.md)
 
