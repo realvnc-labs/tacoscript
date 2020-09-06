@@ -1,8 +1,8 @@
-name: Go
+name: Test
 on: [push]
 jobs:
   sca:
-    name: SCA
+    name: Sca
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2

@@ -11,7 +11,7 @@ func Init(isVerbose bool) {
 	f := &MultiLineFormatter{
 		TextFormatter: log.TextFormatter{
 			TimestampFormat: "2006-01-02T15:04:05.000000",
-			FullTimestamp:   false,
+			FullTimestamp:   true,
 		},
 	}
 	log.SetFormatter(f)

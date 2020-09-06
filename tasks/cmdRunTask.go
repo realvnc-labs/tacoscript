@@ -180,7 +180,7 @@ func (crte *CmdRunTaskExecutor) checkOnlyIfs(ctx *exec2.Context, cmdRunTask *Cmd
 	if err != nil {
 		runErr, isRunErr := err.(exec2.RunError)
 		if isRunErr {
-			logrus.Debugf("will skip %s since onlyif condition has failed: %v", crte, runErr)
+			logrus.Debugf("will skip %s since onlyif condition has failed: %v", cmdRunTask.Path, runErr)
 			return false, nil
 		}
 
@@ -211,7 +211,7 @@ func (crte *CmdRunTaskExecutor) checkUnless(ctx *exec2.Context, cmdRunTask *CmdR
 		return false, err
 	}
 
-	logrus.Infof("any unless condition didn't fail for task '%s'", crte)
+	logrus.Infof("any unless condition didn't fail for task '%s'", cmdRunTask.Path)
 	return false, nil
 }
 
@@ -222,7 +222,7 @@ func (crte *CmdRunTaskExecutor) shouldBeExecuted(ctx *exec2.Context, cmdRunTask 
 	}
 
 	if isExists {
-		logrus.Debugf("some files exist, will skip the execution of %s", crte)
+		logrus.Debugf("some files exist, will skip the execution of %s", cmdRunTask.Path)
 		return false, nil
 	}
 
@@ -241,11 +241,11 @@ func (crte *CmdRunTaskExecutor) shouldBeExecuted(ctx *exec2.Context, cmdRunTask 
 	}
 
 	if !isExpectationSuccess {
-		logrus.Debugf("check of unless section was false, will skip %s", crte)
+		logrus.Debugf("check of unless section was false, will skip %s", cmdRunTask.Path)
 		return false, nil
 	}
 
-	logrus.Debugf("all execution conditions are met, will continue %s", crte)
+	logrus.Debugf("all execution conditions are met, will continue %s", cmdRunTask.Path)
 	return true, nil
 }
 

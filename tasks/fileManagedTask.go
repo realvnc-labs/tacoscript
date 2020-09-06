@@ -384,8 +384,6 @@ func (fmte *FileManagedTaskExecutor) copySourceToTarget(ctx context.Context, fil
 		return nil
 	}
 
-	logrus.Debugf("will copy source location '%s' to target location '%s'", fileManagedTask.Source.RawLocation, fileManagedTask.Name)
-
 	if !source.IsURL {
 		return fmte.handleLocalSource(fileManagedTask, source.LocalPath)
 	}
@@ -395,8 +393,6 @@ func (fmte *FileManagedTaskExecutor) copySourceToTarget(ctx context.Context, fil
 
 func (fmte *FileManagedTaskExecutor) handleRemoteSource(ctx context.Context, fileManagedTask *FileManagedTask) error {
 	tempTargetPath := fileManagedTask.Name + "_temp"
-
-	logrus.Debug("source location is a remote url")
 
 	defer func(f string) {
 		fileExists, err := fmte.FsManager.FileExists(f)
@@ -414,7 +410,7 @@ func (fmte *FileManagedTaskExecutor) handleRemoteSource(ctx context.Context, fil
 		return err
 	}
 	logrus.Debugf(
-		"copied remove source '%s' to a temp location '%s', will check the hash",
+		"copied remove source '%s' to a temp location '%s'",
 		fileManagedTask.Source.RawLocation,
 		tempTargetPath,
 	)
@@ -433,7 +429,7 @@ func (fmte *FileManagedTaskExecutor) handleRemoteSource(ctx context.Context, fil
 	}
 
 	logrus.Debugf(
-		"copied field from temp location '%s' to the expected location '%s'",
+		"moved file from a temp location '%s' to the target location '%s'",
 		tempTargetPath,
 		fileManagedTask.Name,
 	)
@@ -478,6 +474,7 @@ func (fmte *FileManagedTaskExecutor) checkIfLocalFileShouldBeCopied(fileManagedT
 				sourcePath,
 			)
 		}
+		return true, nil
 	}
 
 	logrus.Debug("since skip verify is set to true will ignore source hash and check if the hash sum " +
@@ -527,7 +524,7 @@ func (fmte *FileManagedTaskExecutor) checkIfLocalFileShouldBeCopied(fileManagedT
 
 func (fmte *FileManagedTaskExecutor) copyContentToTarget(fileManagedTask *FileManagedTask) error {
 	if !fileManagedTask.Contents.Valid {
-		logrus.Debug("contents field is empty, will not copy data")
+		logrus.Debug("contents field is empty, will not manage content")
 		return nil
 	}
 

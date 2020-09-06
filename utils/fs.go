@@ -95,7 +95,6 @@ func FileExists(filePath string) (bool, error) {
 		return false, nil
 	}
 
-	logrus.Debugf("will check if file '%s' exists", filePath)
 	_, e := os.Stat(filePath)
 	if e == nil {
 		return true, nil
@@ -213,16 +212,20 @@ func DownloadFtpFile(ctx context.Context, u *url.URL, targetFilePath string) err
 
 func CreateDirPathIfNeeded(targetFilePath string, mode os.FileMode) error {
 	targetFileDir := filepath.Dir(targetFilePath)
-	if targetFileDir != "" {
-		logrus.Debugf("will create dirs tree '%s", targetFileDir)
-		return os.MkdirAll(targetFileDir, mode)
+	if targetFileDir == "" {
+		return nil
 	}
 
-	return nil
+	logrus.Debugf("will create dirs tree '%s'", targetFileDir)
+	err := os.MkdirAll(targetFileDir, mode)
+	if err == nil {
+		logrus.Debugf("dirs tree is created for '%s'", targetFilePath)
+	}
+	return err
 }
 
 func DownloadFile(ctx context.Context, targetLocation string, sourceURL *url.URL, skipTLSCheck bool) error {
-	logrus.Debug("source location is a remote file path")
+	logrus.Debugf("will download file at url '%v'", sourceURL)
 
 	var err error
 	switch sourceURL.Scheme {

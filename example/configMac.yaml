@@ -20,7 +20,6 @@ save-date:
   cmd.run:
     - name: /bin/date > /tmp/my-date.txt
     - cwd: /tmp
-    - user: www-data
     - shell: bash
     - env:
         - PASSWORD: bunny
@@ -39,15 +38,23 @@ create-folder:
     - unless: test -e /tmp/mydate
 another-file:
   file.managed:
-    - name: /tmp/my-file.txt
+    - name: my-file-win1251.txt
     - contents: |
-        My file content
         goes here
         Funny file
-    - user: root
-    - group: www-data
     - mode: 0755
-    - encoding: UTF-8
-    - onlyif:
+    - encoding: windows1251
+    - unless:
         - which apache2
         - grep -q foo /tmp/bla
+another-url:
+  file.managed:
+    - name: /tmp/sub/utf8-js-1.json
+    - source: https://raw.githubusercontent.com/mathiasbynens/utf8.js/master/package.json
+    - source_hash: sha256=40c5219fc82b478b1704a02d66c93cec2da90afa62dc18d7af06c6130d9966ed
+    - skip_verify: false
+    - makedirs: true
+    - replace: false
+    - user: root
+    - group: wheel
+    - mode: 0777

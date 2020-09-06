@@ -68,6 +68,7 @@ var charMaps = map[string]encoding.Encoding{
 	"utf16be":           unicode.UTF16(unicode.BigEndian, unicode.IgnoreBOM),
 	"utf16le":           unicode.UTF16(unicode.LittleEndian, unicode.IgnoreBOM),
 	"utf8":              nil,
+	"utf-8":             nil,
 }
 
 func Encode(encodingName, contentsUtf8 string) ([]byte, error) {
