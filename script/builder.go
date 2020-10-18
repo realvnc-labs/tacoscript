@@ -23,9 +23,14 @@ type RawDataProvider interface {
 	Read() ([]byte, error)
 }
 
+type TemplateVariablesProvider interface {
+	GetTemplateVariables() map[string]interface{}
+}
+
 type Builder struct {
-	DataProvider RawDataProvider
-	TaskBuilder  tasks.Builder
+	DataProvider              RawDataProvider
+	TaskBuilder               tasks.Builder
+	TemplateVariablesProvider TemplateVariablesProvider
 }
 
 func (p Builder) BuildScripts() (tasks.Scripts, error) {

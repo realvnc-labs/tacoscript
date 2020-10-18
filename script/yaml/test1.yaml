@@ -1,0 +1,16 @@
+cwd:
+  # Name of the class and the module
+  cmd.run:
+    - name: echo ${PASSWORD}
+    - cwd: /usr/tmp
+    - shell: zsh
+    - env:
+        - PASSWORD: bunny
+    - creates: /tmp/my-date.txt
+    #- comment: out
+    - user: root
+    - names:
+        - name one
+        - name two
+        - name three
+    - onlyif: echo 1

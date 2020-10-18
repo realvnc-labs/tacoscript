@@ -3,6 +3,8 @@ package script
 import (
 	"context"
 	"errors"
+	"io/ioutil"
+	"os"
 	"testing"
 
 	"github.com/cloudradar-monitoring/tacoscript/tasks"
@@ -11,6 +13,7 @@ import (
 )
 
 type RawDataProviderMock struct {
+	FileName     string
 	DataToReturn string
 	ErrToReturn  error
 }
@@ -58,6 +61,10 @@ func (tm *TaskBuilderTaskMock) GetPath() string {
 }
 
 func (rdpm RawDataProviderMock) Read() ([]byte, error) {
+	if rdpm.FileName != "" {
+		return ioutil.ReadFile("yaml" + string(os.PathSeparator) + rdpm.FileName)
+	}
+
 	return []byte(rdpm.DataToReturn), rdpm.ErrToReturn
 }
 
@@ -65,8 +72,17 @@ func (tm *TaskBuilderTaskMock) GetRequirements() []string {
 	return tm.Requirements
 }
 
+type TemplateVariablesProviderMock struct {
+	Variables map[string]interface{}
+}
+
+func (tvpm TemplateVariablesProviderMock) GetTemplateVariables() map[string]interface{} {
+	return tvpm.Variables
+}
+
 func TestBuilder(t *testing.T) {
 	testCases := []struct {
+		YamlFileName        string
 		YamlInput           string
 		DataProviderErr     error
 		TaskValidationError error
@@ -74,26 +90,10 @@ func TestBuilder(t *testing.T) {
 		ExpectedErrMsg      string
 		ExpectedScripts     tasks.Scripts
 		TaskRequirements    []string
+		TemplateVariables   map[string]interface{}
 	}{
 		{
-			YamlInput: `
-cwd:
-  # Name of the class and the module
-  cmd.run:
-    - name: echo ${PASSWORD}
-    - cwd: /usr/tmp
-    - shell: zsh
-    - env:
-        - PASSWORD: bunny
-    - creates: /tmp/my-date.txt
-    #- comment: out
-    - user: root
-    - names:
-        - name one
-        - name two
-        - name three
-    - onlyif: echo 1
-`,
+			YamlFileName: "test1.yaml",
 			ExpectedScripts: tasks.Scripts{
 				{
 					ID: "cwd",
@@ -296,6 +296,7 @@ manyUnless:
 		dataProviderMock := RawDataProviderMock{
 			DataToReturn: testCase.YamlInput,
 			ErrToReturn:  testCase.DataProviderErr,
+			FileName:     testCase.YamlFileName,
 		}
 
 		taskBuilderMock := &TaskBuilderMock{
@@ -304,9 +305,14 @@ manyUnless:
 			TaskRequirements:    testCase.TaskRequirements,
 		}
 
+		templateVariablesProviderMock := TemplateVariablesProviderMock{
+			Variables: testCase.TemplateVariables,
+		}
+
 		parser := Builder{
-			DataProvider: dataProviderMock,
-			TaskBuilder:  taskBuilderMock,
+			DataProvider:              dataProviderMock,
+			TaskBuilder:               taskBuilderMock,
+			TemplateVariablesProvider: templateVariablesProviderMock,
 		}
 
 		scripts, err := parser.BuildScripts()
