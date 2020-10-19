@@ -1,0 +1,7 @@
+manyUnless:
+  cmd.run:
+    - name: expecting for one unless to be false
+    - unless:
+        - unless one
+        - unless two
+        - unless three

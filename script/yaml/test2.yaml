@@ -1,0 +1,3 @@
+cwd:
+  cmd.run:
+    - name: echo 1

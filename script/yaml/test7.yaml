@@ -1,0 +1,4 @@
+scriptValidation:
+  cmd.run:
+    - name: task one
+    - require: scriptValidation

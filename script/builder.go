@@ -1,8 +1,10 @@
 package script
 
 import (
+	"bytes"
 	"fmt"
 	"io/ioutil"
+	"text/template"
 
 	"github.com/cloudradar-monitoring/tacoscript/utils"
 
@@ -34,13 +36,18 @@ type Builder struct {
 }
 
 func (p Builder) BuildScripts() (tasks.Scripts, error) {
-	yamlFile, err := p.DataProvider.Read()
+	yamlTemplate, err := p.DataProvider.Read()
+	if err != nil {
+		return tasks.Scripts{}, err
+	}
+
+	yamlBody, err := p.render(yamlTemplate, p.TemplateVariablesProvider.GetTemplateVariables())
 	if err != nil {
 		return tasks.Scripts{}, err
 	}
 
 	rawScripts := map[string]map[string][]map[string]interface{}{}
-	err = yaml2.Unmarshal(yamlFile, &rawScripts)
+	err = yaml2.Unmarshal(yamlBody, &rawScripts)
 	if err != nil {
 		return tasks.Scripts{}, err
 	}
@@ -70,4 +77,19 @@ func (p Builder) BuildScripts() (tasks.Scripts, error) {
 	errs.Add(err)
 
 	return scripts, errs.ToError()
+}
+
+func (p Builder) render(templateData []byte, variables map[string]interface{}) (result []byte, err error) {
+	templ := template.New("goyaml")
+
+	pageTemplate, err := templ.Parse(string(templateData))
+	if err != nil {
+		return result, err
+	}
+
+	buf := bytes.Buffer{}
+
+	err = pageTemplate.Execute(&buf, variables)
+
+	return buf.Bytes(), err
 }

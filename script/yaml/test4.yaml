@@ -1,0 +1,5 @@
+cwd:
+  # Name of the class and the module
+  cmd.run:
+    - names:
+						name one

@@ -1,0 +1,6 @@
+cwd:
+  cmd.run:
+    - name: echo 1
+    - cwd: /usr/tmp
+  somerun:
+    - name: echo 2

@@ -131,57 +131,24 @@ func TestBuilder(t *testing.T) {
 			ExpectedScripts: tasks.Scripts{},
 		},
 		{
-			YamlInput: `
-cwd:
-  cmd.run:
-    - name: echo 1
-`,
+			YamlFileName: "test2.yaml",
 			BuilderError:    errors.New("failed to build task"),
 			ExpectedErrMsg:  "failed to build task",
 			ExpectedScripts: tasks.Scripts{},
 		},
 		{
-			YamlInput: `
-cwd:
-  cmd.run:
-    - name: echo 1
-    - cwd: /usr/tmp
-  somerun:
-    - name: echo 2
-`,
+			YamlFileName: "test3.yaml",
 			TaskValidationError: errors.New("task is invalid"),
 			ExpectedErrMsg:      "task is invalid, task is invalid",
 			ExpectedScripts:     tasks.Scripts{},
 		},
 		{
-			YamlInput: `
-cwd:
-  # Name of the class and the module
-  cmd.run:
-    - names:
-						name one
-`,
-			ExpectedErrMsg:  "yaml: line 6: found character that cannot start any token",
+			YamlFileName: "test4.yaml",
+			ExpectedErrMsg:  "yaml: line 5: found character that cannot start any token",
 			ExpectedScripts: tasks.Scripts{},
 		},
 		{
-			YamlInput: `
-cwd:
-  # Name of the class and the module
-  cmd.run:
-    - names:
-        - run one
-        - run two
-        - run three
-    - require:
-        - req one
-        - req two
-        - req three
-    - onlyif:
-        - onlyif one
-        - onlyif two
-        - onlyif three
-`,
+			YamlFileName: "test5.yaml",
 			ExpectedScripts: tasks.Scripts{
 				{
 					ID: "cwd",
@@ -213,18 +180,7 @@ cwd:
 			},
 		},
 		{
-			YamlInput: `
-manyCreates:
-  # Name of the class and the module
-  cmd.run:
-    - name: many creates cmd
-    - require: require one
-    - creates:
-        - create one
-        - create two
-        - create three
-    - unless: some expected false condition
-`,
+			YamlFileName: "test6.yaml",
 			ExpectedScripts: tasks.Scripts{
 				{
 					ID: "manyCreates",
@@ -249,39 +205,51 @@ manyCreates:
 			},
 		},
 		{
-			YamlInput: `
-scriptValidation:
-  cmd.run:
-    - name: task one
-    - require: scriptValidation
-`,
+			YamlFileName: "test7.yaml",
 			ExpectedErrMsg: "task at path 'scriptValidation.cmd.run[1]' cannot require own script 'scriptValidation', " +
 				"cyclic requirements are detected: '[scriptValidation]'",
 			TaskRequirements: []string{"scriptValidation"},
 		},
 		{
-			YamlInput: `
-manyUnless:
-  cmd.run:
-    - name: expecting for one unless to be false
-    - unless:
-        - unless one
-        - unless two
-        - unless three
-`,
+			YamlFileName: "test9.go.yaml",
+			TemplateVariables: map[string]interface{}{
+				"taco_os_family": "RedHat",
+			},
 			ExpectedScripts: tasks.Scripts{
 				{
-					ID: "manyUnless",
+					ID: "template",
 					Tasks: []tasks.Task{
 						&TaskBuilderTaskMock{
 							TypeName: "cmd.run",
-							Path:     "manyUnless.cmd.run[1]",
+							Path:     "template.cmd.run[1]",
 							Context: []map[string]interface{}{
-								{tasks.NameField: "expecting for one unless to be false"},
-								{tasks.Unless: []interface{}{
-									"unless one",
-									"unless two",
-									"unless three",
+								{tasks.NameField: "yum --version"},
+								{tasks.CreatesField: []interface{}{
+									"test.txt",
+								}},
+							},
+							ValidationError: nil,
+						},
+					},
+				},
+			},
+		},
+		{
+			YamlFileName: "test9.go.yaml",
+			TemplateVariables: map[string]interface{}{
+				"taco_os_family": "Ubuntu",
+			},
+			ExpectedScripts: tasks.Scripts{
+				{
+					ID: "template",
+					Tasks: []tasks.Task{
+						&TaskBuilderTaskMock{
+							TypeName: "cmd.run",
+							Path:     "template.cmd.run[1]",
+							Context: []map[string]interface{}{
+								{tasks.NameField: "apt --version"},
+								{tasks.CreatesField: []interface{}{
+									"test.txt",
 								}},
 							},
 							ValidationError: nil,

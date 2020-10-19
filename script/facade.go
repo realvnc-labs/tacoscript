@@ -21,6 +21,7 @@ func RunScript(scriptPath string) error {
 			tasks.TaskTypeCmdRun: &tasks.CmdRunTaskBuilder{},
 			tasks.FileManaged:    &tasks.FileManagedTaskBuilder{},
 		}),
+		TemplateVariablesProvider: utils.OSDataProvider{},
 	}
 
 	execRouter := tasks.ExecutorRouter{

@@ -1,0 +1,10 @@
+{{$creates := "test.txt"}}
+template:
+  cmd.run:
+{{ if eq .taco_os_family "RedHat" }}
+    - name: yum --version
+{{ else }}
+    - name: apt --version
+{{ end }}
+    - creates:
+        - {{ $creates }}

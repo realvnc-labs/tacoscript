@@ -1,0 +1,15 @@
+cwd:
+  # Name of the class and the module
+  cmd.run:
+    - names:
+        - run one
+        - run two
+        - run three
+    - require:
+        - req one
+        - req two
+        - req three
+    - onlyif:
+        - onlyif one
+        - onlyif two
+        - onlyif three

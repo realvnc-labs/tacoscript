@@ -1,0 +1,10 @@
+manyCreates:
+  # Name of the class and the module
+  cmd.run:
+    - name: many creates cmd
+    - require: require one
+    - creates:
+        - create one
+        - create two
+        - create three
+    - unless: some expected false condition
