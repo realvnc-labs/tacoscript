@@ -3,6 +3,7 @@ module github.com/cloudradar-monitoring/tacoscript
 go 1.14
 
 require (
+	github.com/elastic/go-sysinfo v1.4.0
 	github.com/elliotchance/orderedmap v1.3.0
 	github.com/goftp/file-driver v0.0.0-20180502053751-5d604a0fc0c9
 	github.com/goftp/server v0.0.0-20200708154336-f64f7c2d8a42

@@ -3,6 +3,7 @@ package script
 import (
 	"context"
 	"errors"
+	"github.com/cloudradar-monitoring/tacoscript/utils"
 	"io/ioutil"
 	"os"
 	"testing"
@@ -74,10 +75,11 @@ func (tm *TaskBuilderTaskMock) GetRequirements() []string {
 
 type TemplateVariablesProviderMock struct {
 	Variables map[string]interface{}
+	TemplateVariablesError error
 }
 
-func (tvpm TemplateVariablesProviderMock) GetTemplateVariables() map[string]interface{} {
-	return tvpm.Variables
+func (tvpm TemplateVariablesProviderMock) GetTemplateVariables() (map[string]interface{}, error) {
+	return tvpm.Variables, tvpm.TemplateVariablesError
 }
 
 func TestBuilder(t *testing.T) {
@@ -91,6 +93,7 @@ func TestBuilder(t *testing.T) {
 		ExpectedScripts     tasks.Scripts
 		TaskRequirements    []string
 		TemplateVariables   map[string]interface{}
+		TemplateVariablesError error
 	}{
 		{
 			YamlFileName: "test1.yaml",
@@ -213,7 +216,7 @@ func TestBuilder(t *testing.T) {
 		{
 			YamlFileName: "test9.go.yaml",
 			TemplateVariables: map[string]interface{}{
-				"taco_os_family": "RedHat",
+				utils.OSFamily: "RedHat",
 			},
 			ExpectedScripts: tasks.Scripts{
 				{
@@ -237,7 +240,7 @@ func TestBuilder(t *testing.T) {
 		{
 			YamlFileName: "test9.go.yaml",
 			TemplateVariables: map[string]interface{}{
-				"taco_os_family": "Ubuntu",
+				utils.OSFamily: "Ubuntu",
 			},
 			ExpectedScripts: tasks.Scripts{
 				{
@@ -258,6 +261,20 @@ func TestBuilder(t *testing.T) {
 				},
 			},
 		},
+		{
+			TemplateVariables: map[string]interface{}{
+				utils.OSFamily: "",
+			},
+			YamlFileName: "test9.go.yaml",
+			ExpectedErrMsg:  "cannot provide template variables",
+			ExpectedScripts: tasks.Scripts{},
+			TemplateVariablesError: errors.New("cannot provide template variables"),
+		},
+		{
+			YamlFileName: "test10.go.yaml",
+			ExpectedErrMsg:  `template: goyaml:3:6: executing "goyaml" at <eq "RedHat">: error calling eq: missing argument for comparison`,
+			ExpectedScripts: tasks.Scripts{},
+		},
 	}
 
 	for _, testCase := range testCases {
@@ -275,6 +292,7 @@ func TestBuilder(t *testing.T) {
 
 		templateVariablesProviderMock := TemplateVariablesProviderMock{
 			Variables: testCase.TemplateVariables,
+			TemplateVariablesError: testCase.TemplateVariablesError,
 		}
 
 		parser := Builder{

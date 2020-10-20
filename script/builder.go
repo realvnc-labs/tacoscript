@@ -26,7 +26,7 @@ type RawDataProvider interface {
 }
 
 type TemplateVariablesProvider interface {
-	GetTemplateVariables() map[string]interface{}
+	GetTemplateVariables() (map[string]interface{}, error)
 }
 
 type Builder struct {
@@ -41,7 +41,11 @@ func (p Builder) BuildScripts() (tasks.Scripts, error) {
 		return tasks.Scripts{}, err
 	}
 
-	yamlBody, err := p.render(yamlTemplate, p.TemplateVariablesProvider.GetTemplateVariables())
+	templateVariables, err := p.TemplateVariablesProvider.GetTemplateVariables()
+	if err != nil {
+		return tasks.Scripts{}, err
+	}
+	yamlBody, err := p.render(yamlTemplate, templateVariables)
 	if err != nil {
 		return tasks.Scripts{}, err
 	}

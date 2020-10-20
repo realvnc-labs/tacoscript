@@ -1,0 +1,7 @@
+template:
+  cmd.run:
+{{ if eq "RedHat" }}
+    - name: yum --version
+{{ else }}
+    - name: apt --version
+{{ end }}
