@@ -136,6 +136,9 @@ Each script contains a collection of tasks. Each task has a unique type id which
 - [cmd.run](docs/modules/cmd/README.md)
 - [file.managed](docs/modules/file/README.md)
 
+### Templates
+See [Templates rendering](docs/general/templates/README.md)
+
 ### Known limitations
 - to use shell pipes, redirects or glob expands, please specify a `shell` parameter
 - `user` parameter will require sudo rights for tacoscript, in Windows this parameter is ignored
