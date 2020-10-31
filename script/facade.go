@@ -20,6 +20,9 @@ func RunScript(scriptPath string) error {
 		TaskBuilder: tasks.NewBuilderRouter(map[string]tasks.Builder{
 			tasks.TaskTypeCmdRun: &tasks.CmdRunTaskBuilder{},
 			tasks.FileManaged:    &tasks.FileManagedTaskBuilder{},
+			tasks.PkgInstalled:   &tasks.PkgTaskBuilder{},
+			tasks.PkgRemoved:     &tasks.PkgTaskBuilder{},
+			tasks.PkgUpgraded:    &tasks.PkgTaskBuilder{},
 		}),
 		TemplateVariablesProvider: utils.OSDataProvider{},
 	}

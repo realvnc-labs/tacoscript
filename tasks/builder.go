@@ -2,6 +2,7 @@ package tasks
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/cloudradar-monitoring/tacoscript/conv"
 )
@@ -75,4 +76,18 @@ func parseUnlessField(val interface{}, path string) (unless []string, err error)
 	}
 
 	return
+}
+
+func parseBoolField(val interface{}) bool {
+	boolStr := strings.TrimSpace(fmt.Sprint(val))
+	switch boolStr {
+	case "":
+		return false
+	case "0":
+		return false
+	case "false":
+		return false
+	default:
+		return true
+	}
 }

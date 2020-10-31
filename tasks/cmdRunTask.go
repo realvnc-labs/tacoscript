@@ -16,10 +16,9 @@ import (
 )
 
 type CmdRunTask struct {
-	Names                 []string
 	TypeName              string
 	Path                  string
-	Name                  string
+	NamedTask
 	WorkingDir            string
 	User                  string
 	Shell                 string
@@ -108,7 +107,7 @@ func (crt *CmdRunTask) GetPath() string {
 }
 
 func (crt *CmdRunTask) String() string {
-	return fmt.Sprintf("task '%s' at path '%s'", crt.TypeName, crt.GetPath())
+	return conv.ConvertSourceToJSONStrIfPossible(crt)
 }
 
 type CmdRunTaskExecutor struct {
@@ -124,9 +123,6 @@ func (crte *CmdRunTaskExecutor) Execute(ctx context.Context, task Task) Executio
 		return execRes
 	}
 
-	rawCmds := []string{cmdRunTask.Name}
-	rawCmds = append(rawCmds, cmdRunTask.Names...)
-
 	var stdoutBuf, stderrBuf bytes.Buffer
 	execCtx := &exec2.Context{
 		Ctx:          ctx,
@@ -136,7 +132,7 @@ func (crte *CmdRunTaskExecutor) Execute(ctx context.Context, task Task) Executio
 		User:         cmdRunTask.User,
 		Path:         cmdRunTask.Path,
 		Envs:         cmdRunTask.Envs,
-		Cmds:         rawCmds,
+		Cmds:         cmdRunTask.GetNames(),
 		Shell:        cmdRunTask.Shell,
 	}
 

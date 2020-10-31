@@ -78,6 +78,20 @@ type SystemRunner struct {
 	SystemAPI SystemAPI
 }
 
+type RunnerMock struct {
+	GivenExecContexts []*Context
+	ErrToReturn error
+	RunOutputCallback func(stdOutWriter, stdErrWriter io.Writer)
+}
+
+func (rm *RunnerMock) Run(execContext *Context) error{
+	rm.GivenExecContexts = append(rm.GivenExecContexts, execContext)
+	if rm.RunOutputCallback != nil {
+		rm.RunOutputCallback(execContext.StdoutWriter, execContext.StderrWriter)
+	}
+	return rm.ErrToReturn
+}
+
 func (sr SystemRunner) Run(execContext *Context) error {
 	cmds, err := sr.createCmds(execContext)
 	if err != nil {

@@ -37,7 +37,7 @@ func TestCmdRunTaskBuilder(t *testing.T) {
 			expectedTask: &CmdRunTask{
 				TypeName:   "someType",
 				Path:       "somePath",
-				Name:       "1",
+				NamedTask: NamedTask{Name: "1"},
 				WorkingDir: "somedir",
 				User:       "someuser",
 				Shell:      "someshell",
@@ -105,10 +105,10 @@ func TestCmdRunTaskBuilder(t *testing.T) {
 				Require: []string{
 					"one require field",
 				},
-				Names: []string{
+				NamedTask: NamedTask{Names: []string{
 					"name one",
 					"name two",
-				},
+				}},
 			},
 		},
 		{
@@ -137,7 +137,7 @@ func TestCmdRunTaskBuilder(t *testing.T) {
 			expectedTask: &CmdRunTask{
 				TypeName: "manyCreatesType",
 				Path:     "manyCreatesPath",
-				Name:     "many creates command",
+				NamedTask: NamedTask{Name: "many creates command"},
 				MissingFilesCondition: []string{
 					"create one",
 					"create two",
@@ -167,7 +167,7 @@ func TestCmdRunTaskBuilder(t *testing.T) {
 			expectedTask: &CmdRunTask{
 				TypeName: "oneUnlessValue",
 				Path:     "oneUnlessValuePath",
-				Name:     "one unless value",
+				NamedTask: NamedTask{Name: "one unless value"},
 				Unless: []string{
 					"unless one",
 				},
@@ -189,7 +189,7 @@ func TestCmdRunTaskBuilder(t *testing.T) {
 			expectedTask: &CmdRunTask{
 				TypeName: "manyUnlessValue",
 				Path:     "manyUnlessValuePath",
-				Name:     "many unless value",
+				NamedTask: NamedTask{Name: "many unless value"},
 				Unless: []string{
 					"Unless one",
 					"Unless two",
