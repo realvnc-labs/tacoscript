@@ -14,7 +14,7 @@ func BuildManagementCmdsProviders() ([]ManagementCmdsProvider, error) {
 	}, nil
 }
 
-type OsPackageManagerCmdProvider struct {}
+type OsPackageManagerCmdProvider struct{}
 
 func (ecb OsPackageManagerCmdProvider) GetManagementCmds(t *tasks.PkgTask) (ManagementCmds, error) {
 	rawCmds := t.GetNames()

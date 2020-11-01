@@ -74,7 +74,7 @@ func (tm *TaskBuilderTaskMock) GetRequirements() []string {
 }
 
 type TemplateVariablesProviderMock struct {
-	Variables map[string]interface{}
+	Variables              map[string]interface{}
 	TemplateVariablesError error
 }
 
@@ -84,15 +84,15 @@ func (tvpm TemplateVariablesProviderMock) GetTemplateVariables() (map[string]int
 
 func TestBuilder(t *testing.T) {
 	testCases := []struct {
-		YamlFileName        string
-		YamlInput           string
-		DataProviderErr     error
-		TaskValidationError error
-		BuilderError        error
-		ExpectedErrMsg      string
-		ExpectedScripts     tasks.Scripts
-		TaskRequirements    []string
-		TemplateVariables   map[string]interface{}
+		YamlFileName           string
+		YamlInput              string
+		DataProviderErr        error
+		TaskValidationError    error
+		BuilderError           error
+		ExpectedErrMsg         string
+		ExpectedScripts        tasks.Scripts
+		TaskRequirements       []string
+		TemplateVariables      map[string]interface{}
 		TemplateVariablesError error
 	}{
 		{
@@ -134,19 +134,19 @@ func TestBuilder(t *testing.T) {
 			ExpectedScripts: tasks.Scripts{},
 		},
 		{
-			YamlFileName: "test2.yaml",
+			YamlFileName:    "test2.yaml",
 			BuilderError:    errors.New("failed to build task"),
 			ExpectedErrMsg:  "failed to build task",
 			ExpectedScripts: tasks.Scripts{},
 		},
 		{
-			YamlFileName: "test3.yaml",
+			YamlFileName:        "test3.yaml",
 			TaskValidationError: errors.New("task is invalid"),
 			ExpectedErrMsg:      "task is invalid, task is invalid",
 			ExpectedScripts:     tasks.Scripts{},
 		},
 		{
-			YamlFileName: "test4.yaml",
+			YamlFileName:    "test4.yaml",
 			ExpectedErrMsg:  "yaml: line 5: found character that cannot start any token",
 			ExpectedScripts: tasks.Scripts{},
 		},
@@ -265,13 +265,13 @@ func TestBuilder(t *testing.T) {
 			TemplateVariables: map[string]interface{}{
 				utils.OSFamily: "",
 			},
-			YamlFileName: "test9.go.yaml",
-			ExpectedErrMsg:  "cannot provide template variables",
-			ExpectedScripts: tasks.Scripts{},
+			YamlFileName:           "test9.go.yaml",
+			ExpectedErrMsg:         "cannot provide template variables",
+			ExpectedScripts:        tasks.Scripts{},
 			TemplateVariablesError: errors.New("cannot provide template variables"),
 		},
 		{
-			YamlFileName: "test10.go.yaml",
+			YamlFileName:    "test10.go.yaml",
 			ExpectedErrMsg:  `template: goyaml:3:6: executing "goyaml" at <eq "RedHat">: error calling eq: missing argument for comparison`,
 			ExpectedScripts: tasks.Scripts{},
 		},
@@ -291,7 +291,7 @@ func TestBuilder(t *testing.T) {
 		}
 
 		templateVariablesProviderMock := TemplateVariablesProviderMock{
-			Variables: testCase.TemplateVariables,
+			Variables:              testCase.TemplateVariables,
 			TemplateVariablesError: testCase.TemplateVariablesError,
 		}
 

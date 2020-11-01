@@ -122,7 +122,7 @@ func (pm PackageTaskManager) run(ctx context.Context, t *tasks.PkgTask, rawCmds 
 	err = pm.Runner.Run(execCtx)
 
 	if err == nil {
-		logrus.Debugf("Cmds %s success",conv.ConvertSourceToJSONStrIfPossible(rawCmds))
+		logrus.Debugf("Cmds %s success", conv.ConvertSourceToJSONStrIfPossible(rawCmds))
 	}
 
 	logrus.Debugf(

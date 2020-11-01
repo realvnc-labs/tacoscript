@@ -1,12 +1,12 @@
 package tasks
 
-type NamedTask struct{
-	Name          string
-	Names         []string
+type NamedTask struct {
+	Name  string
+	Names []string
 }
 
 func (nt *NamedTask) GetNames() []string {
-	names := make([]string, 0, len(nt.Names) + 1)
+	names := make([]string, 0, len(nt.Names)+1)
 	if nt.Name != "" {
 		names = append(names, nt.Name)
 	}

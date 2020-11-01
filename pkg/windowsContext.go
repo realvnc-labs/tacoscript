@@ -8,7 +8,7 @@ import (
 	"strings"
 )
 
-type OsPackageManagerCmdProvider struct {}
+type OsPackageManagerCmdProvider struct{}
 
 func BuildManagementCmdsProviders() ([]ManagementCmdsProvider, error) {
 	return []ManagementCmdsProvider{
@@ -21,7 +21,7 @@ func (ecb OsPackageManagerCmdProvider) GetManagementCmds(t *tasks.PkgTask) (Mana
 
 	versionStr := ""
 	if t.Version != "" {
-		versionStr +=" " + t.Version
+		versionStr += " " + t.Version
 	}
 
 	return ManagementCmds{

@@ -98,9 +98,9 @@ func (fmtb PkgTaskBuilder) Build(typeName, path string, ctx []map[string]interfa
 }
 
 type PkgTask struct {
-	ActionType    PkgActionType
-	TypeName      string
-	Path          string
+	ActionType PkgActionType
+	TypeName   string
+	Path       string
 	NamedTask
 	Shell         string
 	Version       string

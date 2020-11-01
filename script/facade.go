@@ -48,17 +48,17 @@ func RunScript(scriptPath string) error {
 	execRouter := tasks.ExecutorRouter{
 		Executors: map[string]tasks.Executor{
 			tasks.TaskTypeCmdRun: &tasks.CmdRunTaskExecutor{
-				Runner: cmdRunner,
+				Runner:    cmdRunner,
 				FsManager: &utils.FsManager{},
 			},
 			tasks.FileManaged: &tasks.FileManagedTaskExecutor{
-				Runner: cmdRunner,
+				Runner:      cmdRunner,
 				FsManager:   &utils.FsManager{},
 				HashManager: &utils.HashManager{},
 			},
-			tasks.PkgInstalled:   pkgTaskExecutor,
-			tasks.PkgRemoved:     pkgTaskExecutor,
-			tasks.PkgUpgraded:    pkgTaskExecutor,
+			tasks.PkgInstalled: pkgTaskExecutor,
+			tasks.PkgRemoved:   pkgTaskExecutor,
+			tasks.PkgUpgraded:  pkgTaskExecutor,
 		},
 	}
 

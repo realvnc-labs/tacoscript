@@ -29,7 +29,7 @@ func TestTaskExecution(t *testing.T) {
 			Name: "test one name command with 2 envs",
 			Task: &CmdRunTask{
 				Path:       "somepath",
-				NamedTask: NamedTask{Name: "some test command"},
+				NamedTask:  NamedTask{Name: "some test command"},
 				WorkingDir: "/tmp/dev",
 				User:       "user",
 				Shell:      "zsh",
@@ -60,7 +60,7 @@ func TestTaskExecution(t *testing.T) {
 			Name: "test skip command if file exists",
 			Task: &CmdRunTask{
 				User:                  "some user",
-				NamedTask: NamedTask{Name: "some parser command"},
+				NamedTask:             NamedTask{Name: "some parser command"},
 				MissingFilesCondition: []string{"somefile.txt"},
 			},
 			ExpectedResult: ExecutionResult{
@@ -78,7 +78,7 @@ func TestTaskExecution(t *testing.T) {
 			Name: "test setting user failure",
 			Task: &CmdRunTask{
 				NamedTask: NamedTask{Name: "echo 12345"},
-				User: "some user",
+				User:      "some user",
 			},
 			ExpectedResult: ExecutionResult{
 				IsSkipped: false,
@@ -108,7 +108,7 @@ func TestTaskExecution(t *testing.T) {
 			Name: "execute multiple names",
 			Task: &CmdRunTask{
 				Path: "many names path",
-				NamedTask: NamedTask{Names:[]string{
+				NamedTask: NamedTask{Names: []string{
 					"many names cmd 1",
 					"many names cmd 2",
 					"many names cmd 3",
@@ -149,7 +149,7 @@ func TestTaskExecution(t *testing.T) {
 			Name: "executing one onlyif condition with success",
 			Task: &CmdRunTask{
 				NamedTask: NamedTask{Name: "cmd lala"},
-				OnlyIf: []string{"check before lala"},
+				OnlyIf:    []string{"check before lala"},
 			},
 			ExpectedResult: ExecutionResult{
 				IsSkipped: false,
@@ -165,7 +165,7 @@ func TestTaskExecution(t *testing.T) {
 			Name: "executing one onlyif condition with failure",
 			Task: &CmdRunTask{
 				NamedTask: NamedTask{Name: "cmd with OnlyIf failure"},
-				OnlyIf: []string{"check OnlyIf error"},
+				OnlyIf:    []string{"check OnlyIf error"},
 			},
 			ExpectedResult: ExecutionResult{
 				IsSkipped: true,
@@ -189,7 +189,7 @@ func TestTaskExecution(t *testing.T) {
 			Name: "executing multiple onlyif conditions with failure",
 			Task: &CmdRunTask{
 				NamedTask: NamedTask{Name: "cmd with multiple OnlyIf failure"},
-				OnlyIf: []string{"check OnlyIf success", "check OnlyIf failure"},
+				OnlyIf:    []string{"check OnlyIf success", "check OnlyIf failure"},
 			},
 			ExpectedResult: ExecutionResult{
 				IsSkipped: true,
@@ -212,7 +212,7 @@ func TestTaskExecution(t *testing.T) {
 			Name: "executing multiple onlyif conditions with success",
 			Task: &CmdRunTask{
 				NamedTask: NamedTask{Name: "cmd with multiple OnlyIf success"},
-				OnlyIf: []string{"check OnlyIf success 1", "check OnlyIf success 2"},
+				OnlyIf:    []string{"check OnlyIf success 1", "check OnlyIf success 2"},
 			},
 			ExpectedResult: ExecutionResult{
 				IsSkipped: false,
@@ -227,8 +227,8 @@ func TestTaskExecution(t *testing.T) {
 			Name: "executing onlyif validation error",
 			Task: &CmdRunTask{
 				NamedTask: NamedTask{Name: "cmd"},
-				OnlyIf: []string{"checking onlyif validation error"},
-				User:   "some user 123",
+				OnlyIf:    []string{"checking onlyif validation error"},
+				User:      "some user 123",
 			},
 			ExpectedResult: ExecutionResult{
 				IsSkipped: false,
@@ -251,7 +251,7 @@ func TestTaskExecution(t *testing.T) {
 			Name: "executing one unless condition with success",
 			Task: &CmdRunTask{
 				NamedTask: NamedTask{Name: "cmd masa"},
-				Unless: []string{"run unless masa"},
+				Unless:    []string{"run unless masa"},
 			},
 			ExpectedResult: ExecutionResult{
 				IsSkipped: false,
@@ -274,7 +274,7 @@ func TestTaskExecution(t *testing.T) {
 			Name: "executing one unless condition with failure",
 			Task: &CmdRunTask{
 				NamedTask: NamedTask{Name: "cmd with unless failure"},
-				Unless: []string{"check unless failure"},
+				Unless:    []string{"check unless failure"},
 			},
 			ExpectedResult: ExecutionResult{
 				IsSkipped: true,
@@ -289,7 +289,7 @@ func TestTaskExecution(t *testing.T) {
 			Name: "executing multiple unless conditions with all success",
 			Task: &CmdRunTask{
 				NamedTask: NamedTask{Name: "cmd with multiple unless success"},
-				Unless: []string{"check unless one", "check unless two"},
+				Unless:    []string{"check unless one", "check unless two"},
 			},
 			ExpectedResult: ExecutionResult{
 				IsSkipped: true,
@@ -304,7 +304,7 @@ func TestTaskExecution(t *testing.T) {
 			Name: "executing multiple unless conditions with at least one failure",
 			Task: &CmdRunTask{
 				NamedTask: NamedTask{Name: "cmd with multiple unless with at least one failure"},
-				Unless: []string{"check unless 1", "check unless 2"},
+				Unless:    []string{"check unless 1", "check unless 2"},
 			},
 			ExpectedResult: ExecutionResult{
 				IsSkipped: false,
@@ -326,9 +326,9 @@ func TestTaskExecution(t *testing.T) {
 		{
 			Name: "executing unless validation error",
 			Task: &CmdRunTask{
-				Unless: []string{"checking unless validation error"},
+				Unless:    []string{"checking unless validation error"},
 				NamedTask: NamedTask{Name: "executing unless validation error"},
-				User:   "some user 345",
+				User:      "some user 345",
 			},
 			RunnerMock: &appExec.SystemRunner{SystemAPI: &appExec.SystemAPIMock{
 				Cmds:               []*exec.Cmd{},

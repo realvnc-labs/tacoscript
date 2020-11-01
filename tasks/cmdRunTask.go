@@ -16,8 +16,8 @@ import (
 )
 
 type CmdRunTask struct {
-	TypeName              string
-	Path                  string
+	TypeName string
+	Path     string
 	NamedTask
 	WorkingDir            string
 	User                  string
