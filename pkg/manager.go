@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"fmt"
+
 	"github.com/cloudradar-monitoring/tacoscript/conv"
 	"github.com/cloudradar-monitoring/tacoscript/exec"
 	"github.com/cloudradar-monitoring/tacoscript/tasks"
@@ -19,7 +20,7 @@ type ManagementCmds struct {
 }
 
 type ManagementCmdsProvider interface {
-	GetManagementCmds(t *tasks.PkgTask) (ManagementCmds, error)
+	GetManagementCmds(t *tasks.PkgTask) (*ManagementCmds, error)
 }
 
 type PackageTaskManager struct {
@@ -33,7 +34,7 @@ func (pm PackageTaskManager) ExecuteTask(ctx context.Context, t *tasks.PkgTask) 
 		return
 	}
 
-	var managementCmds ManagementCmds
+	var managementCmds *ManagementCmds
 	for _, managementCmdProvider := range pm.PackageManagerCmdProviders {
 		managementCmds, err = managementCmdProvider.GetManagementCmds(t)
 		if err != nil {
@@ -73,7 +74,7 @@ func (pm PackageTaskManager) ExecuteTask(ctx context.Context, t *tasks.PkgTask) 
 	}
 }
 
-func (pm PackageTaskManager) installPackages(ctx context.Context, t *tasks.PkgTask, mngtCmds ManagementCmds) (output string, err error) {
+func (pm PackageTaskManager) installPackages(ctx context.Context, t *tasks.PkgTask, mngtCmds *ManagementCmds) (output string, err error) {
 	logrus.Debugf("will install packages by executing %s", conv.ConvertSourceToJSONStrIfPossible(mngtCmds.InstallCmds))
 
 	output, err = pm.run(ctx, t, mngtCmds.InstallCmds...)
@@ -81,7 +82,7 @@ func (pm PackageTaskManager) installPackages(ctx context.Context, t *tasks.PkgTa
 	return
 }
 
-func (pm PackageTaskManager) uninstallPackages(ctx context.Context, t *tasks.PkgTask, mngtCmds ManagementCmds) (output string, err error) {
+func (pm PackageTaskManager) uninstallPackages(ctx context.Context, t *tasks.PkgTask, mngtCmds *ManagementCmds) (output string, err error) {
 	logrus.Debugf("will uninstall packages by executing %s", conv.ConvertSourceToJSONStrIfPossible(mngtCmds.UninstallCmds))
 
 	output, err = pm.run(ctx, t, mngtCmds.UninstallCmds...)
@@ -89,7 +90,7 @@ func (pm PackageTaskManager) uninstallPackages(ctx context.Context, t *tasks.Pkg
 	return
 }
 
-func (pm PackageTaskManager) updatePackages(ctx context.Context, t *tasks.PkgTask, mngtCmds ManagementCmds) (output string, err error) {
+func (pm PackageTaskManager) updatePackages(ctx context.Context, t *tasks.PkgTask, mngtCmds *ManagementCmds) (output string, err error) {
 	logrus.Debugf("will upgrade packages by executing %s", conv.ConvertSourceToJSONStrIfPossible(mngtCmds.UpgradeCmds))
 
 	output, err = pm.run(ctx, t, mngtCmds.UpgradeCmds...)
@@ -97,7 +98,11 @@ func (pm PackageTaskManager) updatePackages(ctx context.Context, t *tasks.PkgTas
 	return
 }
 
-func (pm PackageTaskManager) updatePkgManagerIfNeeded(ctx context.Context, t *tasks.PkgTask, mngtCmds ManagementCmds) (output string, err error) {
+func (pm PackageTaskManager) updatePkgManagerIfNeeded(
+	ctx context.Context,
+	t *tasks.PkgTask,
+	mngtCmds *ManagementCmds,
+) (output string, err error) {
 	if !t.ShouldRefresh {
 		return
 	}

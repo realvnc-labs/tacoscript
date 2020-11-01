@@ -4,8 +4,9 @@ import (
 	"bytes"
 	"context"
 	"fmt"
-	"github.com/cloudradar-monitoring/tacoscript/conv"
 	"time"
+
+	"github.com/cloudradar-monitoring/tacoscript/conv"
 
 	exec2 "github.com/cloudradar-monitoring/tacoscript/exec"
 
@@ -246,7 +247,9 @@ func (pte *PkgTaskExecutor) shouldBeExecuted(
 
 func (pte *PkgTaskExecutor) checkUnless(ctx *exec2.Context, pkgTask *PkgTask) (isExpectationSuccess bool, err error) {
 	if len(pkgTask.Unless) == 0 {
-		return true, nil
+		isExpectationSuccess = true
+		err = nil
+		return
 	}
 
 	newCtx := ctx.Copy()

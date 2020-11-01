@@ -3,10 +3,11 @@ package script
 import (
 	"context"
 	"errors"
-	"github.com/cloudradar-monitoring/tacoscript/utils"
 	"io/ioutil"
 	"os"
 	"testing"
+
+	"github.com/cloudradar-monitoring/tacoscript/utils"
 
 	"github.com/cloudradar-monitoring/tacoscript/tasks"
 

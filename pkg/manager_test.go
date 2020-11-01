@@ -4,19 +4,20 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"github.com/cloudradar-monitoring/tacoscript/exec"
-	"github.com/cloudradar-monitoring/tacoscript/tasks"
-	"github.com/stretchr/testify/assert"
 	"io"
 	"strings"
 	"testing"
+
+	"github.com/cloudradar-monitoring/tacoscript/exec"
+	"github.com/cloudradar-monitoring/tacoscript/tasks"
+	"github.com/stretchr/testify/assert"
 )
 
 type MockedOsPackageManagerCmdProvider struct {
 	ErrToGive error
 }
 
-func (ecb MockedOsPackageManagerCmdProvider) GetManagementCmds(t *tasks.PkgTask) (ManagementCmds, error) {
+func (ecb MockedOsPackageManagerCmdProvider) GetManagementCmds(t *tasks.PkgTask) (*ManagementCmds, error) {
 	rawCmds := t.GetNames()
 
 	versionStr := ""
@@ -24,7 +25,7 @@ func (ecb MockedOsPackageManagerCmdProvider) GetManagementCmds(t *tasks.PkgTask)
 		versionStr = "--version " + t.Version + " "
 	}
 
-	return ManagementCmds{
+	return &ManagementCmds{
 		VersionCmd:    "mpmb --version",
 		UpgradeCmd:    "mpmb upgrade",
 		InstallCmds:   []string{fmt.Sprintf("mpmb install %s%s", versionStr, strings.Join(rawCmds, " "))},

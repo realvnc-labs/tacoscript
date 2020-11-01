@@ -4,8 +4,9 @@ package pkg
 
 import (
 	"fmt"
-	"github.com/cloudradar-monitoring/tacoscript/tasks"
 	"strings"
+
+	"github.com/cloudradar-monitoring/tacoscript/tasks"
 )
 
 type OsPackageManagerCmdProvider struct{}
@@ -16,7 +17,7 @@ func BuildManagementCmdsProviders() ([]ManagementCmdsProvider, error) {
 	}, nil
 }
 
-func (ecb OsPackageManagerCmdProvider) GetManagementCmds(t *tasks.PkgTask) (ManagementCmds, error) {
+func (ecb OsPackageManagerCmdProvider) GetManagementCmds(t *tasks.PkgTask) (*ManagementCmds, error) {
 	rawCmds := t.GetNames()
 
 	versionStr := ""
@@ -24,7 +25,7 @@ func (ecb OsPackageManagerCmdProvider) GetManagementCmds(t *tasks.PkgTask) (Mana
 		versionStr += " " + t.Version
 	}
 
-	return ManagementCmds{
+	return &ManagementCmds{
 		VersionCmd:    "choco --version",
 		UpgradeCmd:    "choco upgrade -y chocolatey",
 		InstallCmds:   []string{fmt.Sprintf("choco install -y %s%s", strings.Join(rawCmds, " "), versionStr)},

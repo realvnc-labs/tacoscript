@@ -4,11 +4,12 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	appExec "github.com/cloudradar-monitoring/tacoscript/exec"
-	"github.com/stretchr/testify/assert"
 	"os/exec"
 	"strings"
 	"testing"
+
+	appExec "github.com/cloudradar-monitoring/tacoscript/exec"
+	"github.com/stretchr/testify/assert"
 )
 
 type PackageManagerMock struct {

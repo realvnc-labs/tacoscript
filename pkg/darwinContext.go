@@ -4,8 +4,9 @@ package pkg
 
 import (
 	"fmt"
-	"github.com/cloudradar-monitoring/tacoscript/tasks"
 	"strings"
+
+	"github.com/cloudradar-monitoring/tacoscript/tasks"
 )
 
 func BuildManagementCmdsProviders() ([]ManagementCmdsProvider, error) {
@@ -16,7 +17,7 @@ func BuildManagementCmdsProviders() ([]ManagementCmdsProvider, error) {
 
 type OsPackageManagerCmdProvider struct{}
 
-func (ecb OsPackageManagerCmdProvider) GetManagementCmds(t *tasks.PkgTask) (ManagementCmds, error) {
+func (ecb OsPackageManagerCmdProvider) GetManagementCmds(t *tasks.PkgTask) (*ManagementCmds, error) {
 	rawCmds := t.GetNames()
 	rawInstallCmds := make([]string, 0, len(rawCmds))
 	if t.Version != "" {
@@ -28,7 +29,7 @@ func (ecb OsPackageManagerCmdProvider) GetManagementCmds(t *tasks.PkgTask) (Mana
 		rawInstallCmds = rawCmds
 	}
 
-	return ManagementCmds{
+	return &ManagementCmds{
 		VersionCmd:    "brew --version",
 		UpgradeCmd:    "brew update",
 		InstallCmds:   []string{fmt.Sprintf("brew install %s", strings.Join(rawInstallCmds, " "))},

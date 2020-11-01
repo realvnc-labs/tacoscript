@@ -113,6 +113,7 @@ issues:
         - gomnd
         - funlen
         - gocyclo
+        - dupl
 run:
   skip-dirs:
 

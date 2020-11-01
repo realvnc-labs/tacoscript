@@ -4,10 +4,11 @@ package pkg
 
 import (
 	"fmt"
+	"strings"
+
 	"github.com/cloudradar-monitoring/tacoscript/tasks"
 	"github.com/cloudradar-monitoring/tacoscript/utils"
 	"github.com/sirupsen/logrus"
-	"strings"
 )
 
 var osPlatform string
@@ -48,11 +49,11 @@ func BuildManagementCmdsProviders() ([]ManagementCmdsProvider, error) {
 
 type AptCmdsProvider struct{}
 
-func (ecb AptCmdsProvider) GetManagementCmds(t *tasks.PkgTask) (ManagementCmds, error) {
+func (ecb AptCmdsProvider) GetManagementCmds(t *tasks.PkgTask) (*ManagementCmds, error) {
 	rawCmds := t.GetNames()
 	rawInstallCmds := buildInstallCmds(rawCmds, t.Version)
 
-	return ManagementCmds{
+	return &ManagementCmds{
 		VersionCmd:    "apt --version",
 		UpgradeCmd:    "apt update",
 		InstallCmds:   []string{fmt.Sprintf("apt install -y %s", strings.Join(rawInstallCmds, " "))},
@@ -63,11 +64,11 @@ func (ecb AptCmdsProvider) GetManagementCmds(t *tasks.PkgTask) (ManagementCmds, 
 
 type AptGetCmdsProvider struct{}
 
-func (ecb AptGetCmdsProvider) GetManagementCmds(t *tasks.PkgTask) (ManagementCmds, error) {
+func (ecb AptGetCmdsProvider) GetManagementCmds(t *tasks.PkgTask) (*ManagementCmds, error) {
 	rawCmds := t.GetNames()
 	rawInstallCmds := buildInstallCmds(rawCmds, t.Version)
 
-	return ManagementCmds{
+	return &ManagementCmds{
 		VersionCmd:    "apt-get --version",
 		UpgradeCmd:    "apt-get update",
 		InstallCmds:   []string{fmt.Sprintf("apt-get install -y %s", strings.Join(rawInstallCmds, " "))},
@@ -78,11 +79,11 @@ func (ecb AptGetCmdsProvider) GetManagementCmds(t *tasks.PkgTask) (ManagementCmd
 
 type YumCmdsProvider struct{}
 
-func (ecb YumCmdsProvider) GetManagementCmds(t *tasks.PkgTask) (ManagementCmds, error) {
+func (ecb YumCmdsProvider) GetManagementCmds(t *tasks.PkgTask) (*ManagementCmds, error) {
 	rawCmds := t.GetNames()
 	rawInstallCmds := buildInstallCmds(rawCmds, t.Version)
 
-	return ManagementCmds{
+	return &ManagementCmds{
 		VersionCmd:    "yum --version",
 		UpgradeCmd:    "yum update -y",
 		InstallCmds:   []string{fmt.Sprintf("yum install -y %s", strings.Join(rawInstallCmds, " "))},
@@ -93,11 +94,11 @@ func (ecb YumCmdsProvider) GetManagementCmds(t *tasks.PkgTask) (ManagementCmds, 
 
 type DnfCmdsProvider struct{}
 
-func (ecb DnfCmdsProvider) GetManagementCmds(t *tasks.PkgTask) (ManagementCmds, error) {
+func (ecb DnfCmdsProvider) GetManagementCmds(t *tasks.PkgTask) (*ManagementCmds, error) {
 	rawCmds := t.GetNames()
 	rawInstallCmds := buildInstallCmds(rawCmds, t.Version)
 
-	return ManagementCmds{
+	return &ManagementCmds{
 		VersionCmd:    "dnf --version",
 		UpgradeCmd:    "dnf update -y",
 		InstallCmds:   []string{fmt.Sprintf("dnf install -y %s", strings.Join(rawInstallCmds, " "))},

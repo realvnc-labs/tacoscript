@@ -1,8 +1,9 @@
 package tasks
 
 import (
-	"github.com/stretchr/testify/assert"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 func TestPkgTaskBuilder(t *testing.T) {

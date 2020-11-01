@@ -2,6 +2,7 @@ package script
 
 import (
 	"context"
+
 	"github.com/cloudradar-monitoring/tacoscript/pkg"
 	"github.com/sirupsen/logrus"
 
