@@ -10,39 +10,62 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
-type PackageManagerCmdBuilder interface {
-	GetPkgManagerVersionCmd() string
-	GetUpdateCmd(t *tasks.PkgTask) string
-	GetInstallCmdForPackages(t *tasks.PkgTask) []string
-	GetUninstallCmdForPackages(t *tasks.PkgTask) []string
-	GetUpdateCmdForPackages(t *tasks.PkgTask) []string
+type ManagementCmds struct {
+	VersionCmd    string
+	UpgradeCmd    string
+	InstallCmds   []string
+	UninstallCmds []string
+	UpgradeCmds   []string
+}
+
+type ManagementCmdsProvider interface {
+	GetManagementCmds(t *tasks.PkgTask) (ManagementCmds, error)
 }
 
 type PackageTaskManager struct {
-	Runner                   exec.Runner
-	PackageManagerCmdBuilder PackageManagerCmdBuilder
+	Runner                     exec.Runner
+	PackageManagerCmdProviders []ManagementCmdsProvider
 }
 
 func (pm PackageTaskManager) ExecuteTask(ctx context.Context, t *tasks.PkgTask) (output string, err error) {
-	output, err = pm.checkIfPkgManagerExists(ctx, t)
+	if len(pm.PackageManagerCmdProviders) == 0 {
+		err = fmt.Errorf("no package manager providers for the current OS ")
+		return
+	}
+
+	var managementCmds ManagementCmds
+	for _, managementCmdProvider := range pm.PackageManagerCmdProviders {
+		managementCmds, err = managementCmdProvider.GetManagementCmds(t)
+		if err != nil {
+			return "", err
+		}
+
+		logrus.Debugf("will execute version command %s to check if package manager is installed", managementCmds.VersionCmd)
+
+		output, err = pm.run(ctx, t, managementCmds.VersionCmd)
+		if err == nil {
+			logrus.Debugf("version command success: %s, will use it for further package management", managementCmds.VersionCmd)
+			break
+		}
+	}
 	if err != nil {
 		return
 	}
 
-	output, err = pm.updatePkgManagerIfNeeded(ctx, t)
+	output, err = pm.updatePkgManagerIfNeeded(ctx, t, managementCmds)
 	if err != nil {
 		return
 	}
 
 	switch t.ActionType {
 	case tasks.ActionInstall:
-		output, err = pm.installPackages(ctx, t)
+		output, err = pm.installPackages(ctx, t, managementCmds)
 		return
 	case tasks.ActionUninstall:
-		output, err = pm.uninstallPackages(ctx, t)
+		output, err = pm.uninstallPackages(ctx, t, managementCmds)
 		return
 	case tasks.ActionUpdate:
-		output, err = pm.updatePackages(ctx, t)
+		output, err = pm.updatePackages(ctx, t, managementCmds)
 		return
 	default:
 		err = fmt.Errorf("unknown action type '%v' for task %s", t.ActionType, t.TypeName)
@@ -50,54 +73,37 @@ func (pm PackageTaskManager) ExecuteTask(ctx context.Context, t *tasks.PkgTask) 
 	}
 }
 
-func (pm PackageTaskManager) installPackages(ctx context.Context, t *tasks.PkgTask) (output string, err error) {
-	rawCmds := pm.PackageManagerCmdBuilder.GetInstallCmdForPackages(t)
+func (pm PackageTaskManager) installPackages(ctx context.Context, t *tasks.PkgTask, mngtCmds ManagementCmds) (output string, err error) {
+	logrus.Debugf("will install packages by executing %s", conv.ConvertSourceToJSONStrIfPossible(mngtCmds.InstallCmds))
 
-	logrus.Debugf("will install packages by executing %s", conv.ConvertSourceToJSONStrIfPossible(rawCmds))
-
-	output, err = pm.run(ctx, t, rawCmds...)
+	output, err = pm.run(ctx, t, mngtCmds.InstallCmds...)
 
 	return
 }
 
-func (pm PackageTaskManager) uninstallPackages(ctx context.Context, t *tasks.PkgTask) (output string, err error) {
-	rawCmds := pm.PackageManagerCmdBuilder.GetUninstallCmdForPackages(t)
+func (pm PackageTaskManager) uninstallPackages(ctx context.Context, t *tasks.PkgTask, mngtCmds ManagementCmds) (output string, err error) {
+	logrus.Debugf("will uninstall packages by executing %s", conv.ConvertSourceToJSONStrIfPossible(mngtCmds.UninstallCmds))
 
-	logrus.Debugf("will uninstall packages by executing %s", conv.ConvertSourceToJSONStrIfPossible(rawCmds))
-
-	output, err = pm.run(ctx, t, rawCmds...)
+	output, err = pm.run(ctx, t, mngtCmds.UninstallCmds...)
 
 	return
 }
 
-func (pm PackageTaskManager) updatePackages(ctx context.Context, t *tasks.PkgTask) (output string, err error) {
-	rawCmds := pm.PackageManagerCmdBuilder.GetUpdateCmdForPackages(t)
+func (pm PackageTaskManager) updatePackages(ctx context.Context, t *tasks.PkgTask, mngtCmds ManagementCmds) (output string, err error) {
+	logrus.Debugf("will upgrade packages by executing %s", conv.ConvertSourceToJSONStrIfPossible(mngtCmds.UpgradeCmds))
 
-	logrus.Debugf("will update packages by executing %s", conv.ConvertSourceToJSONStrIfPossible(rawCmds))
-
-	output, err = pm.run(ctx, t, rawCmds...)
+	output, err = pm.run(ctx, t, mngtCmds.UpgradeCmds...)
 
 	return
 }
 
-func (pm PackageTaskManager) checkIfPkgManagerExists(ctx context.Context, t *tasks.PkgTask) (output string, err error) {
-	versionCmd := pm.PackageManagerCmdBuilder.GetPkgManagerVersionCmd()
-
-	logrus.Debugf("will execute version command %s to check if package manager is installed", versionCmd)
-
-	output, err = pm.run(ctx, t, versionCmd)
-
-	return
-}
-
-func (pm PackageTaskManager) updatePkgManagerIfNeeded(ctx context.Context, t *tasks.PkgTask) (output string, err error) {
+func (pm PackageTaskManager) updatePkgManagerIfNeeded(ctx context.Context, t *tasks.PkgTask, mngtCmds ManagementCmds) (output string, err error) {
 	if !t.ShouldRefresh {
 		return
 	}
 
-	pkgUpdateCmd := pm.PackageManagerCmdBuilder.GetUpdateCmd(t)
-	logrus.Debugf("will update package manager: %s", pkgUpdateCmd)
-	output, err = pm.run(ctx, t, pkgUpdateCmd)
+	logrus.Debugf("will update package manager: %s", mngtCmds.UpgradeCmd)
+	output, err = pm.run(ctx, t, mngtCmds.UpgradeCmd)
 
 	return
 }

@@ -12,48 +12,36 @@ import (
 	"testing"
 )
 
-type MockedPackageManagerCmdBuilder struct {
+type MockedOsPackageManagerCmdProvider struct {
+	ErrToGive error
 }
 
-func (mpmb *MockedPackageManagerCmdBuilder) GetPkgManagerVersionCmd() string {
-	return "mpmb --version"
-}
-
-func (mpmb *MockedPackageManagerCmdBuilder) GetUpdateCmd(t *tasks.PkgTask) string {
-	return "mpmb upgrade"
-}
-
-func (mpmb *MockedPackageManagerCmdBuilder) GetInstallCmdForPackages(t *tasks.PkgTask) []string {
+func (ecb MockedOsPackageManagerCmdProvider) GetManagementCmds(t *tasks.PkgTask) (ManagementCmds, error) {
 	rawCmds := t.GetNames()
 
 	versionStr := ""
-	if t.Version != ""{
+	if t.Version != "" {
 		versionStr = "--version " + t.Version + " "
 	}
 
-	return []string{fmt.Sprintf("mpmb install %s%s", versionStr, strings.Join(rawCmds, " "))}
-}
-
-func (mpmb *MockedPackageManagerCmdBuilder) GetUninstallCmdForPackages(t *tasks.PkgTask) []string {
-	rawCmds := t.GetNames()
-
-	return []string{fmt.Sprintf("mpmb uninstall %s", strings.Join(rawCmds, " "))}
-}
-
-func (mpmb *MockedPackageManagerCmdBuilder) GetUpdateCmdForPackages(t *tasks.PkgTask) []string {
-	rawCmds := t.GetNames()
-
-	return []string{fmt.Sprintf("mpmb update %s", strings.Join(rawCmds, " "))}
+	return ManagementCmds{
+		VersionCmd:    "mpmb --version",
+		UpgradeCmd:    "mpmb upgrade",
+		InstallCmds:   []string{fmt.Sprintf("mpmb install %s%s", versionStr, strings.Join(rawCmds, " "))},
+		UninstallCmds: []string{fmt.Sprintf("mpmb uninstall %s", strings.Join(rawCmds, " "))},
+		UpgradeCmds:   []string{fmt.Sprintf("mpmb update %s", strings.Join(rawCmds, " "))},
+	}, ecb.ErrToGive
 }
 
 func TestTaskExecution(t *testing.T) {
 	testCases := []struct {
-		Runner *exec.RunnerMock
-		Task *tasks.PkgTask
-		Name string
-		ExpectedCmds []string
-		ExpectedOutput string
-		ExpectedErrStr string
+		Runner           *exec.RunnerMock
+		Task             *tasks.PkgTask
+		Name             string
+		CmdBuildErrorStr string
+		ExpectedCmds     []string
+		ExpectedOutput   string
+		ExpectedErrStr   string
 	}{
 		{
 			Name: "single_name_install_success",
@@ -66,12 +54,12 @@ func TestTaskExecution(t *testing.T) {
 			},
 			Task: &tasks.PkgTask{
 				ActionType: tasks.ActionInstall,
-				NamedTask: tasks.NamedTask{Name: "vim"},
-				Path: "somePath",
-				Shell: "sh",
+				NamedTask:  tasks.NamedTask{Name: "vim"},
+				Path:       "somePath",
+				Shell:      "sh",
 			},
 			ExpectedOutput: "some stdout",
-			ExpectedCmds: []string{"mpmb --version", "mpmb install vim"},
+			ExpectedCmds:   []string{"mpmb --version", "mpmb install vim"},
 		},
 		{
 			Name: "single_name_install_version_success",
@@ -84,11 +72,11 @@ func TestTaskExecution(t *testing.T) {
 			},
 			Task: &tasks.PkgTask{
 				ActionType: tasks.ActionInstall,
-				NamedTask: tasks.NamedTask{Name: "vim"},
-				Version: "1.1.0",
+				NamedTask:  tasks.NamedTask{Name: "vim"},
+				Version:    "1.1.0",
 			},
 			ExpectedOutput: "some stderr",
-			ExpectedCmds: []string{"mpmb --version", "mpmb install --version 1.1.0 vim"},
+			ExpectedCmds:   []string{"mpmb --version", "mpmb install --version 1.1.0 vim"},
 		},
 		{
 			Name: "multiple_name_install_success",
@@ -97,7 +85,7 @@ func TestTaskExecution(t *testing.T) {
 			},
 			Task: &tasks.PkgTask{
 				ActionType: tasks.ActionInstall,
-				NamedTask: tasks.NamedTask{Names: []string{"vim", "nano"}},
+				NamedTask:  tasks.NamedTask{Names: []string{"vim", "nano"}},
 			},
 			ExpectedCmds: []string{"mpmb --version", "mpmb install vim nano"},
 		},
@@ -108,7 +96,7 @@ func TestTaskExecution(t *testing.T) {
 			},
 			Task: &tasks.PkgTask{
 				ActionType: tasks.ActionUninstall,
-				NamedTask: tasks.NamedTask{Names: []string{"vim", "nano"}, Name: "mc"},
+				NamedTask:  tasks.NamedTask{Names: []string{"vim", "nano"}, Name: "mc"},
 			},
 			ExpectedCmds: []string{"mpmb --version", "mpmb uninstall mc vim nano"},
 		},
@@ -119,7 +107,7 @@ func TestTaskExecution(t *testing.T) {
 			},
 			Task: &tasks.PkgTask{
 				ActionType: tasks.ActionUpdate,
-				NamedTask: tasks.NamedTask{Names: []string{"vim", "nano"}},
+				NamedTask:  tasks.NamedTask{Names: []string{"vim", "nano"}},
 			},
 			ExpectedCmds: []string{"mpmb --version", "mpmb update vim nano"},
 		},
@@ -127,13 +115,13 @@ func TestTaskExecution(t *testing.T) {
 			Name: "non_existing_pkg_manager",
 			Runner: &exec.RunnerMock{
 				GivenExecContexts: []*exec.Context{},
-				ErrToReturn: errors.New("non existing pkg manager"),
+				ErrToReturn:       errors.New("non existing pkg manager"),
 			},
 			Task: &tasks.PkgTask{
 				ActionType: tasks.ActionInstall,
-				NamedTask: tasks.NamedTask{Names: []string{"vim", "nano"}},
+				NamedTask:  tasks.NamedTask{Names: []string{"vim", "nano"}},
 			},
-			ExpectedCmds: []string{"mpmb --version"},
+			ExpectedCmds:   []string{"mpmb --version"},
 			ExpectedErrStr: "non existing pkg manager",
 		},
 		{
@@ -143,8 +131,8 @@ func TestTaskExecution(t *testing.T) {
 			},
 			Task: &tasks.PkgTask{
 				ShouldRefresh: true,
-				ActionType: tasks.ActionUpdate,
-				NamedTask: tasks.NamedTask{Names: []string{"vim", "nano"}},
+				ActionType:    tasks.ActionUpdate,
+				NamedTask:     tasks.NamedTask{Names: []string{"vim", "nano"}},
 			},
 			ExpectedCmds: []string{"mpmb --version", "mpmb upgrade", "mpmb update vim nano"},
 		},
@@ -154,20 +142,41 @@ func TestTaskExecution(t *testing.T) {
 				GivenExecContexts: []*exec.Context{},
 			},
 			Task: &tasks.PkgTask{
-				TypeName: "some uknown type name",
+				TypeName:   "some uknown type name",
 				ActionType: 0,
 			},
 			ExpectedErrStr: "unknown action type '0' for task some uknown type name",
-			ExpectedCmds: []string{"mpmb --version"},
+			ExpectedCmds:   []string{"mpmb --version"},
+		},
+		{
+			Name: "build_cmd_error",
+			Runner: &exec.RunnerMock{
+				GivenExecContexts: []*exec.Context{},
+			},
+			Task: &tasks.PkgTask{
+				TypeName:   "some uknown type name",
+				ActionType: tasks.ActionInstall,
+			},
+			CmdBuildErrorStr: "cannot build command",
+			ExpectedErrStr:   "cannot build command",
+			ExpectedCmds:     []string{},
 		},
 	}
 
-	for _, testCase := range testCases{
+	for _, testCase := range testCases {
 		tc := testCase
 		t.Run(tc.Name, func(tt *testing.T) {
+			var cmdBuildError error
+			if tc.CmdBuildErrorStr != "" {
+				cmdBuildError = errors.New(tc.CmdBuildErrorStr)
+			}
 			mngr := PackageTaskManager{
 				Runner: tc.Runner,
-				PackageManagerCmdBuilder: &MockedPackageManagerCmdBuilder{},
+				PackageManagerCmdProviders: []ManagementCmdsProvider{
+					&MockedOsPackageManagerCmdProvider{
+						ErrToGive: cmdBuildError,
+					},
+				},
 			}
 
 			output, err := mngr.ExecuteTask(context.Background(), tc.Task)
