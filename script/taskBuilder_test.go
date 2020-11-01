@@ -109,6 +109,7 @@ Funny file
 			TaskBuilder: tasks.NewBuilderRouter(map[string]tasks.Builder{
 				tasks.FileManaged: tasks.FileManagedTaskBuilder{},
 			}),
+			TemplateVariablesProvider: TemplateVariablesProviderMock{},
 		}
 
 		scripts, err := parser.BuildScripts()
