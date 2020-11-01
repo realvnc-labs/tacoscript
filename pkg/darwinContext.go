@@ -24,6 +24,8 @@ func (ecb OsPackageManagerCmdProvider) GetManagementCmds(t *tasks.PkgTask) (Mana
 			rawInstallCmd := fmt.Sprintf("%s@%s", rawCmd, t.Version)
 			rawInstallCmds = append(rawInstallCmds, rawInstallCmd)
 		}
+	} else {
+		rawInstallCmds = rawCmds
 	}
 
 	return ManagementCmds{

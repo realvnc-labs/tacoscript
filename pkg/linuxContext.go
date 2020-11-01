@@ -50,13 +50,7 @@ type AptCmdsProvider struct{}
 
 func (ecb AptCmdsProvider) GetManagementCmds(t *tasks.PkgTask) (ManagementCmds, error) {
 	rawCmds := t.GetNames()
-	rawInstallCmds := make([]string, 0, len(rawCmds))
-	if t.Version != "" {
-		for _, rawCmd := range rawCmds {
-			rawInstallCmd := fmt.Sprintf("%s=%s", rawCmd, t.Version)
-			rawInstallCmds = append(rawInstallCmds, rawInstallCmd)
-		}
-	}
+	rawInstallCmds := buildInstallCmds(rawCmds, t.Version)
 
 	return ManagementCmds{
 		VersionCmd:    "apt --version",
@@ -71,13 +65,7 @@ type AptGetCmdsProvider struct{}
 
 func (ecb AptGetCmdsProvider) GetManagementCmds(t *tasks.PkgTask) (ManagementCmds, error) {
 	rawCmds := t.GetNames()
-	rawInstallCmds := make([]string, 0, len(rawCmds))
-	if t.Version != "" {
-		for _, rawCmd := range rawCmds {
-			rawInstallCmd := fmt.Sprintf("%s=%s", rawCmd, t.Version)
-			rawInstallCmds = append(rawInstallCmds, rawInstallCmd)
-		}
-	}
+	rawInstallCmds := buildInstallCmds(rawCmds, t.Version)
 
 	return ManagementCmds{
 		VersionCmd:    "apt-get --version",
@@ -92,13 +80,7 @@ type YumCmdsProvider struct{}
 
 func (ecb YumCmdsProvider) GetManagementCmds(t *tasks.PkgTask) (ManagementCmds, error) {
 	rawCmds := t.GetNames()
-	rawInstallCmds := make([]string, 0, len(rawCmds))
-	if t.Version != "" {
-		for _, rawCmd := range rawCmds {
-			rawInstallCmd := fmt.Sprintf("%s-%s", rawCmd, t.Version)
-			rawInstallCmds = append(rawInstallCmds, rawInstallCmd)
-		}
-	}
+	rawInstallCmds := buildInstallCmds(rawCmds, t.Version)
 
 	return ManagementCmds{
 		VersionCmd:    "yum --version",
@@ -113,13 +95,7 @@ type DnfCmdsProvider struct{}
 
 func (ecb DnfCmdsProvider) GetManagementCmds(t *tasks.PkgTask) (ManagementCmds, error) {
 	rawCmds := t.GetNames()
-	rawInstallCmds := make([]string, 0, len(rawCmds))
-	if t.Version != "" {
-		for _, rawCmd := range rawCmds {
-			rawInstallCmd := fmt.Sprintf("%s-%s", rawCmd, t.Version)
-			rawInstallCmds = append(rawInstallCmds, rawInstallCmd)
-		}
-	}
+	rawInstallCmds := buildInstallCmds(rawCmds, t.Version)
 
 	return ManagementCmds{
 		VersionCmd:    "dnf --version",
@@ -128,4 +104,17 @@ func (ecb DnfCmdsProvider) GetManagementCmds(t *tasks.PkgTask) (ManagementCmds, 
 		UninstallCmds: []string{fmt.Sprintf("dnf remove -y %s", strings.Join(rawCmds, " "))},
 		UpgradeCmds:   []string{fmt.Sprintf("dnf upgrade -y %s", strings.Join(rawCmds, " "))},
 	}, nil
+}
+
+func buildInstallCmds(rawCmds []string, version string) []string {
+	rawInstallCmds := make([]string, 0, len(rawCmds))
+	if version == "" {
+		return rawCmds
+	}
+	for _, rawCmd := range rawCmds {
+		rawInstallCmd := fmt.Sprintf("%s-%s", rawCmd, version)
+		rawInstallCmds = append(rawInstallCmds, rawInstallCmd)
+	}
+
+	return rawInstallCmds
 }
