@@ -135,6 +135,9 @@ Each script contains a collection of tasks. Each task has a unique type id which
 
 - [cmd.run](docs/modules/cmd/README.md)
 - [file.managed](docs/modules/file/README.md)
+- [pkg.installed](docs/modules/pkg/README.md#pkg.installed)
+- [pkg.uptodate](docs/modules/pkg/README.md#pkg.uptodate)
+- [pkg.removed](docs/modules/pkg/README.md#pkg.removed)
 
 ### Templates
 See [Templates rendering](docs/general/templates/README.md)
