@@ -18,6 +18,7 @@ func Init(isVerbose bool) {
 
 	logLevel := log.InfoLevel
 	if isVerbose {
+		log.SetReportCaller(true)
 		logLevel = log.DebugLevel
 	}
 

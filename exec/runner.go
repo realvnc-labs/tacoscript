@@ -1,13 +1,16 @@
 package exec
 
 import (
+	"errors"
 	"fmt"
 	"io"
+	"log"
 	"os"
 	"os/exec"
 	"strings"
 
 	io2 "github.com/cloudradar-monitoring/tacoscript/io"
+	"github.com/davecgh/go-spew/spew"
 	"github.com/sirupsen/logrus"
 )
 
@@ -111,6 +114,13 @@ func (sr SystemRunner) runCmds(cmds []*exec.Cmd) error {
 		logrus.Debugf("will run cmd '%s'", cmd.String())
 		err := sr.SystemAPI.Run(cmd)
 		if err != nil {
+			spew.Dump(err)
+
+			uerr := errors.Unwrap(err)
+
+			if exitError, ok := uerr.(*exec.ExitError); ok {
+				log.Fatal("result code is", exitError.ExitCode())
+			}
 			return err
 		}
 		logrus.Debugf("execution success for '%s'", cmd.String())
@@ -256,13 +266,13 @@ func (sr SystemRunner) setIO(cmd *exec.Cmd, stdOutWriter, stdErrWriter io.Writer
 	logrus.Debugf("will set stdout and stderr to cmd '%s'", cmd)
 	stdOutLoggedWriter := io2.FuncWriter{
 		Callback: func(p []byte) (n int, err error) {
-			logrus.Infof(string(p))
+			logrus.Debugf("stdout capture: %s", string(p))
 			return len(p), nil
 		},
 	}
 	stdErrLoggedWriter := io2.FuncWriter{
 		Callback: func(p []byte) (n int, err error) {
-			logrus.Warn(string(p))
+			logrus.Debugf("stderr capture: %s", string(p))
 			return len(p), nil
 		},
 	}

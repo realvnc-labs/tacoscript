@@ -21,7 +21,7 @@ var exeCmd = &cobra.Command{
 			args = []string{DefaultPath}
 		}
 
-		logrus.Infof("will execute script %s", args[0])
+		logrus.Debugf("will execute script %s", args[0])
 
 		return script.RunScript(args[0])
 	},

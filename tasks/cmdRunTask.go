@@ -207,7 +207,7 @@ func (crte *CmdRunTaskExecutor) checkUnless(ctx *exec2.Context, cmdRunTask *CmdR
 		return false, err
 	}
 
-	logrus.Infof("any unless condition didn't fail for task '%s'", cmdRunTask.Path)
+	logrus.Debugf("any unless condition didn't fail for task '%s'", cmdRunTask.Path)
 	return false, nil
 }
 
