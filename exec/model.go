@@ -47,7 +47,8 @@ type CmdParam struct {
 }
 
 type RunError struct {
-	Err error
+	Err      error
+	ExitCode int
 }
 
 func (re RunError) Error() string {

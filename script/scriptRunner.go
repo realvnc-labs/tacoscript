@@ -2,12 +2,14 @@ package script
 
 import (
 	"context"
+	"fmt"
 	"strings"
 	"time"
 
 	"github.com/davecgh/go-spew/spew"
 	"github.com/sirupsen/logrus"
 
+	"github.com/cloudradar-monitoring/tacoscript/exec"
 	"github.com/cloudradar-monitoring/tacoscript/tasks"
 )
 
@@ -16,7 +18,6 @@ type Runner struct {
 }
 
 type scriptResult struct {
-	//xxx
 	Results []taskResult
 
 	Summary scriptSummary
@@ -32,7 +33,6 @@ type scriptSummary struct {
 }
 
 type taskResult struct {
-	// XXX yaml formatting ...
 	ID       string
 	Function string
 	Name     string
@@ -48,7 +48,7 @@ type taskResult struct {
 func (r Runner) Run(ctx context.Context, scripts tasks.Scripts) error {
 	SortScriptsRespectingRequirements(scripts)
 
-	scriptResult := scriptResult{}
+	result := scriptResult{}
 	scriptStart := time.Now()
 
 	succeeded := 0
@@ -72,7 +72,7 @@ func (r Runner) Run(ctx context.Context, scripts tasks.Scripts) error {
 
 			name := ""
 			comment := ""
-			changeMap := make(map[string]string) // XXX depends on type of task
+			changeMap := make(map[string]string)
 
 			if cmdRunTask, ok := task.(*tasks.CmdRunTask); ok {
 				name = strings.Join(cmdRunTask.GetNames(), "; ")
@@ -80,8 +80,11 @@ func (r Runner) Run(ctx context.Context, scripts tasks.Scripts) error {
 
 				spew.Dump(cmdRunTask)
 				if !res.IsSkipped {
-					changeMap["pid"] = "???"     // XXX
-					changeMap["retcode"] = "???" // XXX
+					changeMap["pid"] = "???" // XXX
+					if runErr := res.Err.(exec.RunError); ok {
+						changeMap["retcode"] = fmt.Sprintf("%d", runErr.ExitCode)
+					}
+
 					changeMap["stderr"] = res.StdErr
 					changeMap["stdout"] = res.StdOut
 					changes++
@@ -104,7 +107,7 @@ func (r Runner) Run(ctx context.Context, scripts tasks.Scripts) error {
 				  old:
 			*/
 
-			scriptResult.Results = append(scriptResult.Results, taskResult{
+			result.Results = append(result.Results, taskResult{
 				ID:       script.ID,
 				Function: task.GetName(),
 				Name:     name,
@@ -118,7 +121,7 @@ func (r Runner) Run(ctx context.Context, scripts tasks.Scripts) error {
 		logrus.Debugf("finished script '%s'", script.ID)
 	}
 
-	scriptResult.Summary = scriptSummary{
+	result.Summary = scriptSummary{
 		Config: "XXX", // XXX config file name
 
 		Succeeded:        succeeded,
@@ -128,7 +131,7 @@ func (r Runner) Run(ctx context.Context, scripts tasks.Scripts) error {
 		TotalRunTime:     time.Since(scriptStart),
 	}
 
-	spew.Dump(scriptResult)
+	spew.Dump(result)
 
 	return nil
 }

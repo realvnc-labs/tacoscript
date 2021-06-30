@@ -1,16 +1,13 @@
 package exec
 
 import (
-	"errors"
 	"fmt"
 	"io"
-	"log"
 	"os"
 	"os/exec"
 	"strings"
 
 	io2 "github.com/cloudradar-monitoring/tacoscript/io"
-	"github.com/davecgh/go-spew/spew"
 	"github.com/sirupsen/logrus"
 )
 
@@ -103,7 +100,11 @@ func (sr SystemRunner) Run(execContext *Context) error {
 
 	err = sr.runCmds(cmds)
 	if err != nil {
-		return RunError{Err: err}
+		exitCode := 0
+		if exitError, ok := err.(*exec.ExitError); ok {
+			exitCode = exitError.ExitCode()
+		}
+		return RunError{Err: err, ExitCode: exitCode}
 	}
 
 	return nil
@@ -114,13 +115,6 @@ func (sr SystemRunner) runCmds(cmds []*exec.Cmd) error {
 		logrus.Debugf("will run cmd '%s'", cmd.String())
 		err := sr.SystemAPI.Run(cmd)
 		if err != nil {
-			spew.Dump(err)
-
-			uerr := errors.Unwrap(err)
-
-			if exitError, ok := uerr.(*exec.ExitError); ok {
-				log.Fatal("result code is", exitError.ExitCode())
-			}
 			return err
 		}
 		logrus.Debugf("execution success for '%s'", cmd.String())
