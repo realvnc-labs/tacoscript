@@ -20,12 +20,12 @@ type Task interface {
 }
 
 type ExecutionResult struct {
-	Err        error
-	Duration   time.Duration
-	StdErr     string
-	StdOut     string
-	IsSkipped  bool
-	ReturnCode int // XXX populate
+	Err       error
+	Duration  time.Duration
+	StdErr    string
+	StdOut    string
+	IsSkipped bool
+	Pids      []int
 }
 
 func (tr ExecutionResult) String() string {

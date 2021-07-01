@@ -133,7 +133,8 @@ func (crte *CmdRunTaskExecutor) Execute(ctx context.Context, task Task) Executio
 		Path:         cmdRunTask.Path,
 		Envs:         cmdRunTask.Envs,
 		Cmds:         cmdRunTask.GetNames(),
-		Shell:        cmdRunTask.Shell,
+		// XXX Pids
+		Shell: cmdRunTask.Shell,
 	}
 
 	shouldBeExecuted, err := crte.shouldBeExecuted(execCtx, cmdRunTask)
@@ -159,6 +160,7 @@ func (crte *CmdRunTaskExecutor) Execute(ctx context.Context, task Task) Executio
 
 	execRes.StdErr = stderrBuf.String()
 	execRes.StdOut = stdoutBuf.String()
+	execRes.Pids = execCtx.Pids
 
 	return execRes
 }

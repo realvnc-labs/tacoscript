@@ -80,7 +80,7 @@ func (r Runner) Run(ctx context.Context, scripts tasks.Scripts) error {
 
 				spew.Dump(cmdRunTask)
 				if !res.IsSkipped {
-					changeMap["pid"] = "???" // XXX
+					changeMap["pid"] = intsToString(res.Pids)
 					if runErr := res.Err.(exec.RunError); ok {
 						changeMap["retcode"] = fmt.Sprintf("%d", runErr.ExitCode)
 					}
@@ -134,4 +134,8 @@ func (r Runner) Run(ctx context.Context, scripts tasks.Scripts) error {
 	spew.Dump(result)
 
 	return nil
+}
+
+func intsToString(a []int) string {
+	return strings.Trim(strings.Replace(fmt.Sprint(a), " ", ",", -1), "[]")
 }

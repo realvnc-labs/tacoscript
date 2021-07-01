@@ -16,6 +16,7 @@ type Context struct {
 	Path         string
 	Envs         conv.KeyValues
 	Cmds         []string
+	Pids         []int
 	Shell        string
 }
 
