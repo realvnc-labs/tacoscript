@@ -15,6 +15,7 @@ import (
 
 type Runner struct {
 	ExecutorRouter tasks.ExecutorRouter
+	DataProvider   FileDataProvider
 }
 
 type scriptResult struct {
@@ -78,7 +79,6 @@ func (r Runner) Run(ctx context.Context, scripts tasks.Scripts) error {
 				name = strings.Join(cmdRunTask.GetNames(), "; ")
 				comment = `Command "` + name + `" run`
 
-				spew.Dump(cmdRunTask)
 				if !res.IsSkipped {
 					changeMap["pid"] = intsToString(res.Pids)
 					if runErr := res.Err.(exec.RunError); ok {
@@ -122,8 +122,7 @@ func (r Runner) Run(ctx context.Context, scripts tasks.Scripts) error {
 	}
 
 	result.Summary = scriptSummary{
-		Config: "XXX", // XXX config file name
-
+		Config:           r.DataProvider.Path,
 		Succeeded:        succeeded,
 		Failed:           failed,
 		Changes:          changes,
