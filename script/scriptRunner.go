@@ -71,6 +71,14 @@ func (r Runner) Run(ctx context.Context, scripts tasks.Scripts) error {
 
 			logrus.Debugf("finished task '%s' at path '%s', result: %s", task.GetName(), task.GetPath(), res)
 
+			if res.Succeeded() {
+				succeeded++
+			} else {
+				failed++
+			}
+
+			tasksRun++
+
 			name := ""
 			comment := ""
 			changeMap := make(map[string]string)
@@ -91,21 +99,9 @@ func (r Runner) Run(ctx context.Context, scripts tasks.Scripts) error {
 				}
 			}
 
-			if res.Succeeded() {
-				succeeded++
-			} else {
-				failed++
+			if pkgTask, ok := task.(*tasks.PkgTask); ok {
+				name = pkgTask.NamedTask.Name
 			}
-
-			tasksRun++
-
-			// XXX for pkg install:
-			/*
-				Changes:
-				jq:
-				  new: 1.5+dfsg-2
-				  old:
-			*/
 
 			result.Results = append(result.Results, taskResult{
 				ID:       script.ID,
