@@ -133,8 +133,7 @@ func (crte *CmdRunTaskExecutor) Execute(ctx context.Context, task Task) Executio
 		Path:         cmdRunTask.Path,
 		Envs:         cmdRunTask.Envs,
 		Cmds:         cmdRunTask.GetNames(),
-		// XXX Pids
-		Shell: cmdRunTask.Shell,
+		Shell:        cmdRunTask.Shell,
 	}
 
 	shouldBeExecuted, err := crte.shouldBeExecuted(execCtx, cmdRunTask)

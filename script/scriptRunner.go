@@ -6,8 +6,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/davecgh/go-spew/spew"
 	"github.com/sirupsen/logrus"
+	"gopkg.in/yaml.v2"
 
 	"github.com/cloudradar-monitoring/tacoscript/exec"
 	"github.com/cloudradar-monitoring/tacoscript/tasks"
@@ -33,6 +33,8 @@ type scriptSummary struct {
 	TotalRunTime     time.Duration
 }
 
+type onlyTime time.Time // XXX when formatting as yaml, only write time of day, not date
+
 type taskResult struct {
 	ID       string
 	Function string
@@ -40,10 +42,10 @@ type taskResult struct {
 	Result   bool
 	Comment  string
 
-	Started  time.Time // XXX when formatting as yaml, only write time of day, not date
+	Started  onlyTime
 	Duration time.Duration
 
-	Changes map[string]string // map for custom key-val data depending on type
+	Changes map[string]string `yaml:",omitempty"` // map for custom key-val data depending on type
 }
 
 func (r Runner) Run(ctx context.Context, scripts tasks.Scripts) error {
@@ -109,7 +111,7 @@ func (r Runner) Run(ctx context.Context, scripts tasks.Scripts) error {
 				Name:     name,
 				Result:   res.Succeeded(),
 				Comment:  comment,
-				Started:  taskStart,
+				Started:  onlyTime(taskStart),
 				Duration: res.Duration,
 				Changes:  changeMap,
 			})
@@ -126,11 +128,21 @@ func (r Runner) Run(ctx context.Context, scripts tasks.Scripts) error {
 		TotalRunTime:     time.Since(scriptStart),
 	}
 
-	spew.Dump(result)
+	y, err := yaml.Marshal(result)
+	if err != nil {
+		return err
+	}
+	fmt.Println(string(y))
 
 	return nil
 }
 
 func intsToString(a []int) string {
 	return strings.Trim(strings.Replace(fmt.Sprint(a), " ", ",", -1), "[]")
+}
+
+const stampMicro = "15:04:05.000000"
+
+func (c onlyTime) MarshalYAML() (interface{}, error) {
+	return time.Time(c).Format(stampMicro), nil
 }
