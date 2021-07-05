@@ -18,36 +18,6 @@ type Runner struct {
 	DataProvider   FileDataProvider
 }
 
-type scriptResult struct {
-	Results []taskResult
-
-	Summary scriptSummary
-}
-
-type scriptSummary struct {
-	Config           string
-	Succeeded        int
-	Failed           int
-	Changes          int
-	TotalFunctionRun int
-	TotalRunTime     time.Duration
-}
-
-type onlyTime time.Time // XXX when formatting as yaml, only write time of day, not date
-
-type taskResult struct {
-	ID       string
-	Function string
-	Name     string
-	Result   bool
-	Comment  string
-
-	Started  onlyTime
-	Duration time.Duration
-
-	Changes map[string]string `yaml:",omitempty"` // map for custom key-val data depending on type
-}
-
 func (r Runner) Run(ctx context.Context, scripts tasks.Scripts) error {
 	SortScriptsRespectingRequirements(scripts)
 
@@ -120,12 +90,12 @@ func (r Runner) Run(ctx context.Context, scripts tasks.Scripts) error {
 	}
 
 	result.Summary = scriptSummary{
-		Config:           r.DataProvider.Path,
-		Succeeded:        succeeded,
-		Failed:           failed,
-		Changes:          changes,
-		TotalFunctionRun: tasksRun,
-		TotalRunTime:     time.Since(scriptStart),
+		Config:            r.DataProvider.Path,
+		Succeeded:         succeeded,
+		Failed:            failed,
+		Changes:           changes,
+		TotalFunctionsRun: tasksRun,
+		TotalRunTime:      time.Since(scriptStart),
 	}
 
 	y, err := yaml.Marshal(result)
@@ -135,14 +105,4 @@ func (r Runner) Run(ctx context.Context, scripts tasks.Scripts) error {
 	fmt.Println(string(y))
 
 	return nil
-}
-
-func intsToString(a []int) string {
-	return strings.Trim(strings.Replace(fmt.Sprint(a), " ", ",", -1), "[]")
-}
-
-const stampMicro = "15:04:05.000000"
-
-func (c onlyTime) MarshalYAML() (interface{}, error) {
-	return time.Time(c).Format(stampMicro), nil
 }
