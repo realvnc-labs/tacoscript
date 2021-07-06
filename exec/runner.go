@@ -97,7 +97,6 @@ func (sr SystemRunner) Run(execContext *Context) error {
 	if err != nil {
 		return err
 	}
-
 	execContext.Pids, err = sr.runCmds(cmds)
 	if err != nil {
 		exitCode := 0
@@ -114,7 +113,9 @@ func (sr SystemRunner) runCmds(cmds []*exec.Cmd) (pids []int, err error) {
 	for _, cmd := range cmds {
 		logrus.Debugf("will run cmd '%s'", cmd.String())
 		err := sr.SystemAPI.Run(cmd)
-		pids = append(pids, cmd.Process.Pid)
+		if cmd.Process != nil {
+			pids = append(pids, cmd.Process.Pid)
+		}
 		if err != nil {
 			return pids, err
 		}
