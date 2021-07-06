@@ -2,7 +2,6 @@ package script
 
 import (
 	"context"
-	"errors"
 	"testing"
 
 	"github.com/cloudradar-monitoring/tacoscript/tasks"
@@ -63,26 +62,6 @@ func TestRunner(t *testing.T) {
 				},
 			},
 			ExpectedExecutedTasks: []string{"123"},
-			ExecutorsMapKey:       "TaskMock",
-		},
-		{
-			ExpectedError: "some error",
-			Scripts: tasks.Scripts{
-				{
-					ID:    "script3",
-					Tasks: []tasks.Task{&TaskMock{ID: "task234"}},
-				},
-				{
-					ID:    "script4",
-					Tasks: []tasks.Task{&TaskMock{ID: "task567"}},
-				},
-			},
-			ExecutorMock: &ExecutorMock{
-				ExecResult: tasks.ExecutionResult{
-					Err: errors.New("some error"),
-				},
-			},
-			ExpectedExecutedTasks: []string{"task234"},
 			ExecutorsMapKey:       "TaskMock",
 		},
 		{
