@@ -61,7 +61,7 @@ func (r Runner) Run(ctx context.Context, scripts tasks.Scripts) error {
 
 				if !res.IsSkipped {
 					changeMap["pid"] = intsToString(res.Pids)
-					if runErr := res.Err.(exec.RunError); ok {
+					if runErr, ok := res.Err.(exec.RunError); ok {
 						changeMap["retcode"] = fmt.Sprintf("%d", runErr.ExitCode)
 					}
 
