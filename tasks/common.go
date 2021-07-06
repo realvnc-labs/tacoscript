@@ -28,7 +28,7 @@ type ExecutionResult struct {
 	Pids      []int
 }
 
-func (tr ExecutionResult) String() string {
+func (tr *ExecutionResult) String() string {
 	if tr.Err != nil {
 		return fmt.Sprintf(`Execution failed: %v, StdErr: %s, Took: %v, StdOut: %s`, tr.Err, tr.StdErr, tr.Duration, tr.StdOut)
 	}
@@ -41,6 +41,6 @@ func (tr ExecutionResult) String() string {
 }
 
 // returns true if task succeeded or was skipped
-func (tr ExecutionResult) Succeeded() bool {
+func (tr *ExecutionResult) Succeeded() bool {
 	return tr.Err == nil
 }

@@ -41,7 +41,7 @@ func (r Runner) Run(ctx context.Context, scripts tasks.Scripts) error {
 			logrus.Debugf("will run task '%s' at path '%s'", task.GetName(), task.GetPath())
 			res := executr.Execute(ctx, task)
 
-			logrus.Debugf("finished task '%s' at path '%s', result: %s", task.GetName(), task.GetPath(), res)
+			logrus.Debugf("finished task '%s' at path '%s', result: %s", task.GetName(), task.GetPath(), res.String())
 
 			if res.Succeeded() {
 				succeeded++
