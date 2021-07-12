@@ -8,11 +8,12 @@ import (
 var (
 	Verbose = false
 	rootCmd = &cobra.Command{
-		Use:     "tacoscript",
-		Short:   "Tacoscript is a state-driven scripted task executor",
-		Args:    cobra.ArbitraryArgs,
-		RunE:    exeCmd.RunE,
-		Version: version(),
+		Use:          "tacoscript",
+		Short:        "Tacoscript is a state-driven scripted task executor",
+		Args:         cobra.ArbitraryArgs,
+		RunE:         exeCmd.RunE,
+		SilenceUsage: true,
+		Version:      version(),
 	}
 )
 

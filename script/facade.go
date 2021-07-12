@@ -70,6 +70,7 @@ func RunScript(scriptPath string) error {
 	}
 
 	runner := Runner{
+		DataProvider:   fileDataProvider,
 		ExecutorRouter: execRouter,
 	}
 

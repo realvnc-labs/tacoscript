@@ -564,7 +564,7 @@ three`,
 
 			res := fileManagedExecutor.Execute(context.Background(), tc.Task)
 
-			assertTestCase(tt, &tc, res, lc)
+			assertTestCase(tt, &tc, &res, lc)
 		})
 	}
 
@@ -574,7 +574,7 @@ three`,
 	}
 }
 
-func assertTestCase(t *testing.T, tc *fileManagedTestCase, res ExecutionResult, logs *applog.BufferedLogs) {
+func assertTestCase(t *testing.T, tc *fileManagedTestCase, res *ExecutionResult, logs *applog.BufferedLogs) {
 	if tc.ErrorExpectation != nil {
 		apptest.AssertErrorExpectation(t, res.Err, tc.ErrorExpectation)
 	} else {

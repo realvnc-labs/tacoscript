@@ -10,35 +10,51 @@ jobs:
     strategy:
       matrix:
         # build and publish in parallel: linux/386, linux/amd64, windows/386, windows/amd64, darwin/386, darwin/amd64
-        goos: [linux, windows, darwin]
-        goarch: ["386", amd64, arm64, mips64, mips64le, mipsle, mips, s390x]
+        goos: [linux, windows, darwin, aix]
+        goarch: ["386", amd64, arm64, mips64, mips64le, mipsle, mips, s390x, ppc64]
         exclude:
           - goarch: "386"
             goos: darwin
+          - goarch: "386"
+            goos: aix
+          - goarch: "amd64"
+            goos: aix
           - goarch: "arm64"
             goos: darwin
           - goarch: "arm64"
             goos: windows
+          - goarch: "arm64"
+            goos: aix
           - goarch: "mips64"
             goos: darwin
           - goarch: "mips64"
             goos: windows
+          - goarch: "mips64"
+            goos: aix
           - goarch: "mips64le"
             goos: darwin
           - goarch: "mips64le"
             goos: windows
+          - goarch: "mips64le"
+            goos: aix
           - goarch: "mipsle"
             goos: darwin
           - goarch: "mipsle"
             goos: windows
+          - goarch: "mipsle"
+            goos: aix
           - goarch: "mips"
             goos: darwin
           - goarch: "mips"
             goos: windows
+          - goarch: "mips"
+            goos: aix
           - goarch: "s390x"
             goos: darwin
           - goarch: "s390x"
             goos: windows
+          - goarch: "s390x"
+            goos: aix
     steps:
       - uses: actions/checkout@v2
 

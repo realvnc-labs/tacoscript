@@ -97,26 +97,32 @@ func (sr SystemRunner) Run(execContext *Context) error {
 	if err != nil {
 		return err
 	}
-
-	err = sr.runCmds(cmds)
+	execContext.Pids, err = sr.runCmds(cmds)
 	if err != nil {
-		return RunError{Err: err}
+		exitCode := 0
+		if exitError, ok := err.(*exec.ExitError); ok {
+			exitCode = exitError.ExitCode()
+		}
+		return RunError{Err: err, ExitCode: exitCode}
 	}
 
 	return nil
 }
 
-func (sr SystemRunner) runCmds(cmds []*exec.Cmd) error {
+func (sr SystemRunner) runCmds(cmds []*exec.Cmd) (pids []int, err error) {
 	for _, cmd := range cmds {
 		logrus.Debugf("will run cmd '%s'", cmd.String())
 		err := sr.SystemAPI.Run(cmd)
+		if cmd.Process != nil {
+			pids = append(pids, cmd.Process.Pid)
+		}
 		if err != nil {
-			return err
+			return pids, err
 		}
 		logrus.Debugf("execution success for '%s'", cmd.String())
 	}
 
-	return nil
+	return pids, nil
 }
 
 func (sr SystemRunner) setWorkingDir(cmd *exec.Cmd, execContext *Context) {
@@ -256,13 +262,13 @@ func (sr SystemRunner) setIO(cmd *exec.Cmd, stdOutWriter, stdErrWriter io.Writer
 	logrus.Debugf("will set stdout and stderr to cmd '%s'", cmd)
 	stdOutLoggedWriter := io2.FuncWriter{
 		Callback: func(p []byte) (n int, err error) {
-			logrus.Infof(string(p))
+			logrus.Debugf("stdout capture: %s", string(p))
 			return len(p), nil
 		},
 	}
 	stdErrLoggedWriter := io2.FuncWriter{
 		Callback: func(p []byte) (n int, err error) {
-			logrus.Warn(string(p))
+			logrus.Debugf("stderr capture: %s", string(p))
 			return len(p), nil
 		},
 	}

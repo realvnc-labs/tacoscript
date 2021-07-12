@@ -16,6 +16,7 @@ type Context struct {
 	Path         string
 	Envs         conv.KeyValues
 	Cmds         []string
+	Pids         []int
 	Shell        string
 }
 
@@ -47,7 +48,8 @@ type CmdParam struct {
 }
 
 type RunError struct {
-	Err error
+	Err      error
+	ExitCode int
 }
 
 func (re RunError) Error() string {
