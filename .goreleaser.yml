@@ -1,0 +1,63 @@
+env:
+  - CGO_ENABLED=0
+  - PROJECT=github.com/cloudradar-monitoring/tacoscript
+builds:
+  - id: tacoscript
+    main: ./
+    binary: tacoscript
+    ldflags:
+      - "-s -w -X {{.Env.PROJECT}}/share.BuildVersion={{.Version}}"
+    goos:
+      - linux
+      - darwin
+      - windows
+    goarch:
+      - 386
+      - amd64
+      - arm
+      - arm64
+      - mips
+      - mipsle
+      - mips64
+      - mips64le
+      - s390x
+      - ppc64
+      # FIXME publish aix, disabled because of https://github.com/elastic/go-sysinfo/issues/99
+      # - aix
+    goarm:
+      - 6
+      - 7
+    gomips:
+      - hardfloat
+      - softfloat
+    ignore:
+      - goos: darwin
+        goarch: 386
+      - goos: linux
+        goarch: amd64
+      # TODO: remove when https://github.com/go-ole/go-ole/issues/202 will be fixed
+      - goos: windows
+        goarch: arm
+
+archives:
+  - id: all
+    format_overrides:
+      - goos: windows
+        format: zip
+    replacements:
+      darwin: Darwin
+      linux: Linux
+      windows: Windows
+      386: i386
+      amd64: x86_64
+checksum:
+  name_template: 'checksums.txt'
+snapshot:
+  name_template: "{{ .Tag }}"
+changelog:
+  sort: asc
+release:
+  github:
+    owner: cloudradar-monitoring
+    name: tacoscript
+  draft: true
