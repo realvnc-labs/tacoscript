@@ -22,8 +22,6 @@ builds:
       - mips64le
       - s390x
       - ppc64
-      # FIXME publish aix, disabled because of https://github.com/elastic/go-sysinfo/issues/99
-      # - aix
     goarm:
       - 6
       - 7
@@ -38,6 +36,8 @@ builds:
       # TODO: remove when https://github.com/go-ole/go-ole/issues/202 will be fixed
       - goos: windows
         goarch: arm
+      - goos: linux
+        goarch: ppc64
 
 archives:
   - id: all

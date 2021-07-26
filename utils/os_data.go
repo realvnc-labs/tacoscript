@@ -3,7 +3,7 @@ package utils
 import (
 	"strings"
 
-	"github.com/elastic/go-sysinfo"
+	"github.com/shirou/gopsutil/host"
 )
 
 const (
@@ -20,18 +20,17 @@ type OSDataProvider struct {
 }
 
 func (odp OSDataProvider) GetTemplateVariables() (map[string]interface{}, error) {
-	h, err := sysinfo.Host()
+	h, err := host.Info()
 	if err != nil {
 		return map[string]interface{}{}, err
 	}
-	osInfo := h.Info().OS
 
 	return map[string]interface{}{
-		OSKernel:     strings.ToLower(sysinfo.Go().OS),
-		OSFamily:     strings.ToLower(osInfo.Family),
-		Architecture: strings.ToLower(h.Info().Architecture),
-		OSPlatform:   strings.ToLower(osInfo.Platform),
-		OSName:       strings.ToLower(osInfo.Name),
-		OSVersion:    strings.ToLower(osInfo.Version),
+		OSKernel:     strings.ToLower(h.OS),
+		OSFamily:     strings.ToLower(h.PlatformFamily),
+		Architecture: strings.ToLower(h.KernelArch),
+		OSPlatform:   strings.ToLower(h.Platform),
+		OSName:       strings.ToLower(h.OS),
+		OSVersion:    strings.ToLower(h.PlatformVersion),
 	}, nil
 }
