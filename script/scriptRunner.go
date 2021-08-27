@@ -30,6 +30,7 @@ func (r Runner) Run(ctx context.Context, scripts tasks.Scripts) error {
 
 	for _, script := range scripts {
 		logrus.Debugf("will run script '%s'", script.ID)
+		abort := false
 		for _, task := range script.Tasks {
 			taskStart := time.Now()
 			executr, err := r.ExecutorRouter.GetExecutor(task)
@@ -57,10 +58,6 @@ func (r Runner) Run(ctx context.Context, scripts tasks.Scripts) error {
 				if runErr, ok := res.Err.(exec.RunError); ok {
 					changeMap["retcode"] = fmt.Sprintf("%d", runErr.ExitCode)
 				}
-
-				changeMap["stderr"] = res.StdErr
-				changeMap["stdout"] = res.StdOut
-				changes++
 			}
 
 			if len(res.Changes) > 0 {
@@ -79,6 +76,11 @@ func (r Runner) Run(ctx context.Context, scripts tasks.Scripts) error {
 				Duration: res.Duration,
 				Changes:  changeMap,
 			})
+		}
+
+		if abort {
+			logrus.Debugf("aborting due to task failure")
+			break
 		}
 		logrus.Debugf("finished script '%s'", script.ID)
 	}

@@ -29,6 +29,7 @@ type CmdRunTask struct {
 	Require               []string
 	OnlyIf                []string
 	Unless                []string
+	AbortOnError          bool
 }
 
 type CmdRunTaskBuilder struct {
@@ -79,6 +80,8 @@ func (crtb CmdRunTaskBuilder) Build(typeName, path string, ctx interface{}) (Tas
 		case Unless:
 			t.Unless, err = parseUnlessField(val, path)
 			errs.Add(err)
+		case AbortOnErrorField:
+			t.AbortOnError = conv.ConvertToBool(val)
 		}
 	}
 
