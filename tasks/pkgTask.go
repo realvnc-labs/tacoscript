@@ -171,15 +171,16 @@ func (pte *PkgTaskExecutor) Execute(ctx context.Context, task Task) ExecutionRes
 		StderrWriter: &stderrBuf,
 	}
 	logrus.Debugf("will check if the task '%s' should be executed", task.GetPath())
-	shouldBeExecuted, err := pte.shouldBeExecuted(execCtx, pkgTask)
+	skipReason, err := pte.shouldBeExecuted(execCtx, pkgTask)
 	if err != nil {
 		execRes.Err = err
 		return execRes
 	}
 
-	if !shouldBeExecuted {
+	if skipReason != "" {
 		logrus.Debugf("the task '%s' will be be skipped", task.GetPath())
 		execRes.IsSkipped = true
+		execRes.SkipReason = skipReason
 		return execRes
 	}
 
@@ -221,28 +222,30 @@ func (pte *PkgTaskExecutor) checkOnlyIfs(ctx *exec2.Context, pkgTask *PkgTask) (
 func (pte *PkgTaskExecutor) shouldBeExecuted(
 	ctx *exec2.Context,
 	pkgTask *PkgTask,
-) (shouldBeExecuted bool, err error) {
+) (skipReason string, err error) {
 	isSuccess, err := pte.checkOnlyIfs(ctx, pkgTask)
 	if err != nil {
-		return false, err
+		return "", err
 	}
 
 	if !isSuccess {
-		return false, nil
+		skipReason = "only if condition was false"
+		return skipReason, nil
 	}
 
 	isExpectationSuccess, err := pte.checkUnless(ctx, pkgTask)
 	if err != nil {
-		return false, err
+		return "", err
 	}
 
 	if !isExpectationSuccess {
-		logrus.Debugf("check of unless section was false, will skip %s", pkgTask.Path)
-		return false, nil
+		skipReason = fmt.Sprintf("unless condition is true, will skip %s", pkgTask.Path)
+		logrus.Debug(skipReason)
+		return skipReason, nil
 	}
 
 	logrus.Debugf("all execution conditions are met, will continue %s", pkgTask)
-	return true, nil
+	return "", nil
 }
 
 func (pte *PkgTaskExecutor) checkUnless(ctx *exec2.Context, pkgTask *PkgTask) (isExpectationSuccess bool, err error) {

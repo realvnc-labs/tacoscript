@@ -57,9 +57,9 @@ func (r Runner) Run(ctx context.Context, scripts tasks.Scripts) error {
 
 			if cmdRunTask, ok := task.(*tasks.CmdRunTask); ok {
 				name = strings.Join(cmdRunTask.GetNames(), "; ")
-				comment = `Command "` + name + `" run`
 
 				if !res.IsSkipped {
+					comment = `Command "` + name + `" run`
 					changeMap["pid"] = intsToString(res.Pids)
 					if runErr, ok := res.Err.(exec.RunError); ok {
 						changeMap["retcode"] = fmt.Sprintf("%d", runErr.ExitCode)
@@ -68,6 +68,8 @@ func (r Runner) Run(ctx context.Context, scripts tasks.Scripts) error {
 					changeMap["stderr"] = res.StdErr
 					changeMap["stdout"] = res.StdOut
 					changes++
+				} else {
+					comment = `Command "` + name + `" did not run: ` + res.SkipReason
 				}
 			}
 

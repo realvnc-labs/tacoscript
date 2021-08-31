@@ -213,15 +213,16 @@ func (fmte *FileManagedTaskExecutor) Execute(ctx context.Context, task Task) Exe
 		Path:         fileManagedTask.Path,
 	}
 	logrus.Debugf("will check if the task '%s' should be executed", task.GetPath())
-	shouldBeExecuted, err := fmte.shouldBeExecuted(execCtx, fileManagedTask)
+	skipReason, err := fmte.shouldBeExecuted(execCtx, fileManagedTask)
 	if err != nil {
 		execRes.Err = err
 		return execRes
 	}
 
-	if !shouldBeExecuted {
+	if skipReason != "" {
 		logrus.Debugf("the task '%s' will be be skipped", task.GetPath())
 		execRes.IsSkipped = true
+		execRes.SkipReason = skipReason
 		return execRes
 	}
 
@@ -308,51 +309,54 @@ func (fmte *FileManagedTaskExecutor) checkOnlyIfs(ctx *exec2.Context, fileManage
 func (fmte *FileManagedTaskExecutor) shouldBeExecuted(
 	ctx *exec2.Context,
 	fileManagedTask *FileManagedTask,
-) (shouldBeExecuted bool, err error) {
-	isExists, err := fmte.checkMissingFileCondition(fileManagedTask)
+) (skipReason string, err error) {
+	isExists, fileName, err := fmte.checkMissingFileCondition(fileManagedTask)
 	if err != nil {
-		return false, err
+		return "", err
 	}
 
 	if isExists {
-		logrus.Debugf("some files exist, will skip the execution of %s", fileManagedTask)
-		return false, nil
+		skipReason = fmt.Sprintf("file %s exist", fileName)
+		logrus.Debugf(skipReason + ", will skip the execution of %s", fileManagedTask)
+		return skipReason, nil
 	}
 
 	if fileManagedTask.SourceHash != "" {
 		var hashEquals bool
 		hashEquals, _, err = fmte.HashManager.HashEquals(fileManagedTask.SourceHash, fileManagedTask.Name)
 		if err != nil {
-			return false, err
+			return "", err
 		}
 		if hashEquals {
-			logrus.Debugf("hash '%s' matches the hash sum of file at '%s', will not update it", fileManagedTask.SourceHash, fileManagedTask.Name)
-			return false, nil
+			skipReason = fmt.Sprintf("hash '%s' matches the hash sum of file at '%s', will not update it", fileManagedTask.SourceHash, fileManagedTask.Name)
+			logrus.Debug(skipReason)
+			return skipReason, nil
 		}
 	}
 
 	isSuccess, err := fmte.checkOnlyIfs(ctx, fileManagedTask)
 	if err != nil {
-		return false, err
+		return "", err
 	}
 
 	if !isSuccess {
-		return false, nil
+		skipReason = "only if condition was false"
+		return skipReason, nil
 	}
 
-	shouldSkip, err := fmte.shouldSkipForContentExpectation(fileManagedTask)
+	skipReasonForContents, err := fmte.shouldSkipForContentExpectation(fileManagedTask)
 	if err != nil {
-		return false, err
+		return "", err
 	}
-	if shouldSkip {
-		return false, nil
+	if skipReasonForContents != "" {
+		return skipReasonForContents, nil
 	}
 
 	logrus.Debugf("all execution conditions are met, will continue %s", fileManagedTask)
-	return true, nil
+	return "", nil
 }
 
-func (fmte *FileManagedTaskExecutor) checkMissingFileCondition(fileManagedTask *FileManagedTask) (isExists bool, err error) {
+func (fmte *FileManagedTaskExecutor) checkMissingFileCondition(fileManagedTask *FileManagedTask) (isExists bool, fileName string, err error) {
 	if len(fileManagedTask.Creates) == 0 {
 		return
 	}
@@ -368,13 +372,14 @@ func (fmte *FileManagedTaskExecutor) checkMissingFileCondition(fileManagedTask *
 		}
 
 		if isExists {
+			fileName = missingFileCondition
 			logrus.Debugf("file '%s' exists", missingFileCondition)
-			return
+			return true, fileName, nil
 		}
 		logrus.Debugf("file '%s' doesn't exist", missingFileCondition)
 	}
 
-	return
+	return false, "", nil
 }
 
 func (fmte *FileManagedTaskExecutor) copySourceToTarget(ctx context.Context, fileManagedTask *FileManagedTask) error {
@@ -555,10 +560,10 @@ func (fmte *FileManagedTaskExecutor) copyContentToTarget(fileManagedTask *FileMa
 	return err
 }
 
-func (fmte *FileManagedTaskExecutor) shouldSkipForContentExpectation(fileManagedTask *FileManagedTask) (bool, error) {
+func (fmte *FileManagedTaskExecutor) shouldSkipForContentExpectation(fileManagedTask *FileManagedTask) (skipReason string, err error) {
 	if !fileManagedTask.Contents.Valid {
 		logrus.Debug("contents section is missing, won't check the content")
-		return false, nil
+		return "", nil
 	}
 
 	logrus.Debugf("will compare contents of file '%s' with the provided contents", fileManagedTask.Name)
@@ -566,7 +571,7 @@ func (fmte *FileManagedTaskExecutor) shouldSkipForContentExpectation(fileManaged
 
 	fileExists, err := fmte.FsManager.FileExists(fileManagedTask.Name)
 	if err != nil {
-		return false, err
+		return "", err
 	}
 
 	if fileExists {
@@ -577,14 +582,15 @@ func (fmte *FileManagedTaskExecutor) shouldSkipForContentExpectation(fileManaged
 		}
 
 		if err != nil {
-			return false, err
+			return "", err
 		}
 	}
 
 	contentDiff := utils.Diff(fileManagedTask.Contents.String, actualContents)
 	if contentDiff == "" {
-		logrus.Debugf("file '%s' matched with the expected contents, will skip the execution", fileManagedTask.Name)
-		return true, nil
+		skipReason = fmt.Sprintf("file '%s' matched with the expected contents, will skip the execution", fileManagedTask.Name)
+		logrus.Debug(skipReason)
+		return skipReason, nil
 	}
 
 	logrus.WithFields(
@@ -592,7 +598,7 @@ func (fmte *FileManagedTaskExecutor) shouldSkipForContentExpectation(fileManaged
 			"multiline": contentDiff,
 		}).Infof(`file '%s' differs from the expected content field, will copy diff to file`, fileManagedTask.Name)
 
-	return false, nil
+	return "", nil
 }
 
 func (fmte *FileManagedTaskExecutor) createDirPathIfNeeded(fileManagedTask *FileManagedTask) error {

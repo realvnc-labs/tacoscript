@@ -20,12 +20,13 @@ type Task interface {
 }
 
 type ExecutionResult struct {
-	Err       error
-	Duration  time.Duration
-	StdErr    string
-	StdOut    string
-	IsSkipped bool
-	Pids      []int
+	Err        error
+	Duration   time.Duration
+	StdErr     string
+	StdOut     string
+	IsSkipped  bool
+	SkipReason string
+	Pids       []int
 }
 
 func (tr *ExecutionResult) String() string {
@@ -34,7 +35,7 @@ func (tr *ExecutionResult) String() string {
 	}
 
 	if tr.IsSkipped {
-		return fmt.Sprintf(`Execution is Skipped, StdOut: %s, StdErr: %s, Took: %v`, tr.StdOut, tr.StdErr, tr.Duration)
+		return fmt.Sprintf(`Execution is Skipped: %s, StdOut: %s, StdErr: %s, Took: %v`, tr.SkipReason, tr.StdOut, tr.StdErr, tr.Duration)
 	}
 
 	return fmt.Sprintf(`Execution success, StdOut: %s, StdErr: %s, Took: %s`, tr.StdOut, tr.StdErr, tr.Duration)
