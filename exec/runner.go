@@ -22,6 +22,8 @@ var cParamShells = map[string]string{
 	"cmd.exe": "/C",
 }
 
+const defaultShell = "sh"
+
 type SystemAPI interface {
 	Run(cmd *exec.Cmd) error
 	SetUser(userName, path string, cmd *exec.Cmd) error
@@ -278,13 +280,12 @@ func (sr SystemRunner) setIO(cmd *exec.Cmd, stdOutWriter, stdErrWriter io.Writer
 
 func (sr SystemRunner) parseShellParam(rawShell string) ShellParam {
 	rawShell = strings.TrimSpace(rawShell)
+	if rawShell == "" {
+		rawShell = defaultShell
+	}
 
 	parsedShellParam := ShellParam{
 		RawShellString: rawShell,
-	}
-
-	if rawShell == "" {
-		return parsedShellParam
 	}
 
 	shellParts := strings.Split(rawShell, " ")

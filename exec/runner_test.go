@@ -74,6 +74,16 @@ func TestRunner(t *testing.T) {
 			expectedCmds: []string{"zsh -c cmd3", "zsh -c cmd4"},
 		},
 		{
+			name: "default shell",
+			execContext: &Context{
+				StdoutWriter: &bytes.Buffer{},
+				StderrWriter: &bytes.Buffer{},
+				Cmds:         []string{"somecmd"},
+				Shell:        "",
+			},
+			expectedCmds: []string{"sh -c somecmd"},
+		},
+		{
 			name:         "test user set failure",
 			setUserError: "set user failed",
 			expectedErr:  errors.New("set user failed"),

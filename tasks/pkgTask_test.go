@@ -179,7 +179,7 @@ func TestPkgTaskExecution(t *testing.T) {
 			RunnerMock: &appExec.SystemRunner{SystemAPI: &appExec.SystemAPIMock{
 				Cmds: []*exec.Cmd{},
 				Callback: func(cmd *exec.Cmd) error {
-					assert.Equal(t, "check OnlyIf error", cmd.String())
+					assert.Contains(t, cmd.String(), "check OnlyIf error")
 					return appExec.RunError{Err: errors.New("some OnlyIfFailure")}
 				},
 			}},
