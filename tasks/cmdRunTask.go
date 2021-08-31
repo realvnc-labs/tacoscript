@@ -221,7 +221,7 @@ func (crte *CmdRunTaskExecutor) shouldBeExecuted(ctx *exec2.Context, cmdRunTask 
 
 	if isExists {
 		skipExecutionReason = fmt.Sprintf("file %s exists", filename)
-		logrus.Debugf(skipExecutionReason + ", will skip the execution of %s", cmdRunTask.Path)
+		logrus.Debugf(skipExecutionReason+", will skip the execution of %s", cmdRunTask.Path)
 		return skipExecutionReason, nil
 	}
 
@@ -231,8 +231,7 @@ func (crte *CmdRunTaskExecutor) shouldBeExecuted(ctx *exec2.Context, cmdRunTask 
 	}
 
 	if !isSuccess {
-		skipExecutionReason = "only if condition was false"
-		return skipExecutionReason, nil
+		return onlyIfConditionFailedReason, nil
 	}
 
 	isExpectationSuccess, err := crte.checkUnless(ctx, cmdRunTask)
@@ -242,7 +241,7 @@ func (crte *CmdRunTaskExecutor) shouldBeExecuted(ctx *exec2.Context, cmdRunTask 
 
 	if !isExpectationSuccess {
 		skipExecutionReason = "unless condition is true"
-		logrus.Debugf(skipExecutionReason + ", will skip %s", cmdRunTask.Path)
+		logrus.Debugf(skipExecutionReason+", will skip %s", cmdRunTask.Path)
 		return skipExecutionReason, nil
 	}
 

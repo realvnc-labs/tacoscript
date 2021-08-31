@@ -229,8 +229,7 @@ func (pte *PkgTaskExecutor) shouldBeExecuted(
 	}
 
 	if !isSuccess {
-		skipReason = "only if condition was false"
-		return skipReason, nil
+		return onlyIfConditionFailedReason, nil
 	}
 
 	isExpectationSuccess, err := pte.checkUnless(ctx, pkgTask)

@@ -317,7 +317,7 @@ func (fmte *FileManagedTaskExecutor) shouldBeExecuted(
 
 	if isExists {
 		skipReason = fmt.Sprintf("file %s exist", fileName)
-		logrus.Debugf(skipReason + ", will skip the execution of %s", fileManagedTask)
+		logrus.Debugf(skipReason+", will skip the execution of %s", fileManagedTask)
 		return skipReason, nil
 	}
 
@@ -328,7 +328,11 @@ func (fmte *FileManagedTaskExecutor) shouldBeExecuted(
 			return "", err
 		}
 		if hashEquals {
-			skipReason = fmt.Sprintf("hash '%s' matches the hash sum of file at '%s', will not update it", fileManagedTask.SourceHash, fileManagedTask.Name)
+			skipReason = fmt.Sprintf(
+				"hash '%s' matches the hash sum of file at '%s', will not update it",
+				fileManagedTask.SourceHash,
+				fileManagedTask.Name,
+			)
 			logrus.Debug(skipReason)
 			return skipReason, nil
 		}
@@ -340,8 +344,7 @@ func (fmte *FileManagedTaskExecutor) shouldBeExecuted(
 	}
 
 	if !isSuccess {
-		skipReason = "only if condition was false"
-		return skipReason, nil
+		return onlyIfConditionFailedReason, nil
 	}
 
 	skipReasonForContents, err := fmte.shouldSkipForContentExpectation(fileManagedTask)
@@ -356,7 +359,9 @@ func (fmte *FileManagedTaskExecutor) shouldBeExecuted(
 	return "", nil
 }
 
-func (fmte *FileManagedTaskExecutor) checkMissingFileCondition(fileManagedTask *FileManagedTask) (isExists bool, fileName string, err error) {
+func (fmte *FileManagedTaskExecutor) checkMissingFileCondition(
+	fileManagedTask *FileManagedTask,
+) (isExists bool, fileName string, err error) {
 	if len(fileManagedTask.Creates) == 0 {
 		return
 	}

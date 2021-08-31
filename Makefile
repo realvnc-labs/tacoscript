@@ -33,5 +33,9 @@ build:
 test:
 	go test -race -v -p 1 ./...
 
+fmt:
+	goimports -w .
+	gofmt -w .
+
 sca:
 	golangci-lint run
