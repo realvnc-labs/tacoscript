@@ -2,10 +2,11 @@ package script
 
 import (
 	"database/sql"
-	"github.com/stretchr/testify/require"
 	"net/url"
 	"os"
 	"testing"
+
+	"github.com/stretchr/testify/require"
 
 	"github.com/cloudradar-monitoring/tacoscript/tasks"
 	"github.com/cloudradar-monitoring/tacoscript/utils"
@@ -16,14 +17,14 @@ func TestTaskBuilderFromRawYaml(t *testing.T) {
 	testCases := []struct {
 		YamlInput      string
 		expectedScript tasks.Script
-		expectedError string
+		expectedError  string
 	}{
 		{
-			YamlInput: "",
+			YamlInput:     "",
 			expectedError: "empty script provided: nothing to execute",
 		},
 		{
-			YamlInput: "kkk",
+			YamlInput:     "kkk",
 			expectedError: "invalid script provided",
 		},
 		{

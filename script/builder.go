@@ -57,7 +57,7 @@ func (p Builder) BuildScripts() (tasks.Scripts, error) {
 	rawScripts := map[string]map[string][]map[string]interface{}{}
 	err = yaml2.Unmarshal(yamlBody, &rawScripts)
 	if err != nil {
-		return tasks.Scripts{}, fmt.Errorf( "invalid script provided: %w", err)
+		return tasks.Scripts{}, fmt.Errorf("invalid script provided: %w", err)
 	}
 
 	scripts := make(tasks.Scripts, 0, len(rawScripts))
