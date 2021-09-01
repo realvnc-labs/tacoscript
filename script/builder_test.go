@@ -148,7 +148,7 @@ func TestBuilder(t *testing.T) {
 		},
 		{
 			YamlFileName:    "test4.yaml",
-			ExpectedErrMsg:  "yaml: line 5: found character that cannot start any token",
+			ExpectedErrMsg:  "invalid script provided: yaml: line 5: found character that cannot start any token",
 			ExpectedScripts: tasks.Scripts{},
 		},
 		{

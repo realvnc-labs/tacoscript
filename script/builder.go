@@ -2,6 +2,7 @@ package script
 
 import (
 	"bytes"
+	"errors"
 	"fmt"
 	"io/ioutil"
 	"text/template"
@@ -49,11 +50,14 @@ func (p Builder) BuildScripts() (tasks.Scripts, error) {
 	if err != nil {
 		return tasks.Scripts{}, err
 	}
+	if len(yamlBody) == 0 {
+		return tasks.Scripts{}, errors.New("empty script provided: nothing to execute")
+	}
 
 	rawScripts := map[string]map[string][]map[string]interface{}{}
 	err = yaml2.Unmarshal(yamlBody, &rawScripts)
 	if err != nil {
-		return tasks.Scripts{}, err
+		return tasks.Scripts{}, fmt.Errorf( "invalid script provided: %w", err)
 	}
 
 	scripts := make(tasks.Scripts, 0, len(rawScripts))

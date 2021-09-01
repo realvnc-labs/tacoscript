@@ -2,6 +2,7 @@ package script
 
 import (
 	"database/sql"
+	"github.com/stretchr/testify/require"
 	"net/url"
 	"os"
 	"testing"
@@ -15,7 +16,16 @@ func TestTaskBuilderFromRawYaml(t *testing.T) {
 	testCases := []struct {
 		YamlInput      string
 		expectedScript tasks.Script
+		expectedError string
 	}{
+		{
+			YamlInput: "",
+			expectedError: "empty script provided: nothing to execute",
+		},
+		{
+			YamlInput: "kkk",
+			expectedError: "invalid script provided",
+		},
 		{
 			YamlInput: `
 maintain-my-file:
@@ -115,7 +125,12 @@ Funny file
 		}
 
 		scripts, err := parser.BuildScripts()
-		assert.NoError(t, err)
+		if testCase.expectedError != "" {
+			require.Contains(t, err.Error(), testCase.expectedError)
+			continue
+		}
+
+		require.NoError(t, err)
 
 		assert.EqualValues(t, tasks.Scripts{testCase.expectedScript}, scripts)
 	}
