@@ -31,8 +31,6 @@ builds:
     ignore:
       - goos: darwin
         goarch: 386
-      - goos: linux
-        goarch: amd64
       # TODO: remove when https://github.com/go-ole/go-ole/issues/202 will be fixed
       - goos: windows
         goarch: arm
