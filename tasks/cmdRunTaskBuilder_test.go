@@ -13,7 +13,7 @@ func TestCmdRunTaskBuilder(t *testing.T) {
 	testCases := []struct {
 		typeName      string
 		path          string
-		ctx           []map[string]interface{}
+		ctx           []interface{}
 		expectedTask  *CmdRunTask
 		expectedError string
 	}{

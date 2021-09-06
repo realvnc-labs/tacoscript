@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/cloudradar-monitoring/tacoscript/conv"
+	"gopkg.in/yaml.v2"
 
 	exec2 "github.com/cloudradar-monitoring/tacoscript/exec"
 
@@ -69,7 +70,7 @@ var pkgContextProcMap = map[string]pkgContextProc{
 	},
 }
 
-func (fmtb PkgTaskBuilder) Build(typeName, path string, ctx []map[string]interface{}) (Task, error) {
+func (fmtb PkgTaskBuilder) Build(typeName, path string, ctx interface{}) (Task, error) {
 	t := &PkgTask{
 		TypeName: typeName,
 		Path:     path,
@@ -85,14 +86,15 @@ func (fmtb PkgTaskBuilder) Build(typeName, path string, ctx []map[string]interfa
 	}
 
 	errs := &utils.Errors{}
-	for _, contextItem := range ctx {
-		for key, val := range contextItem {
-			f, ok := pkgContextProcMap[key]
-			if !ok {
-				continue
-			}
-			errs.Add(f(t, path, val))
+
+	for _, item := range ctx.([]interface{})[0].(yaml.MapSlice) {
+		key := item.Key.(string)
+		val := item.Value
+		f, ok := pkgContextProcMap[key]
+		if !ok {
+			continue
 		}
+		errs.Add(f(t, path, val))
 	}
 
 	return t, errs.ToError()

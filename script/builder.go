@@ -11,6 +11,7 @@ import (
 
 	"github.com/cloudradar-monitoring/tacoscript/tasks"
 
+	"gopkg.in/yaml.v2"
 	yaml2 "gopkg.in/yaml.v2"
 )
 
@@ -54,7 +55,7 @@ func (p Builder) BuildScripts() (tasks.Scripts, error) {
 		return tasks.Scripts{}, errors.New("empty script provided: nothing to execute")
 	}
 
-	rawScripts := map[string]map[string][]map[string]interface{}{}
+	rawScripts := yaml.MapSlice{}
 	err = yaml2.Unmarshal(yamlBody, &rawScripts)
 	if err != nil {
 		return tasks.Scripts{}, fmt.Errorf("invalid script provided: %w", err)
@@ -62,15 +63,19 @@ func (p Builder) BuildScripts() (tasks.Scripts, error) {
 
 	scripts := make(tasks.Scripts, 0, len(rawScripts))
 	errs := utils.Errors{}
-	for scriptID, rawTasks := range rawScripts {
+	for _, rawTask := range rawScripts {
+		scriptID := rawTask.Key.(string)
 		script := tasks.Script{
 			ID:    scriptID,
-			Tasks: make([]tasks.Task, 0, len(rawTasks)),
+			Tasks: []tasks.Task{},
 		}
 		index := 0
-		for taskTypeID, taskContext := range rawTasks {
+		steps := rawTask.Value.(yaml.MapSlice)
+		for _, step := range steps {
+			taskTypeID := step.Key.(string)
+
 			index++
-			task, e := p.TaskBuilder.Build(taskTypeID, fmt.Sprintf("%s.%s[%d]", scriptID, taskTypeID, index), taskContext)
+			task, e := p.TaskBuilder.Build(taskTypeID, fmt.Sprintf("%s.%s[%d]", scriptID, taskTypeID, index), step.Value)
 			if e != nil {
 				return tasks.Scripts{}, e
 			}
@@ -80,6 +85,7 @@ func (p Builder) BuildScripts() (tasks.Scripts, error) {
 		}
 
 		scripts = append(scripts, script)
+
 	}
 	err = ValidateScripts(scripts)
 	errs.Add(err)

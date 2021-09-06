@@ -10,15 +10,15 @@ import (
 type BuilderMock struct {
 	TypeName     string
 	Path         string
-	Context      []map[string]interface{}
+	Context      interface{}
 	TaskToReturn Task
 	ErrToReturn  error
 }
 
-func (bm *BuilderMock) Build(typeName, path string, context []map[string]interface{}) (Task, error) {
+func (bm *BuilderMock) Build(typeName, path string, ctx interface{}) (Task, error) {
 	bm.TypeName = typeName
 	bm.Path = path
-	bm.Context = context
+	bm.Context = ctx
 
 	return bm.TaskToReturn, bm.ErrToReturn
 }

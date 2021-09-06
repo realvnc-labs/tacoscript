@@ -26,7 +26,7 @@ type TaskBuilderMock struct {
 	TaskRequirements    []string
 }
 
-func (bm *TaskBuilderMock) Build(typeName, path string, ctx []map[string]interface{}) (tasks.Task, error) {
+func (bm *TaskBuilderMock) Build(typeName, path string, ctx interface{}) (tasks.Task, error) {
 	t := &TaskBuilderTaskMock{
 		TypeName:        typeName,
 		Path:            path,
@@ -41,7 +41,7 @@ func (bm *TaskBuilderMock) Build(typeName, path string, ctx []map[string]interfa
 type TaskBuilderTaskMock struct {
 	TypeName        string
 	Path            string
-	Context         []map[string]interface{}
+	Context         []interface{}
 	ValidationError error
 	Requirements    []string
 }
