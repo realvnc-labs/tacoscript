@@ -8,6 +8,7 @@ import (
 	"testing"
 
 	"github.com/cloudradar-monitoring/tacoscript/utils"
+	"gopkg.in/yaml.v2"
 
 	"github.com/cloudradar-monitoring/tacoscript/tasks"
 
@@ -41,7 +42,7 @@ func (bm *TaskBuilderMock) Build(typeName, path string, ctx interface{}) (tasks.
 type TaskBuilderTaskMock struct {
 	TypeName        string
 	Path            string
-	Context         []interface{}
+	Context         interface{}
 	ValidationError error
 	Requirements    []string
 }
@@ -105,23 +106,21 @@ func TestBuilder(t *testing.T) {
 						&TaskBuilderTaskMock{
 							TypeName: "cmd.run",
 							Path:     "cwd.cmd.run[1]",
-							Context: []map[string]interface{}{
-								{tasks.NameField: "echo ${PASSWORD}"},
-								{tasks.CwdField: "/usr/tmp"},
-								{tasks.ShellField: "zsh"},
-								{
-									tasks.EnvField: BuildExpectedEnvs(map[interface{}]interface{}{
-										"PASSWORD": "bunny",
-									}),
-								},
-								{tasks.CreatesField: "/tmp/my-date.txt"},
-								{tasks.UserField: "root"},
-								{tasks.NamesField: []interface{}{
+							Context: []interface{}{
+								yaml.MapSlice{yaml.MapItem{tasks.NameField, "echo ${PASSWORD}"}},
+								yaml.MapSlice{yaml.MapItem{tasks.CwdField, "/usr/tmp"}},
+								yaml.MapSlice{yaml.MapItem{tasks.ShellField, "zsh"}},
+								yaml.MapSlice{yaml.MapItem{tasks.EnvField, []interface{}{
+									yaml.MapSlice{yaml.MapItem{"PASSWORD", "bunny"}},
+								}}},
+								yaml.MapSlice{yaml.MapItem{tasks.CreatesField, "/tmp/my-date.txt"}},
+								yaml.MapSlice{yaml.MapItem{tasks.UserField, "root"}},
+								yaml.MapSlice{yaml.MapItem{tasks.NamesField, []interface{}{
 									"name one",
 									"name two",
 									"name three",
-								}},
-								{tasks.OnlyIf: "echo 1"},
+								}}},
+								yaml.MapSlice{yaml.MapItem{tasks.OnlyIf, "echo 1"}},
 							},
 							ValidationError: nil,
 						},
@@ -160,22 +159,22 @@ func TestBuilder(t *testing.T) {
 						&TaskBuilderTaskMock{
 							TypeName: "cmd.run",
 							Path:     "cwd.cmd.run[1]",
-							Context: []map[string]interface{}{
-								{tasks.NamesField: []interface{}{
+							Context: []interface{}{
+								yaml.MapSlice{yaml.MapItem{tasks.NamesField, []interface{}{
 									"run one",
 									"run two",
 									"run three",
-								}},
-								{tasks.RequireField: []interface{}{
+								}}},
+								yaml.MapSlice{yaml.MapItem{tasks.RequireField, []interface{}{
 									"req one",
 									"req two",
 									"req three",
-								}},
-								{tasks.OnlyIf: []interface{}{
+								}}},
+								yaml.MapSlice{yaml.MapItem{tasks.OnlyIf, []interface{}{
 									"onlyif one",
 									"onlyif two",
 									"onlyif three",
-								}},
+								}}},
 							},
 							ValidationError: nil,
 						},
@@ -192,15 +191,15 @@ func TestBuilder(t *testing.T) {
 						&TaskBuilderTaskMock{
 							TypeName: "cmd.run",
 							Path:     "manyCreates.cmd.run[1]",
-							Context: []map[string]interface{}{
-								{tasks.NameField: "many creates cmd"},
-								{tasks.RequireField: "require one"},
-								{tasks.CreatesField: []interface{}{
+							Context: []interface{}{
+								yaml.MapSlice{yaml.MapItem{tasks.NameField, "many creates cmd"}},
+								yaml.MapSlice{yaml.MapItem{tasks.RequireField, "require one"}},
+								yaml.MapSlice{yaml.MapItem{tasks.CreatesField, []interface{}{
 									"create one",
 									"create two",
 									"create three",
-								}},
-								{tasks.Unless: "some expected false condition"},
+								}}},
+								yaml.MapSlice{yaml.MapItem{tasks.Unless, "some expected false condition"}},
 							},
 							ValidationError: nil,
 						},
@@ -226,11 +225,11 @@ func TestBuilder(t *testing.T) {
 						&TaskBuilderTaskMock{
 							TypeName: "cmd.run",
 							Path:     "template.cmd.run[1]",
-							Context: []map[string]interface{}{
-								{tasks.NameField: "yum --version"},
-								{tasks.CreatesField: []interface{}{
+							Context: []interface{}{
+								yaml.MapSlice{yaml.MapItem{tasks.NameField, "yum --version"}},
+								yaml.MapSlice{yaml.MapItem{tasks.CreatesField, []interface{}{
 									"test.txt",
-								}},
+								}}},
 							},
 							ValidationError: nil,
 						},
@@ -250,11 +249,11 @@ func TestBuilder(t *testing.T) {
 						&TaskBuilderTaskMock{
 							TypeName: "cmd.run",
 							Path:     "template.cmd.run[1]",
-							Context: []map[string]interface{}{
-								{tasks.NameField: "apt --version"},
-								{tasks.CreatesField: []interface{}{
+							Context: []interface{}{
+								yaml.MapSlice{yaml.MapItem{tasks.NameField, "apt --version"}},
+								yaml.MapSlice{yaml.MapItem{tasks.CreatesField, []interface{}{
 									"test.txt",
-								}},
+								}}},
 							},
 							ValidationError: nil,
 						},
@@ -315,15 +314,4 @@ func TestBuilder(t *testing.T) {
 
 		assert.EqualValues(t, testCase.ExpectedScripts, scripts)
 	}
-}
-
-func BuildExpectedEnvs(expectedEnvs map[interface{}]interface{}) []interface{} {
-	envs := make([]interface{}, 0, len(expectedEnvs))
-	for envKey, envValue := range expectedEnvs {
-		envs = append(envs, map[interface{}]interface{}{
-			envKey: envValue,
-		})
-	}
-
-	return envs
 }
