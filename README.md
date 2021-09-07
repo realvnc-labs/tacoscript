@@ -54,7 +54,8 @@ Unpack and install the tacoscript binary on your host machine
 
     
         #On linux/MacOS
-        tar -xzvOf tacoscript-0.0.4pre-darwin-amd64.tar.gz >> /usr/local/bin/tacoscript
+        tar -xzvf tacoscript-0.0.4pre-darwin-amd64.tar.gz 
+        mv tacoscript /usr/local/bin/tacoscript
         chmod +x /usr/local/bin/tacoscript
     
 
