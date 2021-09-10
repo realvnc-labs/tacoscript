@@ -269,9 +269,11 @@ func (pm PackageTaskManager) run(
 
 	err = pm.Runner.Run(execCtx)
 
-	if err == nil {
-		logrus.Debugf("Cmds %s success", conv.ConvertSourceToJSONStrIfPossible(rawCmds))
+	if err != nil {
+		return err
 	}
+
+	logrus.Debugf("Cmds %s success", conv.ConvertSourceToJSONStrIfPossible(rawCmds))
 
 	logrus.Debugf(
 		"stdOut: %s, stdErr: %s",
