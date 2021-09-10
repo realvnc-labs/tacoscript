@@ -31,5 +31,6 @@ func (ecb OsPackageManagerCmdProvider) GetManagementCmds(t *tasks.PkgTask) (*Man
 		InstallCmds:   []string{fmt.Sprintf("choco install -y %s%s", strings.Join(rawCmds, " "), versionStr)},
 		UninstallCmds: []string{fmt.Sprintf("choco uninstall -y %s", strings.Join(rawCmds, " "))},
 		UpgradeCmds:   []string{fmt.Sprintf("choco upgrade -y %s", strings.Join(rawCmds, " "))},
+		ListCmd: "choco list --local-only",
 	}, nil
 }

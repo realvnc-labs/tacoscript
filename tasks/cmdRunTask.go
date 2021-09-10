@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"fmt"
+	"strings"
 	"time"
 
 	exec2 "github.com/cloudradar-monitoring/tacoscript/exec"
@@ -122,6 +123,7 @@ func (crte *CmdRunTaskExecutor) Execute(ctx context.Context, task Task) Executio
 		execRes.Err = fmt.Errorf("cannot convert task '%v' to CmdRunTask", task)
 		return execRes
 	}
+	execRes.Name = strings.Join(cmdRunTask.GetNames(), "; ")
 
 	var stdoutBuf, stderrBuf bytes.Buffer
 	execCtx := &exec2.Context{
@@ -145,6 +147,7 @@ func (crte *CmdRunTaskExecutor) Execute(ctx context.Context, task Task) Executio
 	if shouldNotBeExecutedReason != "" {
 		execRes.IsSkipped = true
 		execRes.SkipReason = shouldNotBeExecutedReason
+		execRes.Comment = `Command "` + execRes.Name + `" did not run: ` + shouldNotBeExecutedReason
 		return execRes
 	}
 
@@ -161,6 +164,7 @@ func (crte *CmdRunTaskExecutor) Execute(ctx context.Context, task Task) Executio
 	execRes.StdErr = stderrBuf.String()
 	execRes.StdOut = stdoutBuf.String()
 	execRes.Pids = execCtx.Pids
+	execRes.Comment = `Command "` + execRes.Name + `" run`
 
 	return execRes
 }

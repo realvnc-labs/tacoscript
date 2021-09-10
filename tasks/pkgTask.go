@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/cloudradar-monitoring/tacoscript/conv"
@@ -145,8 +146,15 @@ func (pt *PkgTask) String() string {
 	return fmt.Sprintf("task '%s' at path '%s'", pt.TypeName, pt.GetPath())
 }
 
+type PackageManagerExecutionResult struct {
+	Output  string
+	Comment string
+	Changes map[string]string
+	Pids    []int
+}
+
 type PackageManager interface {
-	ExecuteTask(ctx context.Context, t *PkgTask) (output string, err error)
+	ExecuteTask(ctx context.Context, t *PkgTask) (res *PackageManagerExecutionResult, err error)
 }
 
 type PkgTaskExecutor struct {
@@ -164,6 +172,8 @@ func (pte *PkgTaskExecutor) Execute(ctx context.Context, task Task) ExecutionRes
 		return execRes
 	}
 
+	execRes.Name = strings.Join(pkgTask.GetNames(), "; ")
+
 	var stdoutBuf, stderrBuf bytes.Buffer
 	execCtx := &exec2.Context{
 		Ctx:          ctx,
@@ -178,7 +188,7 @@ func (pte *PkgTaskExecutor) Execute(ctx context.Context, task Task) ExecutionRes
 	}
 
 	if skipReason != "" {
-		logrus.Debugf("the task '%s' will be be skipped", task.GetPath())
+		logrus.Debugf("the task '%s' will be be skipped", execRes.Name)
 		execRes.IsSkipped = true
 		execRes.SkipReason = skipReason
 		return execRes
@@ -186,13 +196,19 @@ func (pte *PkgTaskExecutor) Execute(ctx context.Context, task Task) ExecutionRes
 
 	start := time.Now()
 
-	output, err := pte.PackageManager.ExecuteTask(ctx, pkgTask)
+	pkgExecResult, err := pte.PackageManager.ExecuteTask(ctx, pkgTask)
 	execRes.Err = err
-	execRes.StdOut = output
+	if pkgExecResult != nil {
+		execRes.StdOut = pkgExecResult.Output
+		execRes.Comment = pkgExecResult.Comment
+		execRes.Changes = pkgExecResult.Changes
+		execRes.Pids = pkgExecResult.Pids
+	}
+
 	execRes.IsSkipped = false
 	execRes.Duration = time.Since(start)
 
-	logrus.Debugf("the task '%s' is finished for %v", task.GetPath(), execRes.Duration)
+	logrus.Debugf("the task '%s' is finished for %v", execRes.Name, execRes.Duration)
 	return execRes
 }
 
