@@ -159,7 +159,7 @@ func TestPkgTaskExecution(t *testing.T) {
 				IsSkipped: false,
 				Err:       nil,
 				StdOut:    "installation success",
-				Comment: "some comment",
+				Comment:   "some comment",
 				Changes: map[string]string{
 					"some change key": "some change value",
 				},

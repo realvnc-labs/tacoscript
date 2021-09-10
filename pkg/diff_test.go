@@ -1,22 +1,23 @@
 package pkg
 
 import (
-	"github.com/stretchr/testify/assert"
 	"strings"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 func TestCalcDiff(t *testing.T) {
-	testCases := []struct{
-		name string
-		linesBefore string
-		linesAfter string
+	testCases := []struct {
+		name         string
+		linesBefore  string
+		linesAfter   string
 		expectedDiff *Diff
 	}{
 		{
-			name: "no diff, single line",
-			linesBefore: "readline-common 7.0-3",
-			linesAfter: "readline-common 7.0-3",
+			name:         "no diff, single line",
+			linesBefore:  "readline-common 7.0-3",
+			linesAfter:   "readline-common 7.0-3",
 			expectedDiff: nil,
 		},
 		{
@@ -41,7 +42,7 @@ readline 7.0-3
 seda 4.4-2
 `,
 			expectedDiff: &Diff{
-				Added:   []string{
+				Added: []string{
 					"readline 7.0-3",
 					"seda 4.4-2",
 				},
@@ -58,7 +59,7 @@ util-linux/now 2.31.1-0.4ubuntu3.7
 
 `,
 			expectedDiff: &Diff{
-				Added:   []string{
+				Added: []string{
 					"readline-common 7.0-4",
 					"util-linux/now 2.31.1-0.4ubuntu3.7",
 				},
@@ -75,7 +76,7 @@ sed/now 4.4-2
 `,
 			linesAfter: "",
 			expectedDiff: &Diff{
-				Added:   []string{},
+				Added: []string{},
 				Removed: []string{
 					"readline-common 7.0-3",
 					"sed/now 4.4-2",
@@ -83,7 +84,7 @@ sed/now 4.4-2
 			},
 		},
 		{
-			name: "all added, multi line",
+			name:        "all added, multi line",
 			linesBefore: "",
 			linesAfter: `readline-common 7.0-3
 sed/now 4.4-2
@@ -93,7 +94,7 @@ sed/now 4.4-2
 					"readline-common 7.0-3",
 					"sed/now 4.4-2",
 				},
-				Removed:   []string{},
+				Removed: []string{},
 			},
 		},
 		{
@@ -109,7 +110,7 @@ sed/now 4.4-3
 					"readline-common 7.0-4",
 					"sed/now 4.4-3",
 				},
-				Removed:   []string{
+				Removed: []string{
 					"readline-common 7.0-3",
 					"sed/now 4.4-2",
 				},
