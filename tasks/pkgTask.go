@@ -87,9 +87,10 @@ func (fmtb PkgTaskBuilder) Build(typeName, path string, ctx interface{}) (Task, 
 
 	errs := &utils.Errors{}
 
-	for _, item := range ctx.([]interface{})[0].(yaml.MapSlice) {
-		key := item.Key.(string)
-		val := item.Value
+	for _, item := range ctx.([]interface{}) {
+		row := item.(yaml.MapSlice)[0]
+		key := row.Key.(string)
+		val := row.Value
 		f, ok := pkgContextProcMap[key]
 		if !ok {
 			continue

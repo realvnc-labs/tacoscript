@@ -4,39 +4,38 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"gopkg.in/yaml.v2"
 )
 
 func TestPkgTaskBuilder(t *testing.T) {
 	testCases := []struct {
 		typeName      string
 		path          string
-		ctx           []map[string]interface{}
+		ctx           []interface{}
 		expectedTask  *PkgTask
 		expectedError string
 	}{
 		{
 			typeName: PkgInstalled,
 			path:     "vim",
-			ctx: []map[string]interface{}{
-				{
-					NameField:  "vim",
-					ShellField: "cmd.exe",
-					Version:    "1.0.1",
-					Refresh:    1,
-					RequireField: []interface{}{
-						"req one",
-						"req two",
-						"req three",
-					},
-					OnlyIf: []interface{}{
-						"OnlyIf one",
-						"OnlyIf two",
-						"OnlyIf three",
-					},
-					Unless: []interface{}{
-						"Unless one",
-					},
-				},
+			ctx: []interface{}{
+				yaml.MapSlice{yaml.MapItem{NameField, "vim"}},
+				yaml.MapSlice{yaml.MapItem{ShellField, "cmd.exe"}},
+				yaml.MapSlice{yaml.MapItem{Version, "1.0.1"}},
+				yaml.MapSlice{yaml.MapItem{Refresh, 1}},
+				yaml.MapSlice{yaml.MapItem{RequireField, []interface{}{
+					"req one",
+					"req two",
+					"req three",
+				}}},
+				yaml.MapSlice{yaml.MapItem{OnlyIf, []interface{}{
+					"OnlyIf one",
+					"OnlyIf two",
+					"OnlyIf three",
+				}}},
+				yaml.MapSlice{yaml.MapItem{Unless, []interface{}{
+					"Unless one",
+				}}},
 			},
 			expectedTask: &PkgTask{
 				ActionType:    ActionInstall,
@@ -64,12 +63,10 @@ func TestPkgTaskBuilder(t *testing.T) {
 		{
 			typeName: PkgUpgraded,
 			path:     "git",
-			ctx: []map[string]interface{}{
-				{
-					NameField: "git",
-					Version:   "2.0.2",
-					Refresh:   "false",
-				},
+			ctx: []interface{}{
+				yaml.MapSlice{yaml.MapItem{NameField, "git"}},
+				yaml.MapSlice{yaml.MapItem{Version, "2.0.2"}},
+				yaml.MapSlice{yaml.MapItem{Refresh, "false"}},
 			},
 			expectedTask: &PkgTask{
 				ActionType:    ActionUpdate,
@@ -83,15 +80,13 @@ func TestPkgTaskBuilder(t *testing.T) {
 		{
 			typeName: PkgRemoved,
 			path:     "nano",
-			ctx: []map[string]interface{}{
-				{
-					NamesField: []interface{}{
-						"nano",
-						"git",
-					},
-					Refresh:     "",
-					"someField": "someValue",
-				},
+			ctx: []interface{}{
+				yaml.MapSlice{yaml.MapItem{NamesField, []interface{}{
+					"nano",
+					"git",
+				}}},
+				yaml.MapSlice{yaml.MapItem{Refresh, ""}},
+				yaml.MapSlice{yaml.MapItem{"someField", "someValue"}},
 			},
 			expectedTask: &PkgTask{
 				ActionType: ActionUninstall,
