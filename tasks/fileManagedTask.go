@@ -97,9 +97,10 @@ func (fmtb FileManagedTaskBuilder) Build(typeName, path string, ctx interface{})
 
 	errs := &utils.Errors{}
 
-	for _, item := range ctx.([]interface{})[0].(yaml.MapSlice) {
-		key := item.Key.(string)
-		val := item.Value
+	for _, item := range ctx.([]interface{}) {
+		row := item.(yaml.MapSlice)[0]
+		key := row.Key.(string)
+		val := row.Value
 		f, ok := contextProcMap[key]
 		if !ok {
 			continue
