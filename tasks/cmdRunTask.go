@@ -40,9 +40,11 @@ func (crtb CmdRunTaskBuilder) Build(typeName, path string, ctx interface{}) (Tas
 	}
 
 	errs := utils.Errors{}
-	for _, item := range ctx.([]interface{})[0].(yaml.MapSlice) {
-		key := item.Key.(string)
-		val := item.Value
+
+	for _, item := range ctx.([]interface{}) {
+		row := item.(yaml.MapSlice)[0]
+		key := row.Key.(string)
+		val := row.Value
 
 		var err error
 		switch key {

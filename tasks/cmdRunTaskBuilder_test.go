@@ -55,151 +55,136 @@ func TestCmdRunTaskBuilder(t *testing.T) {
 			},
 		},
 
-		/*
-			{
-				typeName: "someTypeWithErrors",
-				path:     "somePathWithErrors",
-				ctx: []map[string]interface{}{
-					{
-						EnvField: 123,
-					},
-				},
-				expectedTask: &CmdRunTask{
-					TypeName: "someTypeWithErrors",
-					Path:     "somePathWithErrors",
-					Envs:     conv.KeyValues{},
-				},
-				expectedError: "key value array expected at 'somePathWithErrors' but got '123'",
+		{
+			typeName: "someTypeWithErrors",
+			path:     "somePathWithErrors",
+			ctx: []interface{}{
+				yaml.MapSlice{yaml.MapItem{EnvField, 123}},
 			},
-			{
-				typeName: "someTypeWithErrors2",
-				path:     "somePathWithErrors2",
-				ctx: []map[string]interface{}{
-					{
-						EnvField: []interface{}{
-							"one",
-						},
-					},
-				},
-				expectedTask: &CmdRunTask{
-					TypeName: "someTypeWithErrors2",
-					Path:     "somePathWithErrors2",
-					Envs:     conv.KeyValues{},
-				},
-				expectedError: `wrong key value element at 'somePathWithErrors2': '"one"'`,
+			expectedTask: &CmdRunTask{
+				TypeName: "someTypeWithErrors",
+				Path:     "somePathWithErrors",
+				Envs:     conv.KeyValues{},
 			},
-			{
-				typeName: "manyNamesType",
-				path:     "manyNamesPath",
-				ctx: []map[string]interface{}{
-					{
-						RequireField: "one require field",
-						NamesField: []interface{}{
-							"name one",
-							"name two",
-						},
-					},
-				},
-				expectedTask: &CmdRunTask{
-					TypeName: "manyNamesType",
-					Path:     "manyNamesPath",
-					Require: []string{
-						"one require field",
-					},
-					NamedTask: NamedTask{Names: []string{
-						"name one",
-						"name two",
-					}},
-				},
+			expectedError: "key value array expected at 'somePathWithErrors' but got '123'",
+		},
+		{
+			typeName: "someTypeWithErrors2",
+			path:     "somePathWithErrors2",
+			ctx: []interface{}{
+				yaml.MapSlice{yaml.MapItem{EnvField, []interface{}{
+					"one",
+				}}},
 			},
-			{
-				typeName: "manyCreatesType",
-				path:     "manyCreatesPath",
-				ctx: []map[string]interface{}{
-					{
-						NameField: "many creates command",
-						CreatesField: []interface{}{
-							"create one",
-							"create two",
-							"create three",
-						},
-						RequireField: []interface{}{
-							"req one",
-							"req two",
-							"req three",
-						},
-						OnlyIf: []interface{}{
-							"OnlyIf one",
-							"OnlyIf two",
-							"OnlyIf three",
-						},
-					},
+			expectedTask: &CmdRunTask{
+				TypeName: "someTypeWithErrors2",
+				Path:     "somePathWithErrors2",
+				Envs:     conv.KeyValues{},
+			},
+			expectedError: `wrong key value element at 'somePathWithErrors2': '"one"'`,
+		},
+		{
+			typeName: "manyNamesType",
+			path:     "manyNamesPath",
+			ctx: []interface{}{
+				yaml.MapSlice{yaml.MapItem{RequireField, "one require field"}},
+				yaml.MapSlice{yaml.MapItem{NamesField, []interface{}{
+					"name one",
+					"name two",
+				}}},
+			},
+			expectedTask: &CmdRunTask{
+				TypeName: "manyNamesType",
+				Path:     "manyNamesPath",
+				Require: []string{
+					"one require field",
 				},
-				expectedTask: &CmdRunTask{
-					TypeName:  "manyCreatesType",
-					Path:      "manyCreatesPath",
-					NamedTask: NamedTask{Name: "many creates command"},
-					MissingFilesCondition: []string{
-						"create one",
-						"create two",
-						"create three",
-					},
-					Require: []string{
-						"req one",
-						"req two",
-						"req three",
-					},
-					OnlyIf: []string{
-						"OnlyIf one",
-						"OnlyIf two",
-						"OnlyIf three",
-					},
+				NamedTask: NamedTask{Names: []string{
+					"name one",
+					"name two",
+				}},
+			},
+		},
+		{
+			typeName: "manyCreatesType",
+			path:     "manyCreatesPath",
+			ctx: []interface{}{
+				yaml.MapSlice{yaml.MapItem{NameField, "many creates command"}},
+				yaml.MapSlice{yaml.MapItem{CreatesField, []interface{}{
+					"create one",
+					"create two",
+					"create three",
+				}}},
+				yaml.MapSlice{yaml.MapItem{RequireField, []interface{}{
+					"req one",
+					"req two",
+					"req three",
+				}}},
+				yaml.MapSlice{yaml.MapItem{OnlyIf, []interface{}{
+					"OnlyIf one",
+					"OnlyIf two",
+					"OnlyIf three",
+				}}},
+			},
+			expectedTask: &CmdRunTask{
+				TypeName:  "manyCreatesType",
+				Path:      "manyCreatesPath",
+				NamedTask: NamedTask{Name: "many creates command"},
+				MissingFilesCondition: []string{
+					"create one",
+					"create two",
+					"create three",
+				},
+				Require: []string{
+					"req one",
+					"req two",
+					"req three",
+				},
+				OnlyIf: []string{
+					"OnlyIf one",
+					"OnlyIf two",
+					"OnlyIf three",
 				},
 			},
-			{
-				typeName: "oneUnlessValue",
-				path:     "oneUnlessValuePath",
-				ctx: []map[string]interface{}{
-					{
-						NameField: "one unless value",
-						Unless:    "unless one",
-					},
-				},
-				expectedTask: &CmdRunTask{
-					TypeName:  "oneUnlessValue",
-					Path:      "oneUnlessValuePath",
-					NamedTask: NamedTask{Name: "one unless value"},
-					Unless: []string{
-						"unless one",
-					},
+		},
+		{
+			typeName: "oneUnlessValue",
+			path:     "oneUnlessValuePath",
+			ctx: []interface{}{
+				yaml.MapSlice{yaml.MapItem{NameField, "one unless value"}},
+				yaml.MapSlice{yaml.MapItem{Unless, "unless one"}},
+			},
+			expectedTask: &CmdRunTask{
+				TypeName:  "oneUnlessValue",
+				Path:      "oneUnlessValuePath",
+				NamedTask: NamedTask{Name: "one unless value"},
+				Unless: []string{
+					"unless one",
 				},
 			},
-			{
-				typeName: "manyUnlessValue",
-				path:     "manyUnlessValuePath",
-				ctx: []map[string]interface{}{
-					{
-						NameField: "many unless value",
-						Unless: []interface{}{
-							"Unless one",
-							"Unless two",
-							"Unless three",
-						},
-					},
-				},
-				expectedTask: &CmdRunTask{
-					TypeName:  "manyUnlessValue",
-					Path:      "manyUnlessValuePath",
-					NamedTask: NamedTask{Name: "many unless value"},
-					Unless: []string{
-						"Unless one",
-						"Unless two",
-						"Unless three",
-					},
+		},
+		{
+			typeName: "manyUnlessValue",
+			path:     "manyUnlessValuePath",
+			ctx: []interface{}{
+				yaml.MapSlice{yaml.MapItem{NameField, "many unless value"}},
+				yaml.MapSlice{yaml.MapItem{Unless, []interface{}{
+					"Unless one",
+					"Unless two",
+					"Unless three",
+				}}},
+			},
+			expectedTask: &CmdRunTask{
+				TypeName:  "manyUnlessValue",
+				Path:      "manyUnlessValuePath",
+				NamedTask: NamedTask{Name: "many unless value"},
+				Unless: []string{
+					"Unless one",
+					"Unless two",
+					"Unless three",
 				},
 			},
-
-		*/
+		},
 	}
 
 	for _, testCase := range testCases {
