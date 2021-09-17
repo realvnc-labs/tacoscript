@@ -23,7 +23,10 @@ func TestFileManagedTaskBuilder(t *testing.T) {
 			path:     "fileManagedPath",
 			ctx: []interface{}{
 				yaml.MapSlice{yaml.MapItem{NameField, "C:\temp\npp.7.8.8.Installer.x64.exe"}},
-				yaml.MapSlice{yaml.MapItem{SourceField, "https://github.com/notepad-plus-plus/notepad-plus-plus/releases/download/v7.8.8/npp.7.8.8.Installer.x64.exe"}},
+				yaml.MapSlice{yaml.MapItem{
+					SourceField,
+					"https://github.com/notepad-plus-plus/notepad-plus-plus/releases/download/v7.8.8/npp.7.8.8.Installer.x64.exe",
+				}},
 				yaml.MapSlice{yaml.MapItem{SourceHashField, "79eef25f9b0b2c642c62b7f737d4f53f"}},
 				yaml.MapSlice{yaml.MapItem{MakeDirsField, true}},
 				yaml.MapSlice{yaml.MapItem{ReplaceField, false}},

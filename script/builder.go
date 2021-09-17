@@ -12,7 +12,6 @@ import (
 	"github.com/cloudradar-monitoring/tacoscript/tasks"
 
 	"gopkg.in/yaml.v2"
-	yaml2 "gopkg.in/yaml.v2"
 )
 
 type FileDataProvider struct {
@@ -56,7 +55,7 @@ func (p Builder) BuildScripts() (tasks.Scripts, error) {
 	}
 
 	rawScripts := yaml.MapSlice{}
-	err = yaml2.Unmarshal(yamlBody, &rawScripts)
+	err = yaml.Unmarshal(yamlBody, &rawScripts)
 	if err != nil {
 		return tasks.Scripts{}, fmt.Errorf("invalid script provided: %w", err)
 	}
@@ -85,7 +84,6 @@ func (p Builder) BuildScripts() (tasks.Scripts, error) {
 		}
 
 		scripts = append(scripts, script)
-
 	}
 	err = ValidateScripts(scripts)
 	errs.Add(err)

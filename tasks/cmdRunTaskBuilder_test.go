@@ -229,17 +229,6 @@ func TestCmdRunTaskBuilder(t *testing.T) {
 	}
 }
 
-func BuildExpectedEnvs(expectedEnvs map[interface{}]interface{}) []interface{} {
-	envs := make([]interface{}, 0, len(expectedEnvs))
-	for envKey, envValue := range expectedEnvs {
-		envs = append(envs, map[interface{}]interface{}{
-			envKey: envValue,
-		})
-	}
-
-	return envs
-}
-
 func AssertEnvValuesMatch(t *testing.T, expectedEnvs conv.KeyValues, actualCmdEnvs []string) {
 	expectedRawEnvs := expectedEnvs.ToEqualSignStrings()
 	notFoundEnvs := make([]string, 0, len(expectedEnvs))

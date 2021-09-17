@@ -29,7 +29,6 @@ func (kv KeyValue) ToEqualSignString() string {
 }
 
 func ConvertToKeyValues(val interface{}, path string) (KeyValues, error) {
-
 	rawKeyValues, ok := val.([]interface{})
 	if !ok {
 		return []KeyValue{}, fmt.Errorf("key value array expected at '%s' but got '%s'", path, ConvertSourceToJSONStrIfPossible(val))
@@ -38,7 +37,6 @@ func ConvertToKeyValues(val interface{}, path string) (KeyValues, error) {
 	res := make([]KeyValue, 0, len(rawKeyValues))
 
 	for _, rawKeyValueI := range rawKeyValues {
-
 		rawKeyValue, ok := rawKeyValueI.(yaml.MapSlice)
 		if !ok {
 			return []KeyValue{}, fmt.Errorf("wrong key value element at '%s': '%s'", path, ConvertSourceToJSONStrIfPossible(rawKeyValueI))
