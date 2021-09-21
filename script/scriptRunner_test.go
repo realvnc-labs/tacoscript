@@ -122,7 +122,7 @@ func TestRunner(t *testing.T) {
 				},
 			},
 		}
-		err := runr.Run(context.Background(), testCase.Scripts)
+		err := runr.Run(context.Background(), testCase.Scripts, false)
 		if testCase.ExpectedError == "" {
 			assert.NoError(t, err)
 		} else {

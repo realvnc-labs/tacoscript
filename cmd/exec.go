@@ -15,8 +15,8 @@ var exeCmd = &cobra.Command{
 	Short: "Executes a script provided in argument, you can also run taco {{PATH_TO_SCRIPT}}",
 	Args:  cobra.MinimumNArgs(1),
 	RunE: func(cmd *cobra.Command, args []string) error {
-		logrus.Debugf("will execute script %s", args[0])
+		logrus.Debugf("will execute script %s (abort-on-error=%v)", args[0], AbortOnError)
 
-		return script.RunScript(args[0])
+		return script.RunScript(args[0], AbortOnError)
 	},
 }
