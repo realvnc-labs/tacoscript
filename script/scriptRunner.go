@@ -17,7 +17,7 @@ type Runner struct {
 	DataProvider   FileDataProvider
 }
 
-func (r Runner) Run(ctx context.Context, scripts tasks.Scripts) error {
+func (r Runner) Run(ctx context.Context, scripts tasks.Scripts, globalAbortOnError bool) error {
 	SortScriptsRespectingRequirements(scripts)
 
 	result := scriptResult{}
@@ -78,7 +78,7 @@ func (r Runner) Run(ctx context.Context, scripts tasks.Scripts) error {
 			})
 		}
 
-		if abort {
+		if abort || globalAbortOnError {
 			logrus.Debugf("aborting due to task failure")
 			break
 		}
