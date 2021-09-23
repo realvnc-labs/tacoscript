@@ -18,6 +18,7 @@ type Context struct {
 	Cmds         []string
 	Pids         []int
 	Shell        string
+	StopOnError  bool
 }
 
 func (c *Context) Copy() Context {
