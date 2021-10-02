@@ -59,10 +59,15 @@ func (r Runner) Run(ctx context.Context, scripts tasks.Scripts, globalAbortOnErr
 
 			tasksRun++
 
+			name := ""
+			comment := ""
 			changeMap := make(map[string]string)
 
 			if cmdRunTask, ok := task.(*tasks.CmdRunTask); ok {
+				name = strings.Join(cmdRunTask.GetNames(), "; ")
+
 				if !res.IsSkipped {
+					comment = `Command "` + name + `" run`
 					changeMap["pid"] = fmt.Sprintf("%d", res.Pid)
 					if runErr, ok := res.Err.(exec.RunError); ok {
 						changeMap["retcode"] = fmt.Sprintf("%d", runErr.ExitCode)
@@ -82,6 +87,9 @@ func (r Runner) Run(ctx context.Context, scripts tasks.Scripts, globalAbortOnErr
 					aborted = total - tasksRun
 				}
 			}
+			if pkgTask, ok := task.(*tasks.PkgTask); ok {
+				name = pkgTask.NamedTask.Name
+			}
 
 			if len(res.Changes) > 0 {
 				for k, v := range res.Changes {
@@ -93,12 +101,24 @@ func (r Runner) Run(ctx context.Context, scripts tasks.Scripts, globalAbortOnErr
 			if res.Err != nil {
 				errString = res.Err.Error()
 			}
+
+			if managedTask, ok := task.(*tasks.FileManagedTask); ok {
+				name = managedTask.Name
+				if errString == "" {
+					if managedTask.Updated {
+						comment = "File " + name + " updated"
+					} else {
+						comment = "All files in creates exists"
+					}
+				}
+			}
+
 			result.Results = append(result.Results, taskResult{
 				ID:       script.ID,
 				Function: task.GetName(),
-				Name:     res.Name,
+				Name:     name,
 				Result:   res.Succeeded(),
-				Comment:  res.Comment,
+				Comment:  comment,
 				Started:  onlyTime(taskStart),
 				Duration: res.Duration,
 				Changes:  changeMap,

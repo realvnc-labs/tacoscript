@@ -140,6 +140,9 @@ type FileManagedTask struct {
 	Creates      []string
 	OnlyIf       []string
 	Require      []string
+
+	// was managed file updated?
+	Updated bool
 }
 
 func (crt *FileManagedTask) GetName() string {
@@ -182,9 +185,10 @@ func (crt *FileManagedTask) GetPath() string {
 	return crt.Path
 }
 
+/*
 func (crt *FileManagedTask) String() string {
 	return fmt.Sprintf("task '%s' at path '%s'", crt.TypeName, crt.GetPath())
-}
+}*/
 
 type HashManager interface {
 	HashEquals(hashStr, filePath string) (hashEquals bool, actualCache string, err error)
@@ -257,6 +261,7 @@ func (fmte *FileManagedTaskExecutor) Execute(ctx context.Context, task Task) Exe
 			execRes.Err = err
 			return execRes
 		}
+		fileManagedTask.Updated = true
 	}
 	err = fmte.applyFileAttributesToTarget(fileManagedTask)
 	if err != nil {
