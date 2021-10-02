@@ -203,7 +203,9 @@ type FileManagedTaskExecutor struct {
 
 func (fmte *FileManagedTaskExecutor) Execute(ctx context.Context, task Task) ExecutionResult {
 	logrus.Debugf("will trigger '%s' task", task.GetPath())
-	execRes := ExecutionResult{}
+	execRes := ExecutionResult{
+		Changes: make(map[string]string),
+	}
 
 	fileManagedTask, ok := task.(*FileManagedTask)
 	if !ok {
@@ -262,6 +264,14 @@ func (fmte *FileManagedTaskExecutor) Execute(ctx context.Context, task Task) Exe
 			return execRes
 		}
 		fileManagedTask.Updated = true
+
+		info, err := fmte.FsManager.Stat(fileManagedTask.Name)
+		if err != nil {
+			execRes.Err = err
+			return execRes
+		}
+
+		execRes.Changes["length"] = fmt.Sprintf("%d bytes written", info.Size())
 	}
 	err = fmte.applyFileAttributesToTarget(fileManagedTask)
 	if err != nil {
