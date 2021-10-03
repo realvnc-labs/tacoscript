@@ -224,7 +224,7 @@ func (fmte *FileManagedTaskExecutor) Execute(ctx context.Context, task Task) Exe
 		Path:         fileManagedTask.Path,
 	}
 	logrus.Debugf("will check if the task '%s' should be executed", task.GetPath())
-	skipReason, err := fmte.shouldBeExecuted(execCtx, fileManagedTask)
+	skipReason, err := fmte.shouldBeExecuted(execCtx, fileManagedTask, &execRes)
 	if err != nil {
 		execRes.Err = err
 		return execRes
@@ -329,6 +329,7 @@ func (fmte *FileManagedTaskExecutor) checkOnlyIfs(ctx *exec2.Context, fileManage
 func (fmte *FileManagedTaskExecutor) shouldBeExecuted(
 	ctx *exec2.Context,
 	fileManagedTask *FileManagedTask,
+	execRes *ExecutionResult,
 ) (skipReason string, err error) {
 	isExists, fileName, err := fmte.checkMissingFileCondition(fileManagedTask)
 	if err != nil {
@@ -367,7 +368,7 @@ func (fmte *FileManagedTaskExecutor) shouldBeExecuted(
 		return onlyIfConditionFailedReason, nil
 	}
 
-	skipReasonForContents, err := fmte.shouldSkipForContentExpectation(fileManagedTask)
+	skipReasonForContents, err := fmte.shouldSkipForContentExpectation(fileManagedTask, execRes)
 	if err != nil {
 		return "", err
 	}
@@ -586,7 +587,10 @@ func (fmte *FileManagedTaskExecutor) copyContentToTarget(fileManagedTask *FileMa
 	return err
 }
 
-func (fmte *FileManagedTaskExecutor) shouldSkipForContentExpectation(fileManagedTask *FileManagedTask) (skipReason string, err error) {
+func (fmte *FileManagedTaskExecutor) shouldSkipForContentExpectation(
+	fileManagedTask *FileManagedTask,
+	execRes *ExecutionResult,
+) (skipReason string, err error) {
 	if !fileManagedTask.Contents.Valid {
 		logrus.Debug("contents section is missing, won't check the content")
 		return "", nil
@@ -622,7 +626,9 @@ func (fmte *FileManagedTaskExecutor) shouldSkipForContentExpectation(fileManaged
 	logrus.WithFields(
 		logrus.Fields{
 			"multiline": contentDiff,
-		}).Infof(`file '%s' differs from the expected content field, will copy diff to file`, fileManagedTask.Name)
+		}).Debugf(`file '%s' differs from the expected content field, will copy diff to file`, fileManagedTask.Name)
+
+	execRes.Changes["diff"] = contentDiff
 
 	return "", nil
 }
