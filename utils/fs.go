@@ -150,6 +150,9 @@ func DownloadHTTPSFile(ctx context.Context, skipTLS bool, u fmt.Stringer, target
 	if err != nil {
 		return err
 	}
+	if resp.StatusCode < 200 || resp.StatusCode > 299 {
+		return fmt.Errorf("http status %d %s", resp.StatusCode, http.StatusText(resp.StatusCode))
+	}
 	defer CloseResourceSecure("http body", resp.Body)
 
 	_, err = io.Copy(out, resp.Body)
