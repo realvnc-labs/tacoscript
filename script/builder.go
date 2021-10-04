@@ -69,20 +69,22 @@ func (p Builder) BuildScripts() (tasks.Scripts, error) {
 			Tasks: []tasks.Task{},
 		}
 		index := 0
-		steps := rawTask.Value.(yaml.MapSlice)
-		for _, step := range steps {
-			taskTypeID := step.Key.(string)
+		if steps, ok := rawTask.Value.(yaml.MapSlice); ok {
+			for _, step := range steps {
+				taskTypeID := step.Key.(string)
 
-			index++
-			task, e := p.TaskBuilder.Build(taskTypeID, fmt.Sprintf("%s.%s[%d]", scriptID, taskTypeID, index), step.Value)
-			if e != nil {
-				return tasks.Scripts{}, e
+				index++
+				task, e := p.TaskBuilder.Build(taskTypeID, fmt.Sprintf("%s.%s[%d]", scriptID, taskTypeID, index), step.Value)
+				if e != nil {
+					return tasks.Scripts{}, e
+				}
+
+				errs.Add(task.Validate())
+				script.Tasks = append(script.Tasks, task)
 			}
-
-			errs.Add(task.Validate())
-			script.Tasks = append(script.Tasks, task)
+		} else {
+			errs.Add(fmt.Errorf("Script failed to run. Input YAML is malformed."))
 		}
-
 		scripts = append(scripts, script)
 	}
 	err = ValidateScripts(scripts)
