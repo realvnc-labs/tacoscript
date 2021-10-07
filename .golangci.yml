@@ -107,6 +107,9 @@ issues:
         - funlen
         - gocyclo
         - dupl
+  exclude:
+    - composites
+
 run:
   skip-dirs:
 

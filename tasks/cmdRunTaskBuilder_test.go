@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	"github.com/cloudradar-monitoring/tacoscript/conv"
+	"gopkg.in/yaml.v2"
 
 	"github.com/stretchr/testify/assert"
 )
@@ -13,26 +14,24 @@ func TestCmdRunTaskBuilder(t *testing.T) {
 	testCases := []struct {
 		typeName      string
 		path          string
-		ctx           []map[string]interface{}
+		ctx           []interface{}
 		expectedTask  *CmdRunTask
 		expectedError string
 	}{
 		{
 			typeName: "someType",
 			path:     "somePath",
-			ctx: []map[string]interface{}{
-				{
-					NameField:  1,
-					CwdField:   "somedir",
-					UserField:  "someuser",
-					ShellField: "someshell",
-					EnvField: BuildExpectedEnvs(map[interface{}]interface{}{
-						"one": "1",
-						"two": "2",
-					}),
-					CreatesField: "somefile.txt",
-					OnlyIf:       "one condition",
-				},
+			ctx: []interface{}{
+				yaml.MapSlice{yaml.MapItem{NameField, "1"}},
+				yaml.MapSlice{yaml.MapItem{CwdField, "somedir"}},
+				yaml.MapSlice{yaml.MapItem{UserField, "someuser"}},
+				yaml.MapSlice{yaml.MapItem{ShellField, "someshell"}},
+				yaml.MapSlice{yaml.MapItem{EnvField, []interface{}{
+					yaml.MapSlice{yaml.MapItem{"one", "1"}},
+					yaml.MapSlice{yaml.MapItem{"two", "2"}},
+				}}},
+				yaml.MapSlice{yaml.MapItem{CreatesField, "somefile.txt"}},
+				yaml.MapSlice{yaml.MapItem{OnlyIf, "one condition"}},
 			},
 			expectedTask: &CmdRunTask{
 				TypeName:   "someType",
@@ -55,13 +54,12 @@ func TestCmdRunTaskBuilder(t *testing.T) {
 				OnlyIf:                []string{"one condition"},
 			},
 		},
+
 		{
 			typeName: "someTypeWithErrors",
 			path:     "somePathWithErrors",
-			ctx: []map[string]interface{}{
-				{
-					EnvField: 123,
-				},
+			ctx: []interface{}{
+				yaml.MapSlice{yaml.MapItem{EnvField, 123}},
 			},
 			expectedTask: &CmdRunTask{
 				TypeName: "someTypeWithErrors",
@@ -73,12 +71,10 @@ func TestCmdRunTaskBuilder(t *testing.T) {
 		{
 			typeName: "someTypeWithErrors2",
 			path:     "somePathWithErrors2",
-			ctx: []map[string]interface{}{
-				{
-					EnvField: []interface{}{
-						"one",
-					},
-				},
+			ctx: []interface{}{
+				yaml.MapSlice{yaml.MapItem{EnvField, []interface{}{
+					"one",
+				}}},
 			},
 			expectedTask: &CmdRunTask{
 				TypeName: "someTypeWithErrors2",
@@ -90,14 +86,12 @@ func TestCmdRunTaskBuilder(t *testing.T) {
 		{
 			typeName: "manyNamesType",
 			path:     "manyNamesPath",
-			ctx: []map[string]interface{}{
-				{
-					RequireField: "one require field",
-					NamesField: []interface{}{
-						"name one",
-						"name two",
-					},
-				},
+			ctx: []interface{}{
+				yaml.MapSlice{yaml.MapItem{RequireField, "one require field"}},
+				yaml.MapSlice{yaml.MapItem{NamesField, []interface{}{
+					"name one",
+					"name two",
+				}}},
 			},
 			expectedTask: &CmdRunTask{
 				TypeName: "manyNamesType",
@@ -114,25 +108,23 @@ func TestCmdRunTaskBuilder(t *testing.T) {
 		{
 			typeName: "manyCreatesType",
 			path:     "manyCreatesPath",
-			ctx: []map[string]interface{}{
-				{
-					NameField: "many creates command",
-					CreatesField: []interface{}{
-						"create one",
-						"create two",
-						"create three",
-					},
-					RequireField: []interface{}{
-						"req one",
-						"req two",
-						"req three",
-					},
-					OnlyIf: []interface{}{
-						"OnlyIf one",
-						"OnlyIf two",
-						"OnlyIf three",
-					},
-				},
+			ctx: []interface{}{
+				yaml.MapSlice{yaml.MapItem{NameField, "many creates command"}},
+				yaml.MapSlice{yaml.MapItem{CreatesField, []interface{}{
+					"create one",
+					"create two",
+					"create three",
+				}}},
+				yaml.MapSlice{yaml.MapItem{RequireField, []interface{}{
+					"req one",
+					"req two",
+					"req three",
+				}}},
+				yaml.MapSlice{yaml.MapItem{OnlyIf, []interface{}{
+					"OnlyIf one",
+					"OnlyIf two",
+					"OnlyIf three",
+				}}},
 			},
 			expectedTask: &CmdRunTask{
 				TypeName:  "manyCreatesType",
@@ -158,11 +150,9 @@ func TestCmdRunTaskBuilder(t *testing.T) {
 		{
 			typeName: "oneUnlessValue",
 			path:     "oneUnlessValuePath",
-			ctx: []map[string]interface{}{
-				{
-					NameField: "one unless value",
-					Unless:    "unless one",
-				},
+			ctx: []interface{}{
+				yaml.MapSlice{yaml.MapItem{NameField, "one unless value"}},
+				yaml.MapSlice{yaml.MapItem{Unless, "unless one"}},
 			},
 			expectedTask: &CmdRunTask{
 				TypeName:  "oneUnlessValue",
@@ -176,15 +166,13 @@ func TestCmdRunTaskBuilder(t *testing.T) {
 		{
 			typeName: "manyUnlessValue",
 			path:     "manyUnlessValuePath",
-			ctx: []map[string]interface{}{
-				{
-					NameField: "many unless value",
-					Unless: []interface{}{
-						"Unless one",
-						"Unless two",
-						"Unless three",
-					},
-				},
+			ctx: []interface{}{
+				yaml.MapSlice{yaml.MapItem{NameField, "many unless value"}},
+				yaml.MapSlice{yaml.MapItem{Unless, []interface{}{
+					"Unless one",
+					"Unless two",
+					"Unless three",
+				}}},
 			},
 			expectedTask: &CmdRunTask{
 				TypeName:  "manyUnlessValue",
@@ -239,17 +227,6 @@ func TestCmdRunTaskBuilder(t *testing.T) {
 			assert.Equal(t, tc.expectedTask.Unless, actualCmdRunTask.Unless)
 		})
 	}
-}
-
-func BuildExpectedEnvs(expectedEnvs map[interface{}]interface{}) []interface{} {
-	envs := make([]interface{}, 0, len(expectedEnvs))
-	for envKey, envValue := range expectedEnvs {
-		envs = append(envs, map[interface{}]interface{}{
-			envKey: envValue,
-		})
-	}
-
-	return envs
 }
 
 func AssertEnvValuesMatch(t *testing.T, expectedEnvs conv.KeyValues, actualCmdEnvs []string) {
