@@ -281,7 +281,6 @@ func (sr SystemRunner) setIO(cmd *exec.Cmd, stdOutWriter, stdErrWriter io.Writer
 }
 
 func (sr SystemRunner) parseShellParam(rawShell string) ShellParam {
-
 	rawShell = strings.TrimSpace(rawShell)
 	if rawShell == "" {
 		if runtime.GOOS == "windows" {
