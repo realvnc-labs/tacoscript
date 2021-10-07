@@ -5,6 +5,7 @@ import (
 	"io"
 	"os"
 	"os/exec"
+	"runtime"
 	"strings"
 
 	io2 "github.com/cloudradar-monitoring/tacoscript/io"
@@ -22,7 +23,8 @@ var cParamShells = map[string]string{
 	"cmd.exe": "/C",
 }
 
-const defaultShell = "sh"
+const defaultWindowsShell = "cmd.exe"
+const defaultUnixShell = "sh"
 
 type SystemAPI interface {
 	Run(cmd *exec.Cmd) error
@@ -279,9 +281,14 @@ func (sr SystemRunner) setIO(cmd *exec.Cmd, stdOutWriter, stdErrWriter io.Writer
 }
 
 func (sr SystemRunner) parseShellParam(rawShell string) ShellParam {
+
 	rawShell = strings.TrimSpace(rawShell)
 	if rawShell == "" {
-		rawShell = defaultShell
+		if runtime.GOOS == "windows" {
+			rawShell = defaultWindowsShell
+		} else {
+			rawShell = defaultUnixShell
+		}
 	}
 
 	parsedShellParam := ShellParam{
