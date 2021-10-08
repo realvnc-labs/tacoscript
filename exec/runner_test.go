@@ -135,7 +135,7 @@ func TestRunner(t *testing.T) {
 			execContext := tc.execContext
 			err := systemRunner.Run(execContext)
 			if tc.expectedErr != nil {
-				assert.Equal(t, err, tc.expectedErr)
+				assert.Equal(t, tc.expectedErr, err)
 				return
 			}
 

@@ -102,7 +102,7 @@ func (sr SystemRunner) Run(execContext *Context) error {
 		return err
 	}
 	var exitCode int
-	execContext.Pids, exitCode, err = sr.runCmds(cmds, execContext.StopOnError)
+	execContext.Pids, exitCode, err = sr.runCmds(cmds)
 	if err != nil {
 		return RunError{Err: err, ExitCode: exitCode}
 	}
@@ -110,7 +110,7 @@ func (sr SystemRunner) Run(execContext *Context) error {
 	return nil
 }
 
-func (sr SystemRunner) runCmds(cmds []*exec.Cmd, stopOnError bool) (pids []int, exitCode int, err error) {
+func (sr SystemRunner) runCmds(cmds []*exec.Cmd) (pids []int, exitCode int, err error) {
 	for _, cmd := range cmds {
 		logrus.Debugf("will run cmd '%s'", cmd.String())
 		err := sr.SystemAPI.Run(cmd)
@@ -119,16 +119,11 @@ func (sr SystemRunner) runCmds(cmds []*exec.Cmd, stopOnError bool) (pids []int, 
 		}
 
 		if exitError, ok := err.(*exec.ExitError); ok {
-			if stopOnError {
-				exitCode = exitError.ExitCode()
-			} else {
-				// Using stop_on_error: False, the overall exit code is the sum of all individual exit codes.
-				exitCode += exitError.ExitCode()
-			}
+			exitCode = exitError.ExitCode()
 		}
 
-		if stopOnError && err != nil {
-			logrus.Debugf("stopped execution of multi-command (stop-on-error=%v)", stopOnError)
+		if err != nil {
+			logrus.Debugf("stopped execution of multi-command")
 			return pids, exitCode, err
 		}
 		logrus.Debugf("execution success for '%s'", cmd.String())

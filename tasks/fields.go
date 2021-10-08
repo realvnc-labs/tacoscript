@@ -27,7 +27,6 @@ const (
 	ModeField         = "mode"
 	EncodingField     = "encoding"
 	AbortOnErrorField = "abort_on_error"
-	StopOnErrorField  = "stop_on_error"
 	Version           = "version"
 	Refresh           = "refresh"
 )
