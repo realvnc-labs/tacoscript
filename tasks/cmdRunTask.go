@@ -32,9 +32,6 @@ type CmdRunTask struct {
 
 	// aborts task execution if one task fails
 	AbortOnError bool
-
-	// aborts execution of a multi command task if a command fails
-	StopOnError bool
 }
 
 type CmdRunTaskBuilder struct {
@@ -87,8 +84,6 @@ func (crtb CmdRunTaskBuilder) Build(typeName, path string, ctx interface{}) (Tas
 			errs.Add(err)
 		case AbortOnErrorField:
 			t.AbortOnError = conv.ConvertToBool(val)
-		case StopOnErrorField:
-			t.StopOnError = conv.ConvertToBool(val)
 		}
 	}
 
@@ -150,7 +145,6 @@ func (crte *CmdRunTaskExecutor) Execute(ctx context.Context, task Task) Executio
 		Envs:         cmdRunTask.Envs,
 		Cmds:         cmdRunTask.GetNames(),
 		Shell:        cmdRunTask.Shell,
-		StopOnError:  cmdRunTask.StopOnError,
 	}
 
 	shouldNotBeExecutedReason, err := crte.shouldBeExecuted(execCtx, cmdRunTask)
@@ -167,8 +161,6 @@ func (crte *CmdRunTaskExecutor) Execute(ctx context.Context, task Task) Executio
 	}
 
 	start := time.Now()
-
-	// XXXX respect stop_on_error
 
 	err = crte.Runner.Run(execCtx)
 
