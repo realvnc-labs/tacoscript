@@ -102,7 +102,7 @@ func (sr SystemRunner) Run(execContext *Context) error {
 		return err
 	}
 	var exitCode int
-	execContext.Pids, exitCode, err = sr.runCmds(cmds)
+	execContext.Pid, exitCode, err = sr.runCmds(cmds)
 	if err != nil {
 		return RunError{Err: err, ExitCode: exitCode}
 	}
@@ -110,12 +110,13 @@ func (sr SystemRunner) Run(execContext *Context) error {
 	return nil
 }
 
-func (sr SystemRunner) runCmds(cmds []*exec.Cmd) (pids []int, exitCode int, err error) {
+func (sr SystemRunner) runCmds(cmds []*exec.Cmd) (pid int, exitCode int, err error) {
+	// XXX: write all commands to file and invoke using shell ...
 	for _, cmd := range cmds {
 		logrus.Debugf("will run cmd '%s'", cmd.String())
 		err := sr.SystemAPI.Run(cmd)
 		if cmd.Process != nil {
-			pids = append(pids, cmd.Process.Pid)
+			pid = cmd.Process.Pid
 		}
 
 		if exitError, ok := err.(*exec.ExitError); ok {
@@ -124,12 +125,12 @@ func (sr SystemRunner) runCmds(cmds []*exec.Cmd) (pids []int, exitCode int, err 
 
 		if err != nil {
 			logrus.Debugf("stopped execution of multi-command")
-			return pids, exitCode, err
+			return pid, exitCode, err
 		}
 		logrus.Debugf("execution success for '%s'", cmd.String())
 	}
 
-	return pids, exitCode, nil
+	return pid, exitCode, nil
 }
 
 func (sr SystemRunner) setWorkingDir(cmd *exec.Cmd, execContext *Context) {

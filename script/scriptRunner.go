@@ -61,7 +61,7 @@ func (r Runner) Run(ctx context.Context, scripts tasks.Scripts, globalAbortOnErr
 
 				if !res.IsSkipped {
 					comment = `Command "` + name + `" run`
-					changeMap["pid"] = intsToString(res.Pids)
+					changeMap["pid"] = fmt.Sprintf("%d", res.Pid)
 					if runErr, ok := res.Err.(exec.RunError); ok {
 						changeMap["retcode"] = fmt.Sprintf("%d", runErr.ExitCode)
 					}
