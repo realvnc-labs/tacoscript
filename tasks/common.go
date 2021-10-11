@@ -26,7 +26,7 @@ type ExecutionResult struct {
 	StdOut     string
 	IsSkipped  bool
 	SkipReason string
-	Pids       []int
+	Pid        int
 	Name       string
 	Comment    string
 	Changes    map[string]string

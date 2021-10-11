@@ -172,8 +172,7 @@ func (crte *CmdRunTaskExecutor) Execute(ctx context.Context, task Task) Executio
 
 	execRes.StdErr = stderrBuf.String()
 	execRes.StdOut = stdoutBuf.String()
-	execRes.Pids = execCtx.Pids
-	execRes.Comment = `Command "` + execRes.Name + `" run`
+	execRes.Pid = execCtx.Pid
 
 	return execRes
 }
