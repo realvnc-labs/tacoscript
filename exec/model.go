@@ -37,14 +37,7 @@ func (c *Context) Copy() Context {
 type ShellParam struct {
 	ShellName      string
 	ShellPath      string
-	ShellParams    []string
 	RawShellString string
-}
-
-type CmdParam struct {
-	Cmd          string
-	Params       []string
-	RawCmdString string
 }
 
 type RunError struct {
