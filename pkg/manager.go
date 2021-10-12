@@ -28,12 +28,17 @@ type ManagementCmdsProvider interface {
 }
 
 type PackageTaskManager struct {
-	Runner                     exec.Runner
-	PackageManagerCmdProviders []ManagementCmdsProvider
+	Runner                          exec.Runner
+	ManagementCmdsProviderBuildFunc func() ([]ManagementCmdsProvider, error)
 }
 
 func (pm PackageTaskManager) ExecuteTask(ctx context.Context, t *tasks.PkgTask) (res *tasks.PackageManagerExecutionResult, err error) {
-	if len(pm.PackageManagerCmdProviders) == 0 {
+	managementCmdProviders, err := pm.ManagementCmdsProviderBuildFunc()
+	if err != nil {
+		return nil, err
+	}
+
+	if len(managementCmdProviders) == 0 {
 		err = fmt.Errorf("no package manager providers for the current OS ")
 		return
 	}
@@ -42,8 +47,8 @@ func (pm PackageTaskManager) ExecuteTask(ctx context.Context, t *tasks.PkgTask) 
 
 	var managementCmds *ManagementCmds
 	foundSupportedPackageManager := false
-	triedCommands := make([]string, 0, len(pm.PackageManagerCmdProviders))
-	for _, managementCmdProvider := range pm.PackageManagerCmdProviders {
+	triedCommands := make([]string, 0, len(managementCmdProviders))
+	for _, managementCmdProvider := range managementCmdProviders {
 		managementCmds, err = managementCmdProvider.GetManagementCmds(t)
 		if err != nil {
 			return nil, err

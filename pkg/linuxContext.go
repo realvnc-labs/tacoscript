@@ -26,6 +26,10 @@ var linuxOSBuilderMap = map[string][]ManagementCmdsProvider{
 		DnfCmdsProvider{},
 		YumCmdsProvider{},
 	},
+	"fedora": {
+		DnfCmdsProvider{},
+		YumCmdsProvider{},
+	},
 }
 
 func init() {

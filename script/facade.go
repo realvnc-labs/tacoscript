@@ -3,10 +3,8 @@ package script
 import (
 	"context"
 
-	"github.com/cloudradar-monitoring/tacoscript/pkg"
-	"github.com/sirupsen/logrus"
-
 	"github.com/cloudradar-monitoring/tacoscript/exec"
+	"github.com/cloudradar-monitoring/tacoscript/pkg"
 	"github.com/cloudradar-monitoring/tacoscript/utils"
 
 	"github.com/cloudradar-monitoring/tacoscript/tasks"
@@ -34,13 +32,9 @@ func RunScript(scriptPath string) error {
 		SystemAPI: exec.OSApi{},
 	}
 
-	pkgCmdProviders, err := pkg.BuildManagementCmdsProviders()
-	if err != nil {
-		logrus.Warn(err.Error())
-	}
 	pkgTaskManager := pkg.PackageTaskManager{
-		Runner:                     cmdRunner,
-		PackageManagerCmdProviders: pkgCmdProviders,
+		Runner:                          cmdRunner,
+		ManagementCmdsProviderBuildFunc: pkg.BuildManagementCmdsProviders,
 	}
 	pkgTaskExecutor := &tasks.PkgTaskExecutor{
 		PackageManager: pkgTaskManager,
