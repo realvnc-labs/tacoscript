@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"os"
 	"strconv"
+
+	"gopkg.in/yaml.v2"
 )
 
 type KeyValues []KeyValue
@@ -35,12 +37,14 @@ func ConvertToKeyValues(val interface{}, path string) (KeyValues, error) {
 	res := make([]KeyValue, 0, len(rawKeyValues))
 
 	for _, rawKeyValueI := range rawKeyValues {
-		rawKeyValue, ok := rawKeyValueI.(map[interface{}]interface{})
+		rawKeyValue, ok := rawKeyValueI.(yaml.MapSlice)
 		if !ok {
 			return []KeyValue{}, fmt.Errorf("wrong key value element at '%s': '%s'", path, ConvertSourceToJSONStrIfPossible(rawKeyValueI))
 		}
 
-		for key, val := range rawKeyValue {
+		for _, item := range rawKeyValue {
+			key := item.Key.(string)
+			val := item.Value
 			res = append(res, KeyValue{
 				Key:   fmt.Sprint(key),
 				Value: fmt.Sprint(val),
