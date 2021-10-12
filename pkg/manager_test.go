@@ -174,10 +174,10 @@ func TestTaskExecution(t *testing.T) {
 			}
 			mngr := PackageTaskManager{
 				Runner: tc.Runner,
-				PackageManagerCmdProviders: []ManagementCmdsProvider{
-					&MockedOsPackageManagerCmdProvider{
-						ErrToGive: cmdBuildError,
-					},
+				ManagementCmdsProviderBuildFunc: func() ([]ManagementCmdsProvider, error) {
+					return []ManagementCmdsProvider{
+						&MockedOsPackageManagerCmdProvider{ErrToGive: cmdBuildError},
+					}, nil
 				},
 			}
 
