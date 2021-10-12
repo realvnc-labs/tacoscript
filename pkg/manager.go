@@ -21,6 +21,7 @@ type ManagementCmds struct {
 	UninstallCmds []string
 	UpgradeCmds   []string
 	ListCmd       string
+	FilterFunc    func(ctx context.Context, rawPackages []string) []string
 }
 
 type ManagementCmdsProvider interface {
@@ -252,6 +253,10 @@ func (pm PackageTaskManager) getPackagesList(
 
 	packagesList = strings.Split(res.Output, utils.LineBreak)
 	logrus.Debugf("got %d packages", len(packagesList))
+
+	if mngtCmds.FilterFunc != nil {
+		packagesList = mngtCmds.FilterFunc(ctx, packagesList)
+	}
 
 	return packagesList, nil
 }
