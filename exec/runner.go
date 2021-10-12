@@ -1,8 +1,8 @@
 package exec
 
 import (
-	"fmt"
 	"io"
+	"io/ioutil"
 	"os"
 	"os/exec"
 	"runtime"
@@ -11,17 +11,6 @@ import (
 	io2 "github.com/cloudradar-monitoring/tacoscript/io"
 	"github.com/sirupsen/logrus"
 )
-
-var cParamShells = map[string]string{
-	"zsh":     "-c",
-	"bash":    "-c",
-	"sh":      "-c",
-	"csh":     "-c",
-	"tcsh":    "-c",
-	"ksh":     "-c",
-	"fish":    "-c",
-	"cmd.exe": "/C",
-}
 
 const defaultWindowsShell = "cmd.exe"
 const defaultUnixShell = "sh"
@@ -97,12 +86,20 @@ func (rm *RunnerMock) Run(execContext *Context) error {
 }
 
 func (sr SystemRunner) Run(execContext *Context) error {
-	cmds, err := sr.createCmds(execContext)
+	tmpFile, err := ioutil.TempFile(os.TempDir(), "taco-")
 	if err != nil {
 		return err
 	}
+	defer os.Remove(tmpFile.Name())
+
+	cmd, err := sr.createCmd(execContext, tmpFile)
+	if err != nil {
+		return err
+	}
+
 	var exitCode int
-	execContext.Pid, exitCode, err = sr.runCmds(cmds)
+	execContext.Pid, exitCode, err = sr.runCmd(cmd)
+
 	if err != nil {
 		return RunError{Err: err, ExitCode: exitCode}
 	}
@@ -110,25 +107,22 @@ func (sr SystemRunner) Run(execContext *Context) error {
 	return nil
 }
 
-func (sr SystemRunner) runCmds(cmds []*exec.Cmd) (pid int, exitCode int, err error) {
-	// XXX: write all commands to file and invoke using shell ...
-	for _, cmd := range cmds {
-		logrus.Debugf("will run cmd '%s'", cmd.String())
-		err := sr.SystemAPI.Run(cmd)
-		if cmd.Process != nil {
-			pid = cmd.Process.Pid
-		}
-
-		if exitError, ok := err.(*exec.ExitError); ok {
-			exitCode = exitError.ExitCode()
-		}
-
-		if err != nil {
-			logrus.Debugf("stopped execution of multi-command")
-			return pid, exitCode, err
-		}
-		logrus.Debugf("execution success for '%s'", cmd.String())
+func (sr SystemRunner) runCmd(cmd *exec.Cmd) (pid, exitCode int, err error) {
+	logrus.Debugf("will run cmd '%s'", cmd.String())
+	err = sr.SystemAPI.Run(cmd)
+	if cmd.Process != nil {
+		pid = cmd.Process.Pid
 	}
+
+	if exitError, ok := err.(*exec.ExitError); ok {
+		exitCode = exitError.ExitCode()
+	}
+
+	if err != nil {
+		logrus.Debugf("stopped execution of multi-command")
+		return pid, exitCode, err
+	}
+	logrus.Debugf("execution success for '%s'", cmd.String())
 
 	return pid, exitCode, nil
 }
@@ -140,48 +134,25 @@ func (sr SystemRunner) setWorkingDir(cmd *exec.Cmd, execContext *Context) {
 	}
 }
 
-func (sr SystemRunner) createCmds(execContext *Context) (cmds []*exec.Cmd, err error) {
-	rawCmds := make([]string, 0, len(execContext.Cmds))
-	for _, cmdName := range execContext.Cmds {
-		cmdName = strings.TrimSpace(cmdName)
-		if cmdName == "" {
-			continue
-		}
-
-		rawCmds = append(rawCmds, cmdName)
+func (sr SystemRunner) createCmd(execContext *Context, tmpFile *os.File) (cmd *exec.Cmd, err error) {
+	rawCmds := strings.Join(execContext.Cmds, "\n")
+	if _, err := tmpFile.Write([]byte(rawCmds)); err != nil {
+		return nil, err
 	}
 
 	shellParam := sr.parseShellParam(execContext.Shell)
-	for _, rawCmd := range rawCmds {
-		cmd, err := sr.createCmd(rawCmd, shellParam, execContext)
-		if err != nil {
-			return cmds, err
-		}
+	cmdName := sr.buildCmdParts(shellParam)
 
-		cmds = append(cmds, cmd)
-	}
-
-	return
-}
-
-func (sr SystemRunner) createCmd(rawCmd string, shellParam ShellParam, execContext *Context) (*exec.Cmd, error) {
-	cmdParam := sr.parseCmdParam(rawCmd)
-
-	cmdName, cmdArgs := sr.buildCmdParts(shellParam, cmdParam)
-
-	cmd := exec.Command(cmdName, cmdArgs...)
+	cmd = exec.Command(cmdName, tmpFile.Name())
 
 	sr.setWorkingDir(cmd, execContext)
-
-	err := sr.setUser(cmd, execContext)
-	if err != nil {
+	if err := sr.setUser(cmd, execContext); err != nil {
 		return nil, err
 	}
 
 	sr.setEnvs(cmd, execContext)
 	sr.setIO(cmd, execContext.StdoutWriter, execContext.StderrWriter)
-
-	return cmd, nil
+	return
 }
 
 func (sr SystemRunner) setEnvs(cmd *exec.Cmd, execContext *Context) {
@@ -207,63 +178,9 @@ func (sr SystemRunner) setUser(cmd *exec.Cmd, execContext *Context) error {
 	return nil
 }
 
-func (sr SystemRunner) parseCmdParam(rawCmd string) CmdParam {
-	rawCmd = strings.TrimSpace(rawCmd)
-
-	parsedCmdParam := CmdParam{
-		RawCmdString: rawCmd,
-	}
-
-	if rawCmd == "" {
-		return parsedCmdParam
-	}
-
-	cmdParts := strings.Split(rawCmd, " ")
-	parsedCmdParam.Cmd = cmdParts[0]
-
-	parsedCmdParam.Params = make([]string, 0, len(cmdParts))
-	for k, cmdPart := range cmdParts {
-		if k == 0 {
-			continue
-		}
-		cmdPart = strings.TrimSpace(cmdPart)
-		parsedCmdParam.Params = append(parsedCmdParam.Params, cmdPart)
-	}
-
-	return parsedCmdParam
-}
-
-func (sr SystemRunner) buildCmdParts(shellParam ShellParam, cmdParam CmdParam) (cmdName string, cmdArgs []string) {
-	if shellParam.ShellPath != "" {
-		sr.addCShellParamIfNeeded(&shellParam)
-		cmdName = shellParam.ShellPath
-		cmdParams := fmt.Sprintf("%s %s", cmdParam.Cmd, strings.Join(cmdParam.Params, " "))
-		cmdArgs = shellParam.ShellParams
-		cmdArgs = append(cmdArgs, cmdParams)
-	} else {
-		cmdName = cmdParam.Cmd
-		cmdArgs = cmdParam.Params
-	}
-
+func (sr SystemRunner) buildCmdParts(shellParam ShellParam) (cmdName string) {
+	cmdName = shellParam.ShellPath
 	return
-}
-
-func (sr SystemRunner) addCShellParamIfNeeded(shellParam *ShellParam) {
-	if shellParam.ShellName == "" || len(shellParam.ShellParams) > 0 {
-		return
-	}
-
-	var cParam string
-	for knownShellName, knownCParam := range cParamShells {
-		if knownShellName == shellParam.ShellName {
-			cParam = knownCParam
-			break
-		}
-	}
-
-	if cParam != "" {
-		shellParam.ShellParams = append(shellParam.ShellParams, cParam)
-	}
 }
 
 func (sr SystemRunner) setIO(cmd *exec.Cmd, stdOutWriter, stdErrWriter io.Writer) {
@@ -300,15 +217,6 @@ func (sr SystemRunner) parseShellParam(rawShell string) ShellParam {
 
 	shellParts := strings.Split(rawShell, " ")
 	parsedShellParam.ShellPath = shellParts[0]
-
-	parsedShellParam.ShellParams = make([]string, 0, len(shellParts))
-	for k, shellPart := range shellParts {
-		if k == 0 {
-			continue
-		}
-		shellPart = strings.TrimSpace(shellPart)
-		parsedShellParam.ShellParams = append(parsedShellParam.ShellParams, shellPart)
-	}
 
 	shellPathParts := strings.Split(parsedShellParam.ShellPath, string(os.PathSeparator))
 	parsedShellParam.ShellName = shellPathParts[len(shellPathParts)-1]
