@@ -37,6 +37,7 @@ func (c *Context) Copy() Context {
 type ShellParam struct {
 	ShellName      string
 	ShellPath      string
+	ShellParams    []string
 	RawShellString string
 }
 
