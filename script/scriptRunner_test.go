@@ -40,7 +40,7 @@ func (em *ExecutorMock) Execute(ctx context.Context, task tasks.Task) tasks.Exec
 	return em.ExecResult
 }
 
-func TestRunner(t *testing.T) {
+func TestScriptRunner(t *testing.T) {
 	testCases := []struct {
 		Scripts               tasks.Scripts
 		ExpectedError         string
