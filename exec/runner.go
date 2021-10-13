@@ -209,6 +209,9 @@ func (sr SystemRunner) parseShellParam(rawShell string) ShellParam {
 			rawShell = defaultUnixShell
 		}
 	}
+	if rawShell == "cmd" && runtime.GOOS == "windows" {
+		rawShell = defaultWindowsShell
+	}
 
 	parsedShellParam := ShellParam{
 		RawShellString: rawShell,
