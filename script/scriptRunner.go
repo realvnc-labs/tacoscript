@@ -66,8 +66,8 @@ func (r Runner) Run(ctx context.Context, scripts tasks.Scripts, globalAbortOnErr
 						changeMap["retcode"] = fmt.Sprintf("%d", runErr.ExitCode)
 					}
 
-					changeMap["stderr"] = res.StdErr
-					changeMap["stdout"] = res.StdOut
+					changeMap["stderr"] = strings.TrimSpace(res.StdErr)
+					changeMap["stdout"] = strings.TrimSpace(res.StdOut)
 					changes++
 				} else {
 					comment = `Command "` + name + `" did not run: ` + res.SkipReason
