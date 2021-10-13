@@ -118,13 +118,8 @@ func (sr SystemRunner) runCmd(cmd *exec.Cmd) (pid, exitCode int, err error) {
 		exitCode = exitError.ExitCode()
 	}
 
-	if err != nil {
-		logrus.Debugf("stopped execution of multi-command")
-		return pid, exitCode, err
-	}
 	logrus.Debugf("execution success for '%s'", cmd.String())
-
-	return pid, exitCode, nil
+	return pid, exitCode, err
 }
 
 func (sr SystemRunner) setWorkingDir(cmd *exec.Cmd, execContext *Context) {
@@ -141,9 +136,10 @@ func (sr SystemRunner) createCmd(execContext *Context, tmpFile *os.File) (cmd *e
 	}
 
 	shellParam := sr.parseShellParam(execContext.Shell)
-	cmdName := sr.buildCmdParts(shellParam)
+	cmdName, cmdArgs := sr.buildCmdParts(shellParam)
+	cmdArgs = append(cmdArgs, tmpFile.Name())
 
-	cmd = exec.Command(cmdName, tmpFile.Name())
+	cmd = exec.Command(cmdName, cmdArgs...)
 
 	sr.setWorkingDir(cmd, execContext)
 	if err := sr.setUser(cmd, execContext); err != nil {
@@ -178,8 +174,9 @@ func (sr SystemRunner) setUser(cmd *exec.Cmd, execContext *Context) error {
 	return nil
 }
 
-func (sr SystemRunner) buildCmdParts(shellParam ShellParam) (cmdName string) {
+func (sr SystemRunner) buildCmdParts(shellParam ShellParam) (cmdName string, cmdArgs []string) {
 	cmdName = shellParam.ShellPath
+	cmdArgs = shellParam.ShellParams
 	return
 }
 
@@ -220,6 +217,14 @@ func (sr SystemRunner) parseShellParam(rawShell string) ShellParam {
 
 	shellPathParts := strings.Split(parsedShellParam.ShellPath, string(os.PathSeparator))
 	parsedShellParam.ShellName = shellPathParts[len(shellPathParts)-1]
+
+	for k, shellPart := range shellParts {
+		if k == 0 {
+			continue
+		}
+		shellPart = strings.TrimSpace(shellPart)
+		parsedShellParam.ShellParams = append(parsedShellParam.ShellParams, shellPart)
+	}
 
 	return parsedShellParam
 }

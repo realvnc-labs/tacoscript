@@ -4,6 +4,7 @@ go 1.14
 
 require (
 	github.com/StackExchange/wmi v1.2.0 // indirect
+	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/elliotchance/orderedmap v1.4.0
 	github.com/go-ole/go-ole v1.2.5 // indirect
 	github.com/goftp/file-driver v0.0.0-20180502053751-5d604a0fc0c9
