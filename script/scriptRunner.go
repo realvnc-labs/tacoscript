@@ -53,6 +53,19 @@ func (r Runner) Run(ctx context.Context, scripts tasks.Scripts, globalAbortOnErr
 
 			changeMap := make(map[string]string)
 
+
+			if !res.IsSkipped {
+				comment = `Command "` + name + `" run`
+				changeMap["pid"] = fmt.Sprintf("%d", res.Pid)
+				if runErr, ok := res.Err.(exec.RunError); ok {
+					changeMap["retcode"] = fmt.Sprintf("%d", runErr.ExitCode)
+				}
+
+				changeMap["stderr"] = strings.TrimSpace(res.StdErr)
+				changeMap["stdout"] = strings.TrimSpace(res.StdOut)
+				changes++
+			}
+
 			if len(res.Changes) > 0 {
 				for k, v := range res.Changes {
 					changeMap[k] = v

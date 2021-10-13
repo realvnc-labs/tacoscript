@@ -135,6 +135,8 @@ func (sr SystemRunner) createCmd(execContext *Context, tmpFile *os.File) (cmd *e
 		return nil, err
 	}
 
+	logrus.Debugf("WROTE TO FILE:\n%s\n----\n", rawCmds)
+
 	shellParam := sr.parseShellParam(execContext.Shell)
 	cmdName, cmdArgs := sr.buildCmdParts(shellParam)
 	cmdArgs = append(cmdArgs, tmpFile.Name())
