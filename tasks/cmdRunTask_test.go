@@ -8,10 +8,9 @@ import (
 	"testing"
 
 	"github.com/cloudradar-monitoring/tacoscript/apptest"
+	"github.com/cloudradar-monitoring/tacoscript/conv"
 
 	appExec "github.com/cloudradar-monitoring/tacoscript/exec"
-
-	"github.com/cloudradar-monitoring/tacoscript/conv"
 
 	"github.com/stretchr/testify/assert"
 )
@@ -21,7 +20,6 @@ func TestTaskExecution(t *testing.T) {
 		Task            *CmdRunTask
 		ExpectedResult  ExecutionResult
 		RunnerMock      *appExec.SystemRunner
-		ExpectedCmdStrs []string
 		Name            string
 		FileShouldExist bool
 	}{
@@ -47,7 +45,6 @@ func TestTaskExecution(t *testing.T) {
 				StdOut:    "some std out",
 				StdErr:    "some std err",
 			},
-			ExpectedCmdStrs: []string{"zsh -c some test command"},
 			RunnerMock: &appExec.SystemRunner{SystemAPI: &appExec.SystemAPIMock{
 				Cmds:               []*exec.Cmd{},
 				ErrToGive:          nil,
@@ -120,7 +117,6 @@ func TestTaskExecution(t *testing.T) {
 				IsSkipped: false,
 				Err:       nil,
 			},
-			ExpectedCmdStrs: []string{"many names cmd 1", "many names cmd 2", "many names cmd 3"},
 			RunnerMock: &appExec.SystemRunner{SystemAPI: &appExec.SystemAPIMock{
 				Cmds:      []*exec.Cmd{},
 				ErrToGive: nil,
@@ -139,7 +135,6 @@ func TestTaskExecution(t *testing.T) {
 				IsSkipped: false,
 				Err:       nil,
 			},
-			ExpectedCmdStrs: []string{"cmd with many MissingFilesConditions"},
 			RunnerMock: &appExec.SystemRunner{SystemAPI: &appExec.SystemAPIMock{
 				Cmds:      []*exec.Cmd{},
 				ErrToGive: nil,
@@ -155,7 +150,6 @@ func TestTaskExecution(t *testing.T) {
 				IsSkipped: false,
 				Err:       nil,
 			},
-			ExpectedCmdStrs: []string{"check before lala", "cmd lala"},
 			RunnerMock: &appExec.SystemRunner{SystemAPI: &appExec.SystemAPIMock{
 				Cmds:      []*exec.Cmd{},
 				ErrToGive: nil,
@@ -171,7 +165,6 @@ func TestTaskExecution(t *testing.T) {
 				IsSkipped: true,
 				Err:       nil,
 			},
-			ExpectedCmdStrs: []string{},
 			RunnerMock: &appExec.SystemRunner{SystemAPI: &appExec.SystemAPIMock{
 				Cmds: []*exec.Cmd{},
 				Callback: func(cmd *exec.Cmd) error {
@@ -192,10 +185,9 @@ func TestTaskExecution(t *testing.T) {
 				OnlyIf:    []string{"check OnlyIf success", "check OnlyIf failure"},
 			},
 			ExpectedResult: ExecutionResult{
-				IsSkipped: true,
+				IsSkipped: false,
 				Err:       nil,
 			},
-			ExpectedCmdStrs: []string{},
 			RunnerMock: &appExec.SystemRunner{SystemAPI: &appExec.SystemAPIMock{
 				Cmds: []*exec.Cmd{},
 				Callback: func(cmd *exec.Cmd) error {
@@ -218,7 +210,6 @@ func TestTaskExecution(t *testing.T) {
 				IsSkipped: false,
 				Err:       nil,
 			},
-			ExpectedCmdStrs: []string{"check OnlyIf success 1", "check OnlyIf success 2", "cmd with multiple OnlyIf success"},
 			RunnerMock: &appExec.SystemRunner{SystemAPI: &appExec.SystemAPIMock{
 				Cmds: []*exec.Cmd{},
 			}},
@@ -234,7 +225,6 @@ func TestTaskExecution(t *testing.T) {
 				IsSkipped: false,
 				Err:       errors.New("cannot set user"),
 			},
-			ExpectedCmdStrs: []string{},
 			RunnerMock: &appExec.SystemRunner{SystemAPI: &appExec.SystemAPIMock{
 				Cmds:               []*exec.Cmd{},
 				UserSetErrToReturn: errors.New("cannot set user"),
@@ -254,10 +244,9 @@ func TestTaskExecution(t *testing.T) {
 				Unless:    []string{"run unless masa"},
 			},
 			ExpectedResult: ExecutionResult{
-				IsSkipped: false,
+				IsSkipped: true,
 				Err:       nil,
 			},
-			ExpectedCmdStrs: []string{"run unless masa", "cmd masa"},
 			RunnerMock: &appExec.SystemRunner{SystemAPI: &appExec.SystemAPIMock{
 				Cmds: []*exec.Cmd{},
 				Callback: func(cmd *exec.Cmd) error {
@@ -280,7 +269,6 @@ func TestTaskExecution(t *testing.T) {
 				IsSkipped: true,
 				Err:       nil,
 			},
-			ExpectedCmdStrs: []string{},
 			RunnerMock: &appExec.SystemRunner{SystemAPI: &appExec.SystemAPIMock{
 				Cmds: []*exec.Cmd{},
 			}},
@@ -295,7 +283,6 @@ func TestTaskExecution(t *testing.T) {
 				IsSkipped: true,
 				Err:       nil,
 			},
-			ExpectedCmdStrs: []string{},
 			RunnerMock: &appExec.SystemRunner{SystemAPI: &appExec.SystemAPIMock{
 				Cmds: []*exec.Cmd{},
 			}},
@@ -307,18 +294,15 @@ func TestTaskExecution(t *testing.T) {
 				Unless:    []string{"check unless 1", "check unless 2"},
 			},
 			ExpectedResult: ExecutionResult{
-				IsSkipped: false,
+				IsSkipped: true,
 				Err:       nil,
 			},
-			ExpectedCmdStrs: []string{"check unless 1", "check unless 2", "cmd with multiple unless with at least one failure"},
 			RunnerMock: &appExec.SystemRunner{SystemAPI: &appExec.SystemAPIMock{
 				Cmds: []*exec.Cmd{},
 				Callback: func(cmd *exec.Cmd) error {
-					cmdStr := cmd.String()
-					if strings.Contains(cmdStr, "check unless 2") {
+					if strings.Contains(cmd.String(), "check unless 2") {
 						return appExec.RunError{Err: errors.New("check unless 2 failed")}
 					}
-
 					return nil
 				},
 			}},
@@ -338,12 +322,7 @@ func TestTaskExecution(t *testing.T) {
 				IsSkipped: false,
 				Err:       errors.New("cannot set user 345"),
 			},
-			ExpectedCmdStrs: []string{},
 		},
-	}
-
-	systemAPIMock := &appExec.SystemAPIMock{
-		Cmds: []*exec.Cmd{},
 	}
 
 	for _, testCase := range testCases {
@@ -363,19 +342,16 @@ func TestTaskExecution(t *testing.T) {
 			assert.EqualValues(tt, tc.ExpectedResult.StdErr, res.StdErr)
 
 			if tc.ExpectedResult.Err != nil {
-				assert.Equal(tt, len(tc.ExpectedCmdStrs), len(systemAPIMock.Cmds))
 				return
 			}
 
 			systemAPIMock := tc.RunnerMock.SystemAPI.(*appExec.SystemAPIMock)
 			cmds := systemAPIMock.Cmds
 
-			AssertCmdsPartiallyMatch(tt, tc.ExpectedCmdStrs, cmds)
 			if tc.ExpectedResult.IsSkipped {
 				return
 			}
 
-			assert.Equal(tt, len(tc.ExpectedCmdStrs), len(cmds))
 			for _, cmd := range cmds {
 				assert.Equal(tt, tc.Task.WorkingDir, cmd.Dir)
 				AssertEnvValuesMatch(tt, tc.Task.Envs, cmd.Env)

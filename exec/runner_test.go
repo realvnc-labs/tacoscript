@@ -36,7 +36,6 @@ func TestRunner(t *testing.T) {
 		expectedErr    error
 		expectedStdOut string
 		expectedStdErr string
-		expectedCmds   []string
 	}{
 		{
 			name: "run with all fields filled",
@@ -59,7 +58,6 @@ func TestRunner(t *testing.T) {
 				Cmds:  []string{"cmd1", "cmd2"},
 				Shell: "shell",
 			},
-			expectedCmds:   []string{"shell cmd1", "shell cmd2"},
 			expectedStdOut: "some stdout",
 			expectedStdErr: "some stderr",
 		},
@@ -71,7 +69,6 @@ func TestRunner(t *testing.T) {
 				Cmds:         []string{"cmd3", "cmd4"},
 				Shell:        "zsh",
 			},
-			expectedCmds: []string{"zsh -c cmd3", "zsh -c cmd4"},
 		},
 		{
 			name: "default shell",
@@ -81,7 +78,6 @@ func TestRunner(t *testing.T) {
 				Cmds:         []string{"somecmd"},
 				Shell:        "",
 			},
-			expectedCmds: []string{"sh -c somecmd"},
 		},
 		{
 			name:         "test user set failure",
@@ -109,7 +105,6 @@ func TestRunner(t *testing.T) {
 				StderrWriter: &bytes.Buffer{},
 				Cmds:         []string{"cmd7   ", "     cmd8"},
 			},
-			expectedCmds: []string{"cmd7", "cmd8"},
 		},
 	}
 
@@ -153,9 +148,7 @@ func TestRunner(t *testing.T) {
 			}
 
 			actuallyExecutedCmds := systemAPI.Cmds
-
-			assert.Equal(t, len(tc.expectedCmds), len(actuallyExecutedCmds))
-			for k, actuallyExecutedCmd := range actuallyExecutedCmds {
+			for _, actuallyExecutedCmd := range actuallyExecutedCmds {
 				assert.Equal(t, execContext.WorkingDir, actuallyExecutedCmd.Dir)
 
 				if len(execContext.Envs) > 0 {
@@ -179,12 +172,6 @@ func TestRunner(t *testing.T) {
 						}
 					}
 				}
-
-				if k > len(tc.expectedCmds)-1 {
-					continue
-				}
-				expectedCmd := tc.expectedCmds[k]
-				assert.Contains(t, actuallyExecutedCmd.String(), expectedCmd)
 
 				if tc.expectedStdOut != "" {
 					_, err := actuallyExecutedCmd.Stdout.Write([]byte(tc.expectedStdOut))
