@@ -12,7 +12,9 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
+// the default windows shell must be cmd.exe for compatibility with older Windows versions
 const defaultWindowsShell = "cmd.exe"
+
 const defaultUnixShell = "sh"
 
 type SystemAPI interface {
@@ -86,7 +88,15 @@ func (rm *RunnerMock) Run(execContext *Context) error {
 }
 
 func (sr SystemRunner) Run(execContext *Context) error {
-	tmpFile, err := ioutil.TempFile(os.TempDir(), "taco-")
+	tmpPattern := "taco-*"
+	if runtime.GOOS == "windows" {
+		if execContext.Shell == defaultWindowsShell {
+			tmpPattern = "taco-*.cmd"
+		} else {
+			tmpPattern = "taco-*.ps1"
+		}
+	}
+	tmpFile, err := ioutil.TempFile(os.TempDir(), tmpPattern)
 	if err != nil {
 		return err
 	}
@@ -130,16 +140,34 @@ func (sr SystemRunner) setWorkingDir(cmd *exec.Cmd, execContext *Context) {
 }
 
 func (sr SystemRunner) createCmd(execContext *Context, tmpFile *os.File) (cmd *exec.Cmd, err error) {
-	rawCmds := strings.Join(execContext.Cmds, "\n")
+	prelude := ""
+	newLine := "\n"
+
+	if runtime.GOOS == "windows" {
+		newLine = "\r\n"
+		if execContext.Shell == defaultWindowsShell {
+			prelude = "@echo off" + newLine
+		}
+	}
+
+	rawCmds := prelude + strings.Join(execContext.Cmds, newLine)
+
 	if _, err := tmpFile.Write([]byte(rawCmds)); err != nil {
 		return nil, err
 	}
+
+	tmpFile.Close()
 
 	logrus.Debugf("WROTE TO FILE:\n%s\n----\n", rawCmds)
 
 	shellParam := sr.parseShellParam(execContext.Shell)
 	cmdName, cmdArgs := sr.buildCmdParts(shellParam)
-	cmdArgs = append(cmdArgs, tmpFile.Name())
+
+	if runtime.GOOS == "windows" && execContext.Shell == defaultWindowsShell {
+		cmdName = tmpFile.Name()
+	} else {
+		cmdArgs = append(cmdArgs, tmpFile.Name())
+	}
 
 	cmd = exec.Command(cmdName, cmdArgs...)
 
