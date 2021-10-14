@@ -53,7 +53,6 @@ func (r Runner) Run(ctx context.Context, scripts tasks.Scripts, globalAbortOnErr
 
 			changeMap := make(map[string]string)
 
-
 			if !res.IsSkipped {
 				comment = `Command "` + name + `" run`
 				changeMap["pid"] = fmt.Sprintf("%d", res.Pid)
