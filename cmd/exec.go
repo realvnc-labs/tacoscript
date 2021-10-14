@@ -19,4 +19,5 @@ var exeCmd = &cobra.Command{
 
 		return script.RunScript(args[0], AbortOnError)
 	},
+	SilenceErrors: true,
 }
