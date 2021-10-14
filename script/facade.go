@@ -69,6 +69,5 @@ func RunScript(scriptPath string, abortOnError bool) error {
 	}
 
 	err = runner.Run(context.Background(), scripts, abortOnError)
-
 	return err
 }

@@ -123,5 +123,9 @@ func (r Runner) Run(ctx context.Context, scripts tasks.Scripts, globalAbortOnErr
 	}
 	fmt.Println(string(y))
 
+	if aborted > 0 || failed > 0 {
+		return fmt.Errorf("%d aborted, %d failed", aborted, failed)
+	}
+
 	return nil
 }
