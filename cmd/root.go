@@ -22,7 +22,7 @@ var (
 func init() {
 	cobra.OnInitialize(initLog)
 	rootCmd.PersistentFlags().BoolVarP(&Verbose, "verbose", "v", false, "verbose output")
-	rootCmd.PersistentFlags().BoolVarP(&AbortOnError, "abort-on-error", "", false, "Abort on error")
+	rootCmd.PersistentFlags().BoolVarP(&AbortOnError, "abort-on-error", "a", false, "Abort on error")
 }
 
 func initLog() {
