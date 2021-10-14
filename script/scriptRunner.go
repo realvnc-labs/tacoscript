@@ -28,6 +28,13 @@ func (r Runner) Run(ctx context.Context, scripts tasks.Scripts, globalAbortOnErr
 	failed := 0
 	tasksRun := 0
 	changes := 0
+	aborted := 0
+
+	total := 0
+
+	for _, script := range scripts {
+		total += len(script.Tasks)
+	}
 
 	for _, script := range scripts {
 		logrus.Debugf("will run script '%s'", script.ID)
@@ -75,6 +82,7 @@ func (r Runner) Run(ctx context.Context, scripts tasks.Scripts, globalAbortOnErr
 
 				if cmdRunTask.AbortOnError && !res.Succeeded() {
 					abort = true
+					aborted = total - tasksRun
 				}
 			}
 
@@ -95,7 +103,8 @@ func (r Runner) Run(ctx context.Context, scripts tasks.Scripts, globalAbortOnErr
 		}
 
 		if abort || globalAbortOnError {
-			logrus.Debugf("aborting due to task failure")
+			logrus.Debug("aborting due to task failure")
+			aborted = total - tasksRun
 			break
 		}
 		logrus.Debugf("finished script '%s'", script.ID)
@@ -105,6 +114,7 @@ func (r Runner) Run(ctx context.Context, scripts tasks.Scripts, globalAbortOnErr
 		Config:            r.DataProvider.Path,
 		Succeeded:         succeeded,
 		Failed:            failed,
+		Aborted:           aborted,
 		Changes:           changes,
 		TotalFunctionsRun: tasksRun,
 		TotalRunTime:      time.Since(scriptStart),
