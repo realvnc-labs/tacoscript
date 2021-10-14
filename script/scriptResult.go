@@ -27,6 +27,7 @@ type scriptSummary struct {
 	Config            string        `yaml:"Config"`
 	Succeeded         int           `yaml:"Succeeded"`
 	Failed            int           `yaml:"Failed"`
+	Aborted           int           `yaml:"Aborted"`
 	Changes           int           `yaml:"Changes"`
 	TotalFunctionsRun int           `yaml:"TotalFunctionsRun"`
 	TotalRunTime      time.Duration `yaml:"TotalRunTime"`
