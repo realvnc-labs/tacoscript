@@ -4,8 +4,8 @@ linters-settings:
   exhaustive:
     default-signifies-exhaustive: false
   funlen:
-    lines: 100
-    statements: 100
+    lines: 120
+    statements: 120
   gci:
     local-prefixes: github.com/cloudradar-monitoring/tacoscript
   goconst:
@@ -25,7 +25,7 @@ linters-settings:
       - whyNoLint
       - wrapperFunc
   gocyclo:
-    min-complexity: 15
+    min-complexity: 20
   goimports:
     local-prefixes: github.com/golangci/golangci-lint
   golint:
