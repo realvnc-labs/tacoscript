@@ -152,8 +152,8 @@ func (sr SystemRunner) createCmd(execContext *Context, tmpFile *os.File) (cmd *e
 
 	rawCmds := prelude + strings.Join(execContext.Cmds, newLine)
 
-	if _, err := tmpFile.Write([]byte(rawCmds)); err != nil {
-		return nil, err
+	if _, err = tmpFile.Write([]byte(rawCmds)); err != nil {
+		return
 	}
 
 	tmpFile.Close()
@@ -172,13 +172,13 @@ func (sr SystemRunner) createCmd(execContext *Context, tmpFile *os.File) (cmd *e
 	cmd = exec.Command(cmdName, cmdArgs...)
 
 	sr.setWorkingDir(cmd, execContext)
-	if err := sr.setUser(cmd, execContext); err != nil {
-		return nil, err
+	if err = sr.setUser(cmd, execContext); err != nil {
+		return
 	}
 
 	sr.setEnvs(cmd, execContext)
 	sr.setIO(cmd, execContext.StdoutWriter, execContext.StderrWriter)
-	return
+	return cmd, err
 }
 
 func (sr SystemRunner) setEnvs(cmd *exec.Cmd, execContext *Context) {
