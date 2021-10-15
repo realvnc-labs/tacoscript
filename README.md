@@ -5,7 +5,7 @@
 ## Overview
 Tacoscript library provides functionality for provisioning of remote servers and local machines running on any OS. Tacoscript can be installed as a binary. Therefore it doesn't require any additional tools or programs on the host system. 
 
-Tacoscript can manage host systems from simple yaml files written in a [SaltStack](https://www.saltstack.com/) inspired configuration language. 
+Tacoscript can manage host systems from simple yaml files written in a [Salt Project](https://saltproject.io/) inspired configuration language. 
 
 Why do we need another provisioning tool? Unfortunately, the next competitors like Puppet, Ansible, or Salt have limited support for Windows. And they require the installation of additional dependencies, which is not always convenient.
 
