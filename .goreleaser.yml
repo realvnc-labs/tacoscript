@@ -6,7 +6,9 @@ builds:
     main: ./
     binary: tacoscript
     ldflags:
-      - "-s -w -X {{.Env.PROJECT}}/share.BuildVersion={{.Version}}"
+      - -X 'github.com/cloudradar-monitoring/tacoscript/cmd.Version={{.Version}}'
+      - -X 'github.com/cloudradar-monitoring/tacoscript/cmd.BuildTime={{.Date}}'
+      - -X 'github.com/cloudradar-monitoring/tacoscript/cmd.GitCommit={{.Commit}}'
     goos:
       - linux
       - darwin
