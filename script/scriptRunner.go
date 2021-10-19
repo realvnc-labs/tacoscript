@@ -40,13 +40,13 @@ func (r Runner) Run(ctx context.Context, scripts tasks.Scripts, globalAbortOnErr
 		abort := false
 		for _, task := range script.Tasks {
 			taskStart := time.Now()
-			executr, err := r.ExecutorRouter.GetExecutor(task)
+			executor, err := r.ExecutorRouter.GetExecutor(task)
 			if err != nil {
 				return err
 			}
 
 			logrus.Debugf("will run task '%s' at path '%s'", task.GetName(), task.GetPath())
-			res := executr.Execute(ctx, task)
+			res := executor.Execute(ctx, task)
 
 			logrus.Debugf("finished task '%s' at path '%s', result: %s", task.GetName(), task.GetPath(), res.String())
 
@@ -128,4 +128,14 @@ func (r Runner) Run(ctx context.Context, scripts tasks.Scripts, globalAbortOnErr
 	}
 
 	return nil
+}
+
+// stdout from multiline powershell scripts often includes trailing spaces on each line.
+// when encoded as yaml, the result does not look pretty. this function strips trailing whitespace
+func powershellUnquote(s string) string {
+	lines := strings.Split(s, "\n")
+	for i, line := range lines {
+		lines[i] = strings.TrimRight(line, " ")
+	}
+	return strings.Join(lines, "\n")
 }
