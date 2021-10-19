@@ -88,6 +88,17 @@ func (rm *RunnerMock) Run(execContext *Context) error {
 }
 
 func (sr SystemRunner) Run(execContext *Context) error {
+	if execContext.Shell == "" {
+		if runtime.GOOS == "windows" {
+			execContext.Shell = defaultWindowsShell
+		} else {
+			execContext.Shell = defaultUnixShell
+		}
+	}
+	if execContext.Shell == "cmd" && runtime.GOOS == "windows" {
+		execContext.Shell = defaultWindowsShell
+	}
+
 	tmpPattern := "taco-*"
 	if runtime.GOOS == "windows" {
 		if execContext.Shell == defaultWindowsShell {
@@ -230,17 +241,6 @@ func (sr SystemRunner) setIO(cmd *exec.Cmd, stdOutWriter, stdErrWriter io.Writer
 
 func (sr SystemRunner) parseShellParam(rawShell string) ShellParam {
 	rawShell = strings.TrimSpace(rawShell)
-	if rawShell == "" {
-		if runtime.GOOS == "windows" {
-			rawShell = defaultWindowsShell
-		} else {
-			rawShell = defaultUnixShell
-		}
-	}
-	if rawShell == "cmd" && runtime.GOOS == "windows" {
-		rawShell = defaultWindowsShell
-	}
-
 	parsedShellParam := ShellParam{
 		RawShellString: rawShell,
 	}
@@ -258,6 +258,5 @@ func (sr SystemRunner) parseShellParam(rawShell string) ShellParam {
 		shellPart = strings.TrimSpace(shellPart)
 		parsedShellParam.ShellParams = append(parsedShellParam.ShellParams, shellPart)
 	}
-
 	return parsedShellParam
 }
