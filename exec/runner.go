@@ -17,6 +17,17 @@ const defaultWindowsShell = "cmd.exe"
 
 const defaultUnixShell = "sh"
 
+var powershellShells = []string{"powershell", "powershell.exe", "pwsh", "pwsh.exe"}
+
+func IsPowerShell(shell string) bool {
+	for _, name := range powershellShells {
+		if name == shell {
+			return true
+		}
+	}
+	return false
+}
+
 type SystemAPI interface {
 	Run(cmd *exec.Cmd) error
 	SetUser(userName, path string, cmd *exec.Cmd) error
