@@ -368,6 +368,7 @@ func (fmte *FileManagedTaskExecutor) checkMissingFileCondition(
 	fileManagedTask *FileManagedTask,
 ) (isExists bool, fileName string, err error) {
 	if len(fileManagedTask.Creates) == 0 {
+		fileName = fileManagedTask.Name
 		return
 	}
 
