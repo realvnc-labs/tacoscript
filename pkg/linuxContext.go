@@ -26,6 +26,10 @@ var linuxOSBuilderMap = map[string][]ManagementCmdsProvider{
 		DnfCmdsProvider{},
 		YumCmdsProvider{},
 	},
+	"fedora": {
+		DnfCmdsProvider{},
+		YumCmdsProvider{},
+	},
 }
 
 func init() {
@@ -59,6 +63,7 @@ func (ecb AptCmdsProvider) GetManagementCmds(t *tasks.PkgTask) (*ManagementCmds,
 		InstallCmds:   []string{fmt.Sprintf("apt install -y %s", strings.Join(rawInstallCmds, " "))},
 		UninstallCmds: []string{fmt.Sprintf("apt remove -y %s", strings.Join(rawCmds, " "))},
 		UpgradeCmds:   []string{fmt.Sprintf("apt upgrade -y %s", strings.Join(rawCmds, " "))},
+		ListCmd:       "dpkg -l",
 	}, nil
 }
 
@@ -74,6 +79,7 @@ func (ecb AptGetCmdsProvider) GetManagementCmds(t *tasks.PkgTask) (*ManagementCm
 		InstallCmds:   []string{fmt.Sprintf("apt-get install -y %s", strings.Join(rawInstallCmds, " "))},
 		UninstallCmds: []string{fmt.Sprintf("apt-get remove -y %s", strings.Join(rawCmds, " "))},
 		UpgradeCmds:   []string{fmt.Sprintf("apt-get upgrade -y %s", strings.Join(rawCmds, " "))},
+		ListCmd:       "dpkg -l",
 	}, nil
 }
 
@@ -89,6 +95,7 @@ func (ecb YumCmdsProvider) GetManagementCmds(t *tasks.PkgTask) (*ManagementCmds,
 		InstallCmds:   []string{fmt.Sprintf("yum install -y %s", strings.Join(rawInstallCmds, " "))},
 		UninstallCmds: []string{fmt.Sprintf("yum remove -y %s", strings.Join(rawCmds, " "))},
 		UpgradeCmds:   []string{fmt.Sprintf("yum upgrade -y %s", strings.Join(rawCmds, " "))},
+		ListCmd:       "rpm -qa",
 	}, nil
 }
 
@@ -104,6 +111,7 @@ func (ecb DnfCmdsProvider) GetManagementCmds(t *tasks.PkgTask) (*ManagementCmds,
 		InstallCmds:   []string{fmt.Sprintf("dnf install -y %s", strings.Join(rawInstallCmds, " "))},
 		UninstallCmds: []string{fmt.Sprintf("dnf remove -y %s", strings.Join(rawCmds, " "))},
 		UpgradeCmds:   []string{fmt.Sprintf("dnf upgrade -y %s", strings.Join(rawCmds, " "))},
+		ListCmd:       "rpm -qa",
 	}, nil
 }
 

@@ -3,7 +3,6 @@ package script
 import (
 	"context"
 	"fmt"
-	"strings"
 	"time"
 
 	"github.com/sirupsen/logrus"
@@ -51,38 +50,31 @@ func (r Runner) Run(ctx context.Context, scripts tasks.Scripts) error {
 
 			tasksRun++
 
-			name := ""
-			comment := ""
 			changeMap := make(map[string]string)
 
-			if cmdRunTask, ok := task.(*tasks.CmdRunTask); ok {
-				name = strings.Join(cmdRunTask.GetNames(), "; ")
-
-				if !res.IsSkipped {
-					comment = `Command "` + name + `" run`
-					changeMap["pid"] = intsToString(res.Pids)
-					if runErr, ok := res.Err.(exec.RunError); ok {
-						changeMap["retcode"] = fmt.Sprintf("%d", runErr.ExitCode)
-					}
-
-					changeMap["stderr"] = res.StdErr
-					changeMap["stdout"] = res.StdOut
-					changes++
-				} else {
-					comment = `Command "` + name + `" did not run: ` + res.SkipReason
+			if !res.IsSkipped {
+				changeMap["pid"] = intsToString(res.Pids)
+				if runErr, ok := res.Err.(exec.RunError); ok {
+					changeMap["retcode"] = fmt.Sprintf("%d", runErr.ExitCode)
 				}
+
+				changeMap["stderr"] = res.StdErr
+				changeMap["stdout"] = res.StdOut
+				changes++
 			}
 
-			if pkgTask, ok := task.(*tasks.PkgTask); ok {
-				name = pkgTask.NamedTask.Name
+			if len(res.Changes) > 0 {
+				for k, v := range res.Changes {
+					changeMap[k] = v
+				}
 			}
 
 			result.Results = append(result.Results, taskResult{
 				ID:       script.ID,
 				Function: task.GetName(),
-				Name:     name,
+				Name:     res.Name,
 				Result:   res.Succeeded(),
-				Comment:  comment,
+				Comment:  res.Comment,
 				Started:  onlyTime(taskStart),
 				Duration: res.Duration,
 				Changes:  changeMap,

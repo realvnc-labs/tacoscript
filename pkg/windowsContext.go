@@ -3,6 +3,7 @@
 package pkg
 
 import (
+	"context"
 	"fmt"
 	"strings"
 
@@ -31,5 +32,17 @@ func (ecb OsPackageManagerCmdProvider) GetManagementCmds(t *tasks.PkgTask) (*Man
 		InstallCmds:   []string{fmt.Sprintf("choco install -y %s%s", strings.Join(rawCmds, " "), versionStr)},
 		UninstallCmds: []string{fmt.Sprintf("choco uninstall -y %s", strings.Join(rawCmds, " "))},
 		UpgradeCmds:   []string{fmt.Sprintf("choco upgrade -y %s", strings.Join(rawCmds, " "))},
+		ListCmd:       "choco list --local-only",
+		FilterFunc: func(ctx context.Context, rawPackages []string) []string {
+			res := make([]string, 0, len(rawPackages))
+			for _, rawPackage := range rawPackages {
+				if strings.Contains(rawPackage, "packages installed") {
+					continue
+				}
+				res = append(res, rawPackage)
+			}
+
+			return res
+		},
 	}, nil
 }

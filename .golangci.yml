@@ -107,11 +107,9 @@ issues:
         - funlen
         - gocyclo
         - dupl
+        - lll
   exclude:
     - composites
-
-run:
-  skip-dirs:
 
 # golangci.com configuration
 # https://github.com/golangci/golangci/wiki/Configuration

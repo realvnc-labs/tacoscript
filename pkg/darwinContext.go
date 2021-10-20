@@ -36,5 +36,6 @@ func (ecb OsPackageManagerCmdProvider) GetManagementCmds(t *tasks.PkgTask) (*Man
 		InstallCmds:   []string{fmt.Sprintf("brew install %s", strings.Join(rawInstallCmds, " "))},
 		UninstallCmds: []string{fmt.Sprintf("brew uninstall %s", strings.Join(rawCmds, " "))},
 		UpgradeCmds:   []string{fmt.Sprintf("brew upgrade %s", strings.Join(rawCmds, " "))},
+		ListCmd:       "brew list --formula --versions",
 	}, nil
 }

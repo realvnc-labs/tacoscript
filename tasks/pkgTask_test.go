@@ -15,11 +15,11 @@ import (
 type PackageManagerMock struct {
 	givenCtx     context.Context
 	givenTask    *PkgTask
-	outputToGive string
+	outputToGive *PackageManagerExecutionResult
 	errToGive    error
 }
 
-func (pmm *PackageManagerMock) ExecuteTask(ctx context.Context, t *PkgTask) (output string, err error) {
+func (pmm *PackageManagerMock) ExecuteTask(ctx context.Context, t *PkgTask) (res *PackageManagerExecutionResult, err error) {
 	pmm.givenCtx = ctx
 	pmm.givenTask = t
 
@@ -144,7 +144,9 @@ func TestPkgTaskExecution(t *testing.T) {
 				Cmds: []*exec.Cmd{},
 			}},
 			PackageManagerMock: &PackageManagerMock{
-				outputToGive: "installation success",
+				outputToGive: &PackageManagerExecutionResult{
+					Output: "installation success",
+				},
 			},
 		},
 		{
@@ -157,13 +159,23 @@ func TestPkgTaskExecution(t *testing.T) {
 				IsSkipped: false,
 				Err:       nil,
 				StdOut:    "installation success",
+				Comment:   "some comment",
+				Changes: map[string]string{
+					"some change key": "some change value",
+				},
 			},
 			ExpectedCmdStrs: []string{"check before lala"},
 			RunnerMock: &appExec.SystemRunner{SystemAPI: &appExec.SystemAPIMock{
 				Cmds: []*exec.Cmd{},
 			}},
 			PackageManagerMock: &PackageManagerMock{
-				outputToGive: "installation success",
+				outputToGive: &PackageManagerExecutionResult{
+					Output:  "installation success",
+					Comment: "some comment",
+					Changes: map[string]string{
+						"some change key": "some change value",
+					},
+				},
 			},
 		},
 		{
@@ -239,6 +251,8 @@ func TestPkgTaskExecution(t *testing.T) {
 			assert.EqualValues(tt, tc.ExpectedResult.IsSkipped, res.IsSkipped)
 			assert.EqualValues(tt, tc.ExpectedResult.StdOut, res.StdOut)
 			assert.EqualValues(tt, tc.ExpectedResult.StdErr, res.StdErr)
+			assert.EqualValues(tt, tc.ExpectedResult.Comment, res.Comment)
+			assert.EqualValues(tt, tc.ExpectedResult.Changes, res.Changes)
 
 			if tc.ExpectedResult.Err != nil {
 				return

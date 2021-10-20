@@ -27,6 +27,9 @@ type ExecutionResult struct {
 	IsSkipped  bool
 	SkipReason string
 	Pids       []int
+	Name       string
+	Comment    string
+	Changes    map[string]string
 }
 
 func (tr *ExecutionResult) String() string {
