@@ -207,6 +207,8 @@ func (fmte *FileManagedTaskExecutor) Execute(ctx context.Context, task Task) Exe
 		return execRes
 	}
 
+	execRes.Name = fileManagedTask.Name
+
 	var stdoutBuf, stderrBuf bytes.Buffer
 	execCtx := &exec2.Context{
 		Ctx:          ctx,
