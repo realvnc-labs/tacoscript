@@ -16,6 +16,7 @@ type taskResult struct {
 	Name     string `yaml:"Name"`
 	Result   bool   `yaml:"Result"`
 	Comment  string `yaml:"Comment,omitempty"`
+	Error    string `yaml:"Error,omitempty"`
 
 	Started  onlyTime      `yaml:"Started"`
 	Duration time.Duration `yaml:"Duration"`
