@@ -14,10 +14,11 @@ The task `pkg.installed` ensures that the specified package(s) is installed in t
             - create-file
         - unless: neovim --version
         - onlyif: date +%c|grep -q "^Thu"
+        - manager: apt
 
 We can interpret this script as:
 
-The desired state of the script 'install-neovim' neovim package in version `0.4.3-3` to be installed in the target host system. As shell it will use `bash`.Before running installation it will update list of available packages (`refresh` = true). If this script is executed under the Ubuntu/Debian Linux OS, the tacoscript will execute this command as:
+The desired state of the script 'install-neovim' neovim package in version `0.4.3-3` to be installed in the target host system. As shell it will use `bash`.Before running installation it will update list of available packages (`refresh` = true). This script will be executed with the `apt` package manager as:
     
     - apt update -y
     - apt install -y neovim=0.4.3-3
@@ -78,8 +79,28 @@ see [onlyif](../../general/conditionals/unless.md)
 
 Version of the package to be installed. If ommitted, the tacoscript will install the latest default version.
 
+### manager
+
+[string] type, optional
+
+Package manager to be used for dependency management. Currently, tacoscript supports following package managers:
+#### Linux
+- apt
+- apt-get
+- yum
+- dnf
+#### Windows
+- choco
+- winget
+#### MacOS
+- brew
+
+Please note, you should be careful when specifying a package manager explicitly, e.g. `apt` cannot be executed under Fedora, so it will fail there. But if you don't specify it explicitly, tacoscript will execute `yum`, since it detects it to be available there.
+
 ### refresh
+
 [bool] type, optional
+
 If true, the tacoscript will update list of available packages, e.g. execute `apt update` under Ubuntu/Debian OS.
 
 ## OS Support
@@ -111,12 +132,12 @@ If true, the tacoscript will update list of available packages, e.g. execute `ap
 <tr>
 <td>Windows</td>
 <td></td>
-<td>choco</td>
-<td>choco install -y vim</td>
+<td>choco / winget (fallback to choco)</td>
+<td>choco install -y vim / winget install -e -h --accept-package-agreements --accept-source-agreements vim</td>
 </tr>
 </table>
 
-Note if a corresponding package manager is not installed in the host system, a fallback one will be used. If both are not available, the script will fail.
+Note if a corresponding package manager is not installed in the host system, a fallback one will be used. If both are not available, the script will fail. If user explicitly specified a package manager (e.g. winget), tacoscript will try to use it by all means, no matter if it's installed or not.
 
 # pkg.uptodate
 
@@ -166,6 +187,11 @@ Name contains the list of packages to be upgraded.
 
 See #pkg.installed for reverence.
 
+### manager
+
+[string] type, optional
+See #pkg.installed for reverence.
+
 ### require
 see [require](../../general/dependencies/require.md)
 
@@ -208,13 +234,12 @@ See #pkg.installed for reverence.
 <tr>
 <td>Windows</td>
 <td></td>
-<td>choco</td>
-<td>choco upgrade -y vim</td>
+<td>choco / winget</td>
+<td>choco upgrade -y vim / winget upgrade -e -h --accept-package-agreements --accept-source-agreements vim</td>
 </tr>
 </table>
 
-Note if a corresponding package manager is not installed in the host system, a fallback one will be used. If both are not available, the script will fail. If the package is not yet installed, the behaviour will vary depending on the package manager e.g. `brew` will install this package and `apt-get` will fail.
-
+Note if a corresponding package manager is not installed in the host system, a fallback one will be used. If both are not available, the script will fail. If user explicitly specified a package manager (e.g. winget), tacoscript will try to use it by all means, no matter if it's installed or not.
 
 # pkg.removed
 
@@ -263,6 +288,11 @@ Name contains the list of packages to be removed.
 
 See #pkg.installed for reverence.
 
+### manager
+[string] type, optional
+
+See #pkg.installed for reverence.
+
 ### require
 see [require](../../general/dependencies/require.md)
 
@@ -274,6 +304,7 @@ see [onlyif](../../general/conditionals/unless.md)
 
 ### refresh
 [bool] type, optional
+
 See #pkg.installed for reverence.
 
 ## OS Support
@@ -305,9 +336,9 @@ See #pkg.installed for reverence.
 <tr>
 <td>Windows</td>
 <td></td>
-<td>choco</td>
-<td>choco uninstall -y vim</td>
+<td>choco / winget</td>
+<td>choco uninstall -y vim / winget uninstall -e -h --accept-source-agreements vim</td>
 </tr>
 </table>
 
-Note if a corresponding package manager is not installed in the host system, a fallback one will be used. If both are not available, the script will fail.
+Note if a corresponding package manager is not installed in the host system, a fallback one will be used. If both are not available, the script will fail. If user explicitly specified a package manager (e.g. winget), tacoscript will try to use it by all means, no matter if it's installed or not.
