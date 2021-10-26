@@ -42,10 +42,18 @@ func init() {
 	osPlatform = templateVariables[utils.OSPlatform].(string)
 }
 
-func BuildManagementCmdsProviders() ([]ManagementCmdsProvider, error) {
+func BuildManagementCmdsProviders(t *tasks.PkgTask) ([]ManagementCmdsProvider, error) {
 	linuxSpecificProviders, ok := linuxOSBuilderMap[osPlatform]
 	if !ok {
 		return []ManagementCmdsProvider{}, fmt.Errorf("unsupported linux version %s for package management commands", osPlatform)
+	}
+
+	if t.Manager != "" {
+		for _, linuxSpecificProvider := range linuxSpecificProviders {
+			if t.Manager == linuxSpecificProvider.GetName() {
+				return []ManagementCmdsProvider{linuxSpecificProvider}
+			}
+		}
 	}
 
 	return linuxSpecificProviders, nil
@@ -67,6 +75,10 @@ func (ecb AptCmdsProvider) GetManagementCmds(t *tasks.PkgTask) (*ManagementCmds,
 	}, nil
 }
 
+func (ecb AptCmdsProvider) GetName() string {
+	return tasks.AptManager
+}
+
 type AptGetCmdsProvider struct{}
 
 func (ecb AptGetCmdsProvider) GetManagementCmds(t *tasks.PkgTask) (*ManagementCmds, error) {
@@ -81,6 +93,10 @@ func (ecb AptGetCmdsProvider) GetManagementCmds(t *tasks.PkgTask) (*ManagementCm
 		UpgradeCmds:   []string{fmt.Sprintf("apt-get upgrade -y %s", strings.Join(rawCmds, " "))},
 		ListCmd:       "dpkg -l",
 	}, nil
+}
+
+func (ecb AptGetCmdsProvider) GetName() string {
+	return tasks.AptGetManager
 }
 
 type YumCmdsProvider struct{}
@@ -99,6 +115,10 @@ func (ecb YumCmdsProvider) GetManagementCmds(t *tasks.PkgTask) (*ManagementCmds,
 	}, nil
 }
 
+func (ecb YumCmdsProvider) GetName() string {
+	return tasks.YumManager
+}
+
 type DnfCmdsProvider struct{}
 
 func (ecb DnfCmdsProvider) GetManagementCmds(t *tasks.PkgTask) (*ManagementCmds, error) {
@@ -113,6 +133,10 @@ func (ecb DnfCmdsProvider) GetManagementCmds(t *tasks.PkgTask) (*ManagementCmds,
 		UpgradeCmds:   []string{fmt.Sprintf("dnf upgrade -y %s", strings.Join(rawCmds, " "))},
 		ListCmd:       "rpm -qa",
 	}, nil
+}
+
+func (ecb DnfCmdsProvider) GetName() string {
+	return tasks.DnfManager
 }
 
 func buildInstallCmds(rawCmds []string, version string) []string {

@@ -1,0 +1,9 @@
+#
+# Execute a command
+#
+pkg:
+  pkg.installed:
+    - name: "'Time to Leave'"
+    #- refresh: true
+    - manager: winget
+    - shell: powershell

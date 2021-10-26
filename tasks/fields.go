@@ -28,4 +28,5 @@ const (
 	EncodingField   = "encoding"
 	Version         = "version"
 	Refresh         = "refresh"
+	Manager         = "manager"
 )

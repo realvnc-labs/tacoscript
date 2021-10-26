@@ -10,15 +10,15 @@ import (
 	"github.com/cloudradar-monitoring/tacoscript/tasks"
 )
 
-func BuildManagementCmdsProviders() ([]ManagementCmdsProvider, error) {
+func BuildManagementCmdsProviders(t *tasks.PkgTask) ([]ManagementCmdsProvider, error) {
 	return []ManagementCmdsProvider{
-		OsPackageManagerCmdProvider{},
+		BrewPackageManagerCmdProvider{},
 	}, nil
 }
 
-type OsPackageManagerCmdProvider struct{}
+type BrewPackageManagerCmdProvider struct{}
 
-func (ecb OsPackageManagerCmdProvider) GetManagementCmds(t *tasks.PkgTask) (*ManagementCmds, error) {
+func (ecb BrewPackageManagerCmdProvider) GetManagementCmds(t *tasks.PkgTask) (*ManagementCmds, error) {
 	rawCmds := t.GetNames()
 	rawInstallCmds := make([]string, 0, len(rawCmds))
 	if t.Version != "" {
@@ -38,4 +38,8 @@ func (ecb OsPackageManagerCmdProvider) GetManagementCmds(t *tasks.PkgTask) (*Man
 		UpgradeCmds:   []string{fmt.Sprintf("brew upgrade %s", strings.Join(rawCmds, " "))},
 		ListCmd:       "brew list --formula --versions",
 	}, nil
+}
+
+func (ecb BrewPackageManagerCmdProvider) GetName() string {
+	return tasks.BrewManager
 }

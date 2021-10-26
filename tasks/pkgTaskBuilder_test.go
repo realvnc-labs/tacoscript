@@ -22,6 +22,7 @@ func TestPkgTaskBuilder(t *testing.T) {
 				yaml.MapSlice{yaml.MapItem{NameField, "vim"}},
 				yaml.MapSlice{yaml.MapItem{ShellField, "cmd.exe"}},
 				yaml.MapSlice{yaml.MapItem{Version, "1.0.1"}},
+				yaml.MapSlice{yaml.MapItem{Manager, "apt"}},
 				yaml.MapSlice{yaml.MapItem{Refresh, 1}},
 				yaml.MapSlice{yaml.MapItem{RequireField, []interface{}{
 					"req one",
@@ -44,6 +45,7 @@ func TestPkgTaskBuilder(t *testing.T) {
 				NamedTask:     NamedTask{Name: "vim"},
 				Shell:         "cmd.exe",
 				Version:       "1.0.1",
+				Manager:       "apt",
 				ShouldRefresh: true,
 				Unless: []string{
 					"Unless one",

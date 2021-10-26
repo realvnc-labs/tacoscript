@@ -69,6 +69,10 @@ var pkgContextProcMap = map[string]pkgContextProc{
 		t.Names = names
 		return err
 	},
+	Manager: func(t *PkgTask, path string, val interface{}) error {
+		t.Manager = fmt.Sprint(val)
+		return nil
+	},
 }
 
 func (fmtb PkgTaskBuilder) Build(typeName, path string, ctx interface{}) (Task, error) {
@@ -109,6 +113,7 @@ type PkgTask struct {
 	NamedTask
 	Shell         string
 	Version       string
+	Manager       string
 	ShouldRefresh bool
 	Require       []string
 	OnlyIf        []string
@@ -136,6 +141,13 @@ func (pt *PkgTask) Validate() error {
 
 	if pt.ActionType == 0 {
 		errs.Add(fmt.Errorf("unknown pkg task type: %s", pt.TypeName))
+	}
+
+	if pt.Manager != "" {
+		_, ok := supportedManagers[pt.Manager]
+		if !ok {
+			errs.Add(fmt.Errorf("unsupported pkg manager for the current OS: %s", pt.Manager))
+		}
 	}
 
 	return errs.ToError()

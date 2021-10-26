@@ -26,15 +26,16 @@ type ManagementCmds struct {
 
 type ManagementCmdsProvider interface {
 	GetManagementCmds(t *tasks.PkgTask) (*ManagementCmds, error)
+	GetName() string
 }
 
 type PackageTaskManager struct {
 	Runner                          exec.Runner
-	ManagementCmdsProviderBuildFunc func() ([]ManagementCmdsProvider, error)
+	ManagementCmdsProviderBuildFunc func(t *tasks.PkgTask) ([]ManagementCmdsProvider, error)
 }
 
 func (pm PackageTaskManager) ExecuteTask(ctx context.Context, t *tasks.PkgTask) (res *tasks.PackageManagerExecutionResult, err error) {
-	managementCmdProviders, err := pm.ManagementCmdsProviderBuildFunc()
+	managementCmdProviders, err := pm.ManagementCmdsProviderBuildFunc(t)
 	if err != nil {
 		return nil, err
 	}

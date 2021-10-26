@@ -70,6 +70,16 @@ func TestPkgTaskValidation(t *testing.T) {
 			},
 			ExpectedError: "unknown pkg task type: unknown type name",
 		},
+		{
+			Name: "invalid_manager",
+			Task: PkgTask{
+				Manager:   "unknown manager",
+				Path:       "somepath",
+				NamedTask:  NamedTask{Name: "some name"},
+				ActionType: ActionUninstall,
+			},
+			ExpectedError: "unsupported pkg manager for the current OS: unknown manager",
+		},
 	}
 
 	for _, testCase := range testCases {
