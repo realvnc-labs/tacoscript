@@ -35,6 +35,10 @@ func (ecb MockedOsPackageManagerCmdProvider) GetManagementCmds(t *tasks.PkgTask)
 	}, ecb.ErrToGive
 }
 
+func (ecb MockedOsPackageManagerCmdProvider) GetName() string {
+	return "MockedOsPackageManagerCmdProvider"
+}
+
 func TestTaskExecution(t *testing.T) {
 	testCases := []struct {
 		Runner           *exec.RunnerMock

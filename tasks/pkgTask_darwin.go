@@ -4,7 +4,7 @@
 package tasks
 
 const (
-	BrewManager  = "brew"
+	BrewManager = "brew"
 )
 
 var supportedManagers = map[string]string{BrewManager: BrewManager}

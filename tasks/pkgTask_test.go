@@ -73,7 +73,7 @@ func TestPkgTaskValidation(t *testing.T) {
 		{
 			Name: "invalid_manager",
 			Task: PkgTask{
-				Manager:   "unknown manager",
+				Manager:    "unknown manager",
 				Path:       "somepath",
 				NamedTask:  NamedTask{Name: "some name"},
 				ActionType: ActionUninstall,
