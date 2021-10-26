@@ -51,7 +51,7 @@ func BuildManagementCmdsProviders(t *tasks.PkgTask) ([]ManagementCmdsProvider, e
 	if t.Manager != "" {
 		for _, linuxSpecificProvider := range linuxSpecificProviders {
 			if t.Manager == linuxSpecificProvider.GetName() {
-				return []ManagementCmdsProvider{linuxSpecificProvider}
+				return []ManagementCmdsProvider{linuxSpecificProvider}, nil
 			}
 		}
 	}
