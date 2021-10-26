@@ -89,6 +89,10 @@ func (r Runner) Run(ctx context.Context, scripts tasks.Scripts, globalAbortOnErr
 				}
 			}
 
+			errString := ""
+			if res.Err != nil {
+				errString = res.Err.Error()
+			}
 			result.Results = append(result.Results, taskResult{
 				ID:       script.ID,
 				Function: task.GetName(),
@@ -98,6 +102,7 @@ func (r Runner) Run(ctx context.Context, scripts tasks.Scripts, globalAbortOnErr
 				Started:  onlyTime(taskStart),
 				Duration: res.Duration,
 				Changes:  changeMap,
+				Error:    errString,
 			})
 		}
 
