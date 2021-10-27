@@ -4,10 +4,9 @@
 package utils
 
 import (
+	"fmt"
 	"os"
 	"strings"
-
-	log "github.com/sirupsen/logrus"
 )
 
 func ParseLocationOS(rawLocation string) string {
@@ -22,7 +21,5 @@ func ParseLocationOS(rawLocation string) string {
 }
 
 func Chown(targetFilePath, userName, groupName string) error {
-	log.Debug("no chown support under windows")
-
-	return nil
+	return fmt.Errorf("no chown support under windows")
 }
