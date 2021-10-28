@@ -115,13 +115,13 @@ func (r Runner) Run(ctx context.Context, scripts tasks.Scripts, globalAbortOnErr
 	}
 
 	result.Summary = scriptSummary{
-		Config:            r.DataProvider.Path,
-		Succeeded:         succeeded,
-		Failed:            failed,
-		Aborted:           aborted,
-		Changes:           changes,
-		TotalFunctionsRun: tasksRun,
-		TotalRunTime:      time.Since(scriptStart),
+		Script:        r.DataProvider.Path,
+		Succeeded:     succeeded,
+		Failed:        failed,
+		Aborted:       aborted,
+		Changes:       changes,
+		TotalTasksRun: tasksRun,
+		TotalRunTime:  time.Since(scriptStart),
 	}
 
 	y, err := yaml.Marshal(result)
