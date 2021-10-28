@@ -3,6 +3,7 @@ package script
 import (
 	"context"
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/sirupsen/logrus"
@@ -60,25 +61,26 @@ func (r Runner) Run(ctx context.Context, scripts tasks.Scripts, globalAbortOnErr
 
 			changeMap := make(map[string]string)
 
-			if !res.IsSkipped {
-				comment = `Command "` + name + `" run`
-				changeMap["pid"] = fmt.Sprintf("%d", res.Pid)
-				if runErr, ok := res.Err.(exec.RunError); ok {
-					changeMap["retcode"] = fmt.Sprintf("%d", runErr.ExitCode)
+			if cmdRunTask, ok := task.(*tasks.CmdRunTask); ok {
+				if !res.IsSkipped {
+					changeMap["pid"] = fmt.Sprintf("%d", res.Pid)
+					if runErr, ok := res.Err.(exec.RunError); ok {
+						changeMap["retcode"] = fmt.Sprintf("%d", runErr.ExitCode)
+					}
+
+					changeMap["stderr"] = strings.TrimSpace(strings.ReplaceAll(res.StdErr, "\r\n", "\n"))
+					changeMap["stdout"] = strings.TrimSpace(strings.ReplaceAll(res.StdOut, "\r\n", "\n"))
+
+					if exec.IsPowerShell(cmdRunTask.Shell) {
+						changeMap["stdout"] = powershellUnquote(changeMap["stdout"])
+					}
+					changes++
 				}
 
-				changeMap["stderr"] = strings.TrimSpace(strings.ReplaceAll(res.StdErr, "\r\n", "\n"))
-				changeMap["stdout"] = strings.TrimSpace(strings.ReplaceAll(res.StdOut, "\r\n", "\n"))
-
-				if exec.IsPowerShell(cmdRunTask.Shell) {
-					changeMap["stdout"] = powershellUnquote(changeMap["stdout"])
+				if cmdRunTask.AbortOnError && !res.Succeeded() {
+					abort = true
+					aborted = total - tasksRun
 				}
-				changes++
-			}
-
-			if cmdRunTask.AbortOnError && !res.Succeeded() {
-				abort = true
-				aborted = total - tasksRun
 			}
 
 			if len(res.Changes) > 0 {

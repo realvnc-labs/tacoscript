@@ -292,7 +292,7 @@ func (pm PackageTaskManager) run(
 	)
 
 	res.Output = stderrBuf.String() + stdoutBuf.String()
-	res.Pids = execCtx.Pids
+	res.Pid = execCtx.Pid
 
 	return nil
 }
