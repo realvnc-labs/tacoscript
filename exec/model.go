@@ -16,7 +16,7 @@ type Context struct {
 	Path         string
 	Envs         conv.KeyValues
 	Cmds         []string
-	Pids         []int
+	Pid          int
 	Shell        string
 }
 
@@ -39,12 +39,6 @@ type ShellParam struct {
 	ShellPath      string
 	ShellParams    []string
 	RawShellString string
-}
-
-type CmdParam struct {
-	Cmd          string
-	Params       []string
-	RawCmdString string
 }
 
 type RunError struct {

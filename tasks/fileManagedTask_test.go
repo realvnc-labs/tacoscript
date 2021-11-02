@@ -250,11 +250,9 @@ func TestFileManagedTaskExecution(t *testing.T) {
 				SystemAPI: &appExec.SystemAPIMock{
 					Cmds: []*exec.Cmd{},
 					Callback: func(cmd *exec.Cmd) error {
-						cmdStr := cmd.String()
-						if strings.Contains(cmdStr, "cmd with OnlyIf failure") {
+						if strings.Contains(cmd.String(), "cmd with OnlyIf failure") {
 							return nil
 						}
-
 						return appExec.RunError{Err: errors.New("some OnlyIfFailure")}
 					},
 				},
@@ -588,13 +586,6 @@ func assertTestCase(t *testing.T, tc *fileManagedTestCase, res *ExecutionResult,
 	assert.EqualValues(t, tc.ExpectedResult.IsSkipped, res.IsSkipped)
 	assert.EqualValues(t, tc.ExpectedResult.StdOut, res.StdOut)
 	assert.EqualValues(t, tc.ExpectedResult.StdErr, res.StdErr)
-
-	var cmds []*exec.Cmd
-	if tc.RunnerMock != nil {
-		systemAPIMock := tc.RunnerMock.SystemAPI.(*appExec.SystemAPIMock)
-		cmds = systemAPIMock.Cmds
-	}
-	apptest.AssertCmdsPartiallyMatch(t, tc.ExpectedCmdStrs, cmds)
 
 	if tc.LogExpectation != "" {
 		assertLogExpectation(t, tc.LogExpectation, logs)

@@ -11,7 +11,7 @@ import (
 )
 
 // RunScript main entry point for the script execution
-func RunScript(scriptPath string) error {
+func RunScript(scriptPath string, abortOnError bool) error {
 	fileDataProvider := FileDataProvider{
 		Path: scriptPath,
 	}
@@ -68,7 +68,6 @@ func RunScript(scriptPath string) error {
 		ExecutorRouter: execRouter,
 	}
 
-	err = runner.Run(context.Background(), scripts)
-
+	err = runner.Run(context.Background(), scripts, abortOnError)
 	return err
 }

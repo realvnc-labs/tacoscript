@@ -1,8 +1,6 @@
 package script
 
 import (
-	"fmt"
-	"strings"
 	"time"
 )
 
@@ -29,13 +27,10 @@ type scriptSummary struct {
 	Config            string        `yaml:"Config"`
 	Succeeded         int           `yaml:"Succeeded"`
 	Failed            int           `yaml:"Failed"`
+	Aborted           int           `yaml:"Aborted"`
 	Changes           int           `yaml:"Changes"`
 	TotalFunctionsRun int           `yaml:"TotalFunctionsRun"`
 	TotalRunTime      time.Duration `yaml:"TotalRunTime"`
-}
-
-func intsToString(a []int) string {
-	return strings.Trim(strings.Replace(fmt.Sprint(a), " ", ",", -1), "[]")
 }
 
 const stampMicro = "15:04:05.000000"

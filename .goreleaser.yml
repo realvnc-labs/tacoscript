@@ -6,7 +6,9 @@ builds:
     main: ./
     binary: tacoscript
     ldflags:
-      - "-s -w -X {{.Env.PROJECT}}/cmd.Version={{.Version}}"
+      - -X '{{.Env.PROJECT}}/cmd.Version={{.Version}}'
+      - -X '{{.Env.PROJECT}}/cmd.BuildTime={{.Date}}'
+      - -X '{{.Env.PROJECT}}/cmd.GitCommit={{.Commit}}'
     goos:
       - linux
       - darwin

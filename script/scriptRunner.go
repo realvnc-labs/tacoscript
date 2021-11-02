@@ -3,6 +3,7 @@ package script
 import (
 	"context"
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/sirupsen/logrus"
@@ -17,7 +18,7 @@ type Runner struct {
 	DataProvider   FileDataProvider
 }
 
-func (r Runner) Run(ctx context.Context, scripts tasks.Scripts) error {
+func (r Runner) Run(ctx context.Context, scripts tasks.Scripts, globalAbortOnError bool) error {
 	SortScriptsRespectingRequirements(scripts)
 
 	result := scriptResult{}
@@ -27,18 +28,26 @@ func (r Runner) Run(ctx context.Context, scripts tasks.Scripts) error {
 	failed := 0
 	tasksRun := 0
 	changes := 0
+	aborted := 0
+
+	total := 0
+
+	for _, script := range scripts {
+		total += len(script.Tasks)
+	}
 
 	for _, script := range scripts {
 		logrus.Debugf("will run script '%s'", script.ID)
+		abort := false
 		for _, task := range script.Tasks {
 			taskStart := time.Now()
-			executr, err := r.ExecutorRouter.GetExecutor(task)
+			executor, err := r.ExecutorRouter.GetExecutor(task)
 			if err != nil {
 				return err
 			}
 
 			logrus.Debugf("will run task '%s' at path '%s'", task.GetName(), task.GetPath())
-			res := executr.Execute(ctx, task)
+			res := executor.Execute(ctx, task)
 
 			logrus.Debugf("finished task '%s' at path '%s', result: %s", task.GetName(), task.GetPath(), res.String())
 
@@ -52,15 +61,26 @@ func (r Runner) Run(ctx context.Context, scripts tasks.Scripts) error {
 
 			changeMap := make(map[string]string)
 
-			if !res.IsSkipped {
-				changeMap["pid"] = intsToString(res.Pids)
-				if runErr, ok := res.Err.(exec.RunError); ok {
-					changeMap["retcode"] = fmt.Sprintf("%d", runErr.ExitCode)
+			if cmdRunTask, ok := task.(*tasks.CmdRunTask); ok {
+				if !res.IsSkipped {
+					changeMap["pid"] = fmt.Sprintf("%d", res.Pid)
+					if runErr, ok := res.Err.(exec.RunError); ok {
+						changeMap["retcode"] = fmt.Sprintf("%d", runErr.ExitCode)
+					}
+
+					changeMap["stderr"] = strings.TrimSpace(strings.ReplaceAll(res.StdErr, "\r\n", "\n"))
+					changeMap["stdout"] = strings.TrimSpace(strings.ReplaceAll(res.StdOut, "\r\n", "\n"))
+
+					if exec.IsPowerShell(cmdRunTask.Shell) {
+						changeMap["stdout"] = powershellUnquote(changeMap["stdout"])
+					}
+					changes++
 				}
 
-				changeMap["stderr"] = res.StdErr
-				changeMap["stdout"] = res.StdOut
-				changes++
+				if cmdRunTask.AbortOnError && !res.Succeeded() {
+					abort = true
+					aborted = total - tasksRun
+				}
 			}
 
 			if len(res.Changes) > 0 {
@@ -80,6 +100,12 @@ func (r Runner) Run(ctx context.Context, scripts tasks.Scripts) error {
 				Changes:  changeMap,
 			})
 		}
+
+		if abort || globalAbortOnError {
+			logrus.Debug("aborting due to task failure")
+			aborted = total - tasksRun
+			break
+		}
 		logrus.Debugf("finished script '%s'", script.ID)
 	}
 
@@ -87,6 +113,7 @@ func (r Runner) Run(ctx context.Context, scripts tasks.Scripts) error {
 		Config:            r.DataProvider.Path,
 		Succeeded:         succeeded,
 		Failed:            failed,
+		Aborted:           aborted,
 		Changes:           changes,
 		TotalFunctionsRun: tasksRun,
 		TotalRunTime:      time.Since(scriptStart),
@@ -98,5 +125,19 @@ func (r Runner) Run(ctx context.Context, scripts tasks.Scripts) error {
 	}
 	fmt.Println(string(y))
 
+	if aborted > 0 || failed > 0 {
+		return fmt.Errorf("%d aborted, %d failed", aborted, failed)
+	}
+
 	return nil
+}
+
+// stdout from multiline powershell scripts often includes trailing spaces on each line.
+// when encoded as yaml, the result does not look pretty. this function strips trailing whitespace
+func powershellUnquote(s string) string {
+	lines := strings.Split(s, "\n")
+	for i, line := range lines {
+		lines[i] = strings.TrimRight(line, " ")
+	}
+	return strings.Join(lines, "\n")
 }

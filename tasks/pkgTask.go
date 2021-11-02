@@ -153,7 +153,7 @@ type PackageManagerExecutionResult struct {
 	Output  string
 	Comment string
 	Changes map[string]string
-	Pids    []int
+	Pid     int
 }
 
 type PackageManager interface {
@@ -205,7 +205,7 @@ func (pte *PkgTaskExecutor) Execute(ctx context.Context, task Task) ExecutionRes
 		execRes.StdOut = pkgExecResult.Output
 		execRes.Comment = pkgExecResult.Comment
 		execRes.Changes = pkgExecResult.Changes
-		execRes.Pids = pkgExecResult.Pids
+		execRes.Pid = pkgExecResult.Pid
 	}
 
 	execRes.IsSkipped = false

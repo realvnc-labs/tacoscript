@@ -29,6 +29,9 @@ type CmdRunTask struct {
 	Require               []string
 	OnlyIf                []string
 	Unless                []string
+
+	// aborts task execution if one task fails
+	AbortOnError bool
 }
 
 type CmdRunTaskBuilder struct {
@@ -79,6 +82,8 @@ func (crtb CmdRunTaskBuilder) Build(typeName, path string, ctx interface{}) (Tas
 		case Unless:
 			t.Unless, err = parseUnlessField(val, path)
 			errs.Add(err)
+		case AbortOnErrorField:
+			t.AbortOnError = conv.ConvertToBool(val)
 		}
 	}
 
@@ -167,8 +172,7 @@ func (crte *CmdRunTaskExecutor) Execute(ctx context.Context, task Task) Executio
 
 	execRes.StdErr = stderrBuf.String()
 	execRes.StdOut = stdoutBuf.String()
-	execRes.Pids = execCtx.Pids
-	execRes.Comment = `Command "` + execRes.Name + `" run`
+	execRes.Pid = execCtx.Pid
 
 	return execRes
 }
