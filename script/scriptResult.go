@@ -16,6 +16,7 @@ type taskResult struct {
 	Name     string `yaml:"Name"`
 	Result   bool   `yaml:"Result"`
 	Comment  string `yaml:"Comment,omitempty"`
+	Error    string `yaml:"Error,omitempty"`
 
 	Started  onlyTime      `yaml:"Started"`
 	Duration time.Duration `yaml:"Duration"`
@@ -24,13 +25,13 @@ type taskResult struct {
 }
 
 type scriptSummary struct {
-	Config            string        `yaml:"Config"`
-	Succeeded         int           `yaml:"Succeeded"`
-	Failed            int           `yaml:"Failed"`
-	Aborted           int           `yaml:"Aborted"`
-	Changes           int           `yaml:"Changes"`
-	TotalFunctionsRun int           `yaml:"TotalFunctionsRun"`
-	TotalRunTime      time.Duration `yaml:"TotalRunTime"`
+	Script        string        `yaml:"Script"`
+	Succeeded     int           `yaml:"Succeeded"`
+	Failed        int           `yaml:"Failed"`
+	Aborted       int           `yaml:"Aborted"`
+	Changes       int           `yaml:"Changes"`
+	TotalTasksRun int           `yaml:"TotalTasksRun"`
+	TotalRunTime  time.Duration `yaml:"TotalRunTime"`
 }
 
 const stampMicro = "15:04:05.000000"

@@ -207,6 +207,8 @@ func (fmte *FileManagedTaskExecutor) Execute(ctx context.Context, task Task) Exe
 		return execRes
 	}
 
+	execRes.Name = fileManagedTask.Name
+
 	var stdoutBuf, stderrBuf bytes.Buffer
 	execCtx := &exec2.Context{
 		Ctx:          ctx,
@@ -366,6 +368,7 @@ func (fmte *FileManagedTaskExecutor) checkMissingFileCondition(
 	fileManagedTask *FileManagedTask,
 ) (isExists bool, fileName string, err error) {
 	if len(fileManagedTask.Creates) == 0 {
+		fileName = fileManagedTask.Name
 		return
 	}
 
