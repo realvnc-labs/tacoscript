@@ -1,0 +1,17 @@
+{
+  "name": "tacoscript",
+  "version": "1.0.0",
+  "description": "Manage sysadmin tasks with easy to learn scripts wrapped into a taco",
+  "dependencies": {
+    "@gtm-support/vue-gtm": "^1.1.0"
+  },
+  "devDependencies": {
+    "vuepress": "^2.0.0-beta.22"
+  },
+  "scripts": {
+    "docs:dev": "vuepress dev",
+    "docs:build": "vuepress build"
+  },
+  "author": "cloudradar-monitoring",
+  "homepage": "https://github.com/cloudradar-monitoring/tacoscript"
+}

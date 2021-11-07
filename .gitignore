@@ -3,3 +3,9 @@
 /bin
 /dist
 
+# Vuepress
+.vuepress/.cache
+.vuepress/.temp
+
+# dependencies
+node_modules

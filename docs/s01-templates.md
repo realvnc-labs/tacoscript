@@ -1,5 +1,5 @@
 # Templates rendering
-You can use [golang template language](https://golang.org/pkg/text/template/) in your scripts. 
+You can use [golang template language](https://golang.org/pkg/text/template/) in your scripts.
 Template is evaluated before parsing the yaml format.
 Templating allows you to use conditions and variables.
 
@@ -43,53 +43,60 @@ The values in the predefined variables are always lowercase, so make sure that y
 
 You can use predefined variables in your templates as:
 
-    template:
-      cmd.run:
-    {{ if eq .taco_os_family "redhat" }}
-        - name: yum --version
-    {{ else }}
-        - name: apt --version
-    {{ end }}
+```yaml
+template:
+  cmd.run:
+{{ if eq .taco_os_family "redhat" }}
+    - name: yum --version
+{{ else }}
+    - name: apt --version
+{{ end }}
+```
 
 In this case if you execute this script in a "redhat" centos linux environment the template will be converted to the following script:
 
-    template:
-      cmd.run:
-        - name: yum --version
+```yaml
+template:
+  cmd.run:
+    - name: yum --version
+```
 
 ## Conditions
 
-
-        installVim:
-          cmd.run:
-        {{ if eq .taco_os_family "redhat" }}
-            - name: yum install vim
-        {{ else if eq .taco_os_family "debian" }}
-            - name: apt install vim
-        {{ else if eq .taco_os_platform "alpine" }}
-            - name: apk add vim
-        {{ else }}
-            - name: echo "Unsupported platform {{ .taco_os_family }}"
-        {{ end }}
-
+```yaml
+installVim:
+  cmd.run:
+{{ if eq .taco_os_family "redhat" }}
+    - name: yum install vim
+{{ else if eq .taco_os_family "debian" }}
+    - name: apt install vim
+{{ else if eq .taco_os_platform "alpine" }}
+    - name: apk add vim
+{{ else }}
+    - name: echo "Unsupported platform {{ .taco_os_family }}"
+{{ end }}
+```
 
 ## Variables
 
-    {{$file := "test.txt"}}
-    template:
-      cmd.run:
-        - name: touch {{ $file }}
-        - creates:
-            - {{ $file }}
-            
+```yaml
+{{$file := "test.txt"}}
+template:
+  cmd.run:
+    - name: touch {{ $file }}
+    - creates:
+        - {{ $file }}
+```
+
 By defining $file variable we avoid code repetition like:
 
-
-    template:
-      cmd.run:
-        - name: touch test.txt
-        - creates:
-            - test.txt
+```yaml
+template:
+  cmd.run:
+    - name: touch test.txt
+    - creates:
+        - test.txt
+```
 
 so if you would like to change the file name, you can do it in just one place.
 
