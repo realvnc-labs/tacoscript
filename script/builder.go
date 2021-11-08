@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
-	"io/ioutil"
+	"os"
 	"text/template"
 
 	"github.com/cloudradar-monitoring/tacoscript/utils"
@@ -19,7 +19,7 @@ type FileDataProvider struct {
 }
 
 func (fdp FileDataProvider) Read() ([]byte, error) {
-	return ioutil.ReadFile(fdp.Path)
+	return os.ReadFile(fdp.Path)
 }
 
 type RawDataProvider interface {
@@ -83,7 +83,7 @@ func (p Builder) BuildScripts() (tasks.Scripts, error) {
 				script.Tasks = append(script.Tasks, task)
 			}
 		} else {
-			errs.Add(fmt.Errorf("Script failed to run. Input YAML is malformed."))
+			errs.Add(fmt.Errorf("script failed to run. input YAML is malformed"))
 		}
 		scripts = append(scripts, script)
 	}

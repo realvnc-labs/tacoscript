@@ -41,7 +41,6 @@ type errorResult struct {
 
 func Execute() error {
 	if err := rootCmd.Execute(); err != nil {
-
 		logrus.Debugf("Execute failed: %v", err)
 
 		y, _ := yaml.Marshal(errorResult{Error: err.Error()})

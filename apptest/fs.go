@@ -3,7 +3,6 @@ package apptest
 import (
 	"context"
 	"fmt"
-	"io/ioutil"
 	"net/url"
 	"os"
 	"time"
@@ -62,7 +61,7 @@ func AssertFileMatchesExpectation(fe *FileExpectation) (isExpectationMatched boo
 		return true, "", nil
 	}
 
-	fileContentsBytes, err := ioutil.ReadFile(fe.FilePath)
+	fileContentsBytes, err := os.ReadFile(fe.FilePath)
 	if err != nil {
 		return false, "", err
 	}

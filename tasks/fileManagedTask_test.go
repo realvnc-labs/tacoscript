@@ -5,8 +5,8 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
-	"io/ioutil"
 	"net/url"
+	"os"
 	"os/exec"
 	"strings"
 	"testing"
@@ -75,27 +75,27 @@ func TestFileManagedTaskExecution(t *testing.T) {
 		"sourceFileFTP.txt",
 	}
 
-	err = ioutil.WriteFile("sourceFileAtLocal.txt", []byte("one two three"), 0600)
+	err = os.WriteFile("sourceFileAtLocal.txt", []byte("one two three"), 0600)
 	assert.NoError(t, err)
 	if err != nil {
 		return
 	}
 
-	err = ioutil.WriteFile("sourceFileHTTPS.txt", []byte("one two three"), 0600)
+	err = os.WriteFile("sourceFileHTTPS.txt", []byte("one two three"), 0600)
 	assert.NoError(t, err)
 	if err != nil {
 		return
 	}
 	httpsSrvURL.Path = "/sourceFileHTTPS.txt"
 
-	err = ioutil.WriteFile("sourceFileHTTP.txt", []byte("one two three"), 0600)
+	err = os.WriteFile("sourceFileHTTP.txt", []byte("one two three"), 0600)
 	assert.NoError(t, err)
 	if err != nil {
 		return
 	}
 	httpSrvURL.Path = "/sourceFileHTTP.txt"
 
-	err = ioutil.WriteFile("sourceFileFTP.txt", []byte("one two three"), 0600)
+	err = os.WriteFile("sourceFileFTP.txt", []byte("one two three"), 0600)
 	assert.NoError(t, err)
 	if err != nil {
 		return
@@ -541,7 +541,7 @@ three`,
 				if tc.ContentEncodingToWrite != "" {
 					e = utils.WriteEncodedFile(tc.ContentEncodingToWrite, tc.ContentToWrite, tc.Task.Name, 0600)
 				} else {
-					e = ioutil.WriteFile(tc.Task.Name, []byte(tc.ContentToWrite), 0600)
+					e = os.WriteFile(tc.Task.Name, []byte(tc.ContentToWrite), 0600)
 				}
 				assert.NoError(t, e)
 			}

@@ -3,6 +3,6 @@
 
 package apptest
 
-func AssertFileMatchesExpectationOS(filePath string, fe *FileExpectation) (bool, string, error) {
+func AssertFileMatchesExpectationOS(filePath string, fe *FileExpectation) (isMatched bool, reason string, err error) {
 	return true, "", nil
 }

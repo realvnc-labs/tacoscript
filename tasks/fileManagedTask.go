@@ -5,6 +5,7 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"io/fs"
 	"os"
 	"time"
 
@@ -185,10 +186,9 @@ func (crt *FileManagedTask) GetPath() string {
 	return crt.Path
 }
 
-/*
 func (crt *FileManagedTask) String() string {
 	return fmt.Sprintf("task '%s' at path '%s'", crt.TypeName, crt.GetPath())
-}*/
+}
 
 type HashManager interface {
 	HashEquals(hashStr, filePath string) (hashEquals bool, actualCache string, err error)
@@ -265,7 +265,8 @@ func (fmte *FileManagedTaskExecutor) Execute(ctx context.Context, task Task) Exe
 		}
 		fileManagedTask.Updated = true
 
-		info, err := fmte.FsManager.Stat(fileManagedTask.Name)
+		var info fs.FileInfo
+		info, err = fmte.FsManager.Stat(fileManagedTask.Name)
 		if err != nil {
 			execRes.Err = err
 			return execRes
@@ -316,7 +317,7 @@ func (fmte *FileManagedTaskExecutor) checkOnlyIfs(ctx *exec2.Context, fileManage
 	if err != nil {
 		runErr, isRunErr := err.(exec2.RunError)
 		if isRunErr {
-			logrus.Debugf("will skip %s since onlyif condition has failed: %v", fileManagedTask, runErr)
+			logrus.Debugf("will skip %s since onlyif condition has failed: %v", fileManagedTask.String(), runErr)
 			return false, nil
 		}
 
@@ -376,7 +377,7 @@ func (fmte *FileManagedTaskExecutor) shouldBeExecuted(
 		return skipReasonForContents, nil
 	}
 
-	logrus.Debugf("all execution conditions are met, will continue %s", fileManagedTask)
+	logrus.Debugf("all execution conditions are met, will continue %s", fileManagedTask.String())
 	return "", nil
 }
 

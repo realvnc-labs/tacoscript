@@ -2,7 +2,6 @@ package utils
 
 import (
 	"fmt"
-	"io/ioutil"
 	"os"
 	"strings"
 
@@ -118,11 +117,11 @@ func WriteEncodedFile(encodingName, contentsUtf8, fileName string, perm os.FileM
 		return err
 	}
 
-	return ioutil.WriteFile(fileName, encodedData, perm)
+	return os.WriteFile(fileName, encodedData, perm)
 }
 
 func ReadEncodedFile(encodingName, fileName string) (contentsUtf8 string, err error) {
-	contents, err := ioutil.ReadFile(fileName)
+	contents, err := os.ReadFile(fileName)
 	if err != nil {
 		return
 	}

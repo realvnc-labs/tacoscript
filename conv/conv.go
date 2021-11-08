@@ -46,7 +46,7 @@ func ConvertToKeyValues(val interface{}, path string) (KeyValues, error) {
 			key := item.Key.(string)
 			val := item.Value
 			res = append(res, KeyValue{
-				Key:   fmt.Sprint(key),
+				Key:   key,
 				Value: fmt.Sprint(val),
 			})
 		}
