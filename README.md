@@ -76,7 +76,7 @@ create-file:
 ```
 On Windows, the file can be:
 ```yaml
-create-tile:
+create-file:
   cmd.run:
     - name: New-Item -ItemType file C:\Users\Public\Documents\somefile.txt
     - shell: powershell
