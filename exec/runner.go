@@ -174,7 +174,7 @@ func (sr SystemRunner) createCmd(execContext *Context, tmpFile *os.File) (cmd *e
 
 	rawCmds := prelude + strings.Join(execContext.Cmds, newLine)
 
-	if _, err = tmpFile.Write([]byte(rawCmds)); err != nil {
+	if _, err = tmpFile.WriteString(rawCmds); err != nil {
 		return
 	}
 

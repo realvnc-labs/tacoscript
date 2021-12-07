@@ -5,7 +5,6 @@ import (
 	"crypto/tls"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"net/http"
 	"net/url"
 	"os"
@@ -38,11 +37,11 @@ func (fmm *FsManager) CopyLocalFile(sourceFilePath, targetFilePath string, mode 
 }
 
 func (fmm *FsManager) WriteFile(name, contents string, mode os.FileMode) error {
-	return ioutil.WriteFile(name, []byte(contents), mode)
+	return os.WriteFile(name, []byte(contents), mode)
 }
 
 func (fmm *FsManager) ReadFile(filePath string) (content string, err error) {
-	contentsByte, err := ioutil.ReadFile(filePath)
+	contentsByte, err := os.ReadFile(filePath)
 
 	return string(contentsByte), err
 }
@@ -90,12 +89,12 @@ func MoveFile(sourceFilePath, targetFilePath string) error {
 }
 
 func CopyLocalFile(sourceFilePath, targetFilePath string, mode os.FileMode) error {
-	input, err := ioutil.ReadFile(sourceFilePath)
+	input, err := os.ReadFile(sourceFilePath)
 	if err != nil {
 		return err
 	}
 
-	err = ioutil.WriteFile(targetFilePath, input, mode)
+	err = os.WriteFile(targetFilePath, input, mode)
 	if err != nil {
 		return err
 	}
@@ -110,7 +109,7 @@ func DownloadHTTPFile(ctx context.Context, u fmt.Stringer, targetFilePath string
 	}
 	defer CloseResourceSecure(targetFilePath, out)
 
-	req, err := http.NewRequestWithContext(ctx, http.MethodGet, u.String(), nil)
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, u.String(), http.NoBody)
 	if err != nil {
 		return nil
 	}
@@ -141,7 +140,7 @@ func DownloadHTTPSFile(ctx context.Context, skipTLS bool, u fmt.Stringer, target
 		},
 	}
 
-	req, err := http.NewRequestWithContext(ctx, http.MethodGet, u.String(), nil)
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, u.String(), http.NoBody)
 	if err != nil {
 		return nil
 	}
@@ -149,6 +148,9 @@ func DownloadHTTPSFile(ctx context.Context, skipTLS bool, u fmt.Stringer, target
 	resp, err := client.Do(req)
 	if err != nil {
 		return err
+	}
+	if resp.StatusCode < 200 || resp.StatusCode > 299 {
+		return fmt.Errorf("http status %d %s", resp.StatusCode, http.StatusText(resp.StatusCode))
 	}
 	defer CloseResourceSecure("http body", resp.Body)
 

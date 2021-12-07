@@ -3,8 +3,8 @@ package script
 import (
 	"context"
 	"errors"
-	"io/ioutil"
 	"os"
+	"path/filepath"
 	"testing"
 
 	"github.com/cloudradar-monitoring/tacoscript/utils"
@@ -65,7 +65,7 @@ func (tm *TaskBuilderTaskMock) GetPath() string {
 
 func (rdpm RawDataProviderMock) Read() ([]byte, error) {
 	if rdpm.FileName != "" {
-		return ioutil.ReadFile("yaml" + string(os.PathSeparator) + rdpm.FileName)
+		return os.ReadFile(filepath.Join("yaml", rdpm.FileName))
 	}
 
 	return []byte(rdpm.DataToReturn), rdpm.ErrToReturn

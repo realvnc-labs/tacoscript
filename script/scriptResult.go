@@ -21,7 +21,7 @@ type taskResult struct {
 	Started  onlyTime      `yaml:"Started"`
 	Duration time.Duration `yaml:"Duration"`
 
-	Changes map[string]string `yaml:"Changes,omitempty"` // map for custom key-val data depending on type
+	Changes map[string]interface{} `yaml:"Changes,omitempty"` // map for custom key-val data depending on type
 }
 
 type scriptSummary struct {

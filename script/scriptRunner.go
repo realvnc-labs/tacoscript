@@ -59,20 +59,25 @@ func (r Runner) Run(ctx context.Context, scripts tasks.Scripts, globalAbortOnErr
 
 			tasksRun++
 
-			changeMap := make(map[string]string)
+			name := ""
+			comment := ""
+			changeMap := make(map[string]interface{})
 
 			if cmdRunTask, ok := task.(*tasks.CmdRunTask); ok {
+				name = strings.Join(cmdRunTask.GetNames(), "; ")
+
 				if !res.IsSkipped {
-					changeMap["pid"] = fmt.Sprintf("%d", res.Pid)
+					comment = `Command "` + name + `" run`
+					changeMap["pid"] = res.Pid
 					if runErr, ok := res.Err.(exec.RunError); ok {
-						changeMap["retcode"] = fmt.Sprintf("%d", runErr.ExitCode)
+						changeMap["retcode"] = runErr.ExitCode
 					}
 
 					changeMap["stderr"] = strings.TrimSpace(strings.ReplaceAll(res.StdErr, "\r\n", "\n"))
 					changeMap["stdout"] = strings.TrimSpace(strings.ReplaceAll(res.StdOut, "\r\n", "\n"))
 
 					if exec.IsPowerShell(cmdRunTask.Shell) {
-						changeMap["stdout"] = powershellUnquote(changeMap["stdout"])
+						changeMap["stdout"] = powershellUnquote(changeMap["stdout"].(string))
 					}
 					changes++
 				}
@@ -81,6 +86,9 @@ func (r Runner) Run(ctx context.Context, scripts tasks.Scripts, globalAbortOnErr
 					abort = true
 					aborted = total - tasksRun
 				}
+			}
+			if pkgTask, ok := task.(*tasks.PkgTask); ok {
+				name = pkgTask.NamedTask.Name
 			}
 
 			if len(res.Changes) > 0 {
@@ -93,12 +101,24 @@ func (r Runner) Run(ctx context.Context, scripts tasks.Scripts, globalAbortOnErr
 			if res.Err != nil {
 				errString = res.Err.Error()
 			}
+
+			if managedTask, ok := task.(*tasks.FileManagedTask); ok {
+				name = managedTask.Name
+				if errString == "" {
+					if managedTask.Updated {
+						comment = "File " + name + " updated"
+					} else {
+						comment = "All files in creates exists"
+					}
+				}
+			}
+
 			result.Results = append(result.Results, taskResult{
 				ID:       script.ID,
 				Function: task.GetName(),
-				Name:     res.Name,
+				Name:     name,
 				Result:   res.Succeeded(),
-				Comment:  res.Comment,
+				Comment:  comment,
 				Started:  onlyTime(taskStart),
 				Duration: res.Duration,
 				Changes:  changeMap,

@@ -1,7 +1,6 @@
 package utils
 
 import (
-	"io/ioutil"
 	"os"
 	"testing"
 
@@ -107,7 +106,7 @@ func TestHashes(t *testing.T) {
 	}
 
 	for _, testCase := range testCases {
-		err := ioutil.WriteFile("testFile.txt", []byte(testCase.data), 0600)
+		err := os.WriteFile("testFile.txt", []byte(testCase.data), 0600)
 		assert.NoError(t, err)
 		if err != nil {
 			return

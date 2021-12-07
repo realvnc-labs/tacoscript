@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
-	"io/ioutil"
+	"os"
 	"text/template"
 
 	"github.com/cloudradar-monitoring/tacoscript/utils"
@@ -19,7 +19,7 @@ type FileDataProvider struct {
 }
 
 func (fdp FileDataProvider) Read() ([]byte, error) {
-	return ioutil.ReadFile(fdp.Path)
+	return os.ReadFile(fdp.Path)
 }
 
 type RawDataProvider interface {
@@ -69,20 +69,22 @@ func (p Builder) BuildScripts() (tasks.Scripts, error) {
 			Tasks: []tasks.Task{},
 		}
 		index := 0
-		steps := rawTask.Value.(yaml.MapSlice)
-		for _, step := range steps {
-			taskTypeID := step.Key.(string)
+		if steps, ok := rawTask.Value.(yaml.MapSlice); ok {
+			for _, step := range steps {
+				taskTypeID := step.Key.(string)
 
-			index++
-			task, e := p.TaskBuilder.Build(taskTypeID, fmt.Sprintf("%s.%s[%d]", scriptID, taskTypeID, index), step.Value)
-			if e != nil {
-				return tasks.Scripts{}, e
+				index++
+				task, e := p.TaskBuilder.Build(taskTypeID, fmt.Sprintf("%s.%s[%d]", scriptID, taskTypeID, index), step.Value)
+				if e != nil {
+					return tasks.Scripts{}, e
+				}
+
+				errs.Add(task.Validate())
+				script.Tasks = append(script.Tasks, task)
 			}
-
-			errs.Add(task.Validate())
-			script.Tasks = append(script.Tasks, task)
+		} else {
+			errs.Add(fmt.Errorf("script failed to run. input YAML is malformed"))
 		}
-
 		scripts = append(scripts, script)
 	}
 	err = ValidateScripts(scripts)

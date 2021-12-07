@@ -5,6 +5,7 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"io/fs"
 	"os"
 	"time"
 
@@ -140,6 +141,9 @@ type FileManagedTask struct {
 	Creates      []string
 	OnlyIf       []string
 	Require      []string
+
+	// was managed file updated?
+	Updated bool
 }
 
 func (crt *FileManagedTask) GetName() string {
@@ -199,7 +203,9 @@ type FileManagedTaskExecutor struct {
 
 func (fmte *FileManagedTaskExecutor) Execute(ctx context.Context, task Task) ExecutionResult {
 	logrus.Debugf("will trigger '%s' task", task.GetPath())
-	execRes := ExecutionResult{}
+	execRes := ExecutionResult{
+		Changes: make(map[string]string),
+	}
 
 	fileManagedTask, ok := task.(*FileManagedTask)
 	if !ok {
@@ -218,7 +224,7 @@ func (fmte *FileManagedTaskExecutor) Execute(ctx context.Context, task Task) Exe
 		Path:         fileManagedTask.Path,
 	}
 	logrus.Debugf("will check if the task '%s' should be executed", task.GetPath())
-	skipReason, err := fmte.shouldBeExecuted(execCtx, fileManagedTask)
+	skipReason, err := fmte.shouldBeExecuted(execCtx, fileManagedTask, &execRes)
 	if err != nil {
 		execRes.Err = err
 		return execRes
@@ -257,6 +263,16 @@ func (fmte *FileManagedTaskExecutor) Execute(ctx context.Context, task Task) Exe
 			execRes.Err = err
 			return execRes
 		}
+		fileManagedTask.Updated = true
+
+		var info fs.FileInfo
+		info, err = fmte.FsManager.Stat(fileManagedTask.Name)
+		if err != nil {
+			execRes.Err = err
+			return execRes
+		}
+
+		execRes.Changes["length"] = fmt.Sprintf("%d bytes written", info.Size())
 	}
 	err = fmte.applyFileAttributesToTarget(fileManagedTask)
 	if err != nil {
@@ -301,7 +317,7 @@ func (fmte *FileManagedTaskExecutor) checkOnlyIfs(ctx *exec2.Context, fileManage
 	if err != nil {
 		runErr, isRunErr := err.(exec2.RunError)
 		if isRunErr {
-			logrus.Debugf("will skip %s since onlyif condition has failed: %v", fileManagedTask, runErr)
+			logrus.Debugf("will skip %s since onlyif condition has failed: %v", fileManagedTask.String(), runErr)
 			return false, nil
 		}
 
@@ -314,6 +330,7 @@ func (fmte *FileManagedTaskExecutor) checkOnlyIfs(ctx *exec2.Context, fileManage
 func (fmte *FileManagedTaskExecutor) shouldBeExecuted(
 	ctx *exec2.Context,
 	fileManagedTask *FileManagedTask,
+	execRes *ExecutionResult,
 ) (skipReason string, err error) {
 	isExists, fileName, err := fmte.checkMissingFileCondition(fileManagedTask)
 	if err != nil {
@@ -352,7 +369,7 @@ func (fmte *FileManagedTaskExecutor) shouldBeExecuted(
 		return onlyIfConditionFailedReason, nil
 	}
 
-	skipReasonForContents, err := fmte.shouldSkipForContentExpectation(fileManagedTask)
+	skipReasonForContents, err := fmte.shouldSkipForContentExpectation(fileManagedTask, execRes)
 	if err != nil {
 		return "", err
 	}
@@ -360,7 +377,7 @@ func (fmte *FileManagedTaskExecutor) shouldBeExecuted(
 		return skipReasonForContents, nil
 	}
 
-	logrus.Debugf("all execution conditions are met, will continue %s", fileManagedTask)
+	logrus.Debugf("all execution conditions are met, will continue %s", fileManagedTask.String())
 	return "", nil
 }
 
@@ -571,7 +588,10 @@ func (fmte *FileManagedTaskExecutor) copyContentToTarget(fileManagedTask *FileMa
 	return err
 }
 
-func (fmte *FileManagedTaskExecutor) shouldSkipForContentExpectation(fileManagedTask *FileManagedTask) (skipReason string, err error) {
+func (fmte *FileManagedTaskExecutor) shouldSkipForContentExpectation(
+	fileManagedTask *FileManagedTask,
+	execRes *ExecutionResult,
+) (skipReason string, err error) {
 	if !fileManagedTask.Contents.Valid {
 		logrus.Debug("contents section is missing, won't check the content")
 		return "", nil
@@ -607,7 +627,9 @@ func (fmte *FileManagedTaskExecutor) shouldSkipForContentExpectation(fileManaged
 	logrus.WithFields(
 		logrus.Fields{
 			"multiline": contentDiff,
-		}).Infof(`file '%s' differs from the expected content field, will copy diff to file`, fileManagedTask.Name)
+		}).Debugf(`file '%s' differs from the expected content field, will copy diff to file`, fileManagedTask.Name)
+
+	execRes.Changes["diff"] = contentDiff
 
 	return "", nil
 }
