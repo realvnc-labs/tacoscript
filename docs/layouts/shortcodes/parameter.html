@@ -1,0 +1,13 @@
+{{ with .Get "required" }}
+<span class="gdoc-props__tag warning">required</span>
+{{ else }}
+<span class="gdoc-props__tag tip">optional</span>
+{{ end }}
+
+{{ with .Get "type" }}
+<span class="gdoc-props__tag note">{{.}}</span>
+{{ end }}
+
+{{ with .Get "default" }}
+<span class="gdoc-props__tag">default={{.}}</span>
+{{ end }}

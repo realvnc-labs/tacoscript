@@ -3,3 +3,6 @@
 /bin
 /dist
 
+# hugo
+docs/public
+docs/.hugo_build.lock
