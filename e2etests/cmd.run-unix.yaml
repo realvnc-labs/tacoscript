@@ -1,0 +1,39 @@
+Run:
+  echo-1:
+    cmd.run:
+      - name: echo taco
+  echo-2:
+    cmd.run:
+      - name: echo taco
+      - onlyif:
+        - false
+  echo-3:
+    cmd.run:
+      - names:
+        - echo line1
+        - echo tacoscript
+
+On:
+  - darwin
+  - linux
+
+Expect:
+  PreExec: test -e /tmp/test-file.txt && rm -f /tmp/test-file.txt ||true
+  Summary:
+    Succeeded: 3
+    Changes: 2
+    TotalTasksRun: 3
+  TaskResults:
+    - ID: echo-1
+      ChangesContains:
+        - "stdout: taco"
+      HasChanges: true
+    - ID: echo-2
+      CommentContains:
+        - "Command skipped: only if condition was false"
+      HasChanges: false
+    - ID: echo-3
+      ChangesContains:
+        - line1
+        - tacoscript
+      HasChanges: true

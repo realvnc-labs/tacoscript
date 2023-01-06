@@ -2,6 +2,7 @@ package script
 
 import (
 	"context"
+	"os"
 	"testing"
 
 	"github.com/cloudradar-monitoring/tacoscript/tasks"
@@ -122,7 +123,7 @@ func TestScriptRunner(t *testing.T) {
 				},
 			},
 		}
-		err := runr.Run(context.Background(), testCase.Scripts, false)
+		err := runr.Run(context.Background(), testCase.Scripts, false, os.Stdout)
 		if testCase.ExpectedError == "" {
 			assert.NoError(t, err)
 		} else {

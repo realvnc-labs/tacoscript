@@ -1,4 +1,4 @@
-name: Test
+name: Test Linux
 on: [push]
 jobs:
   sca:
@@ -11,11 +11,11 @@ jobs:
       - name: golangci-lint
         uses: golangci/golangci-lint-action@v2
         with:
-          version: v1.42
+          version: v1.50.1
           args: -c .golangci.yml
 
   test:
-    name: Test
+    name: Test Linux
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
@@ -23,13 +23,7 @@ jobs:
       - name: Set up Go
         uses: actions/setup-go@v2
         with:
-          go-version: 1.16
+          go-version: 1.19
 
-      - name: Test
-        run: |
-          go test -race -coverprofile=profile.cov ./...
-
-      - name: Send coverage
-        uses: shogo82148/actions-goveralls@v1
-        with:
-          path-to-profile: profile.cov
+      - name: Test Linux
+        run: go test -race ./...

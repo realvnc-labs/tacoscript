@@ -57,7 +57,7 @@ linters:
   disable-all: true
   enable:
     - bodyclose
-    - deadcode
+    - unused
     - depguard
     - dogsled
     - dupl
@@ -69,30 +69,26 @@ linters:
     - gocyclo
     - gofmt
     - goimports
-    - golint
+    - revive
     - goprintffuncname
     - gosec
     - gosimple
     - govet
     - ineffassign
-    - interfacer
     - lll
     - misspell
     - nakedret
     - noctx
     - nolintlint
     - rowserrcheck
-    - scopelint
+    - exportloopref
     - staticcheck
-    - structcheck
     - stylecheck
     - typecheck
     - unconvert
     - unparam
     - unused
-    - varcheck
     - whitespace
-    - maligned
 issues:
   # Excluding configuration per-path, per-linter, per-text and per-source
   exclude-rules:
@@ -113,10 +109,10 @@ issues:
 
 # golangci.com configuration
 # https://github.com/golangci/golangci/wiki/Configuration
-service:
-  golangci-lint-version: 1.27.x # use the fixed version to not introduce new linters unexpectedly
-  prepare:
-    - echo "here I can run custom commands, but no preparation needed for this repo"
+#service:
+#  golangci-lint-version: 1.27.x # use the fixed version to not introduce new linters unexpectedly
+#  prepare:
+#    - echo "here I can run custom commands, but no preparation needed for this repo"
 
 output:
   # colored-line-number|line-number|json|tab|checkstyle|code-climate, default is "colored-line-number"

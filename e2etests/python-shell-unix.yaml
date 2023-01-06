@@ -1,0 +1,21 @@
+Run:
+  zchange shell:
+    cmd.run:
+      - name: print("hallo python")
+      - shell: /usr/bin/env python3
+On:
+  - darwin
+  - linux
+Expect:
+  Summary:
+    Succeeded: 1
+    Changes: 1
+    Failed: 0
+    Aborted: 0
+    TotalTasksRun: 1
+
+  TaskResults:
+    - ID: zchange shell
+      Result: true
+      ChangesContains:
+        - "stdout: hallo python"

@@ -1,0 +1,24 @@
+Run:
+  simple-powerhsell-cmd:
+    cmd.run:
+      - name: |
+          get-date
+          Write-Host "I love tacos"
+      - shell: powershell
+
+On:
+  - windows
+
+Expect:
+  Summary:
+    Succeeded: 1
+    Changes: 1
+    Failed: 0
+    Aborted: 0
+    TotalTasksRun: 1
+
+  TaskResults:
+    - ID: simple-powerhsell-cmd
+      Result: true
+      ChangesContains:
+        - "I love tacos"

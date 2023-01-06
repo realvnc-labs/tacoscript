@@ -3,6 +3,7 @@ package script
 import (
 	"context"
 	"fmt"
+	"io"
 	"strings"
 	"time"
 
@@ -18,10 +19,10 @@ type Runner struct {
 	DataProvider   FileDataProvider
 }
 
-func (r Runner) Run(ctx context.Context, scripts tasks.Scripts, globalAbortOnError bool) error {
+func (r Runner) Run(ctx context.Context, scripts tasks.Scripts, globalAbortOnError bool, output io.Writer) error {
 	SortScriptsRespectingRequirements(scripts)
 
-	result := scriptResult{}
+	result := Result{}
 	scriptStart := time.Now()
 
 	succeeded := 0
@@ -80,6 +81,8 @@ func (r Runner) Run(ctx context.Context, scripts tasks.Scripts, globalAbortOnErr
 						changeMap["stdout"] = powershellUnquote(changeMap["stdout"].(string))
 					}
 					changes++
+				} else {
+					comment = `Command skipped: ` + res.SkipReason
 				}
 
 				if cmdRunTask.AbortOnError && !res.Succeeded() {
@@ -95,6 +98,7 @@ func (r Runner) Run(ctx context.Context, scripts tasks.Scripts, globalAbortOnErr
 				for k, v := range res.Changes {
 					changeMap[k] = v
 				}
+				changes++
 			}
 
 			errString := ""
@@ -106,9 +110,9 @@ func (r Runner) Run(ctx context.Context, scripts tasks.Scripts, globalAbortOnErr
 				name = managedTask.Name
 				if errString == "" {
 					if managedTask.Updated {
-						comment = "File " + name + " updated"
+						comment = "File updated"
 					} else {
-						comment = "All files in creates exists"
+						comment = "File not changed " + res.SkipReason
 					}
 				}
 			}
@@ -148,7 +152,8 @@ func (r Runner) Run(ctx context.Context, scripts tasks.Scripts, globalAbortOnErr
 	if err != nil {
 		return err
 	}
-	fmt.Println(string(y))
+
+	fmt.Fprintln(output, string(y))
 
 	if aborted > 0 || failed > 0 {
 		return fmt.Errorf("%d aborted, %d failed", aborted, failed)
