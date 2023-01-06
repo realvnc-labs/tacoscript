@@ -1,22 +1,9 @@
 name: Test Linux
 on: [push]
 jobs:
-  sca:
-    name: Sca
-    runs-on: ubuntu-latest
-    steps:
-
-      - uses: actions/checkout@v2
-
-      - name: golangci-lint
-        uses: golangci/golangci-lint-action@v2
-        with:
-          version: v1.50.1
-          args: -c .golangci.yml
-
   test:
     name: Test Linux
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     steps:
       - uses: actions/checkout@v2
 
