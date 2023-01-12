@@ -1,0 +1,16 @@
+name: E2E Test Windows
+on: [push]
+jobs:
+  test:
+    name: E2E Test Windows
+    runs-on: windows-2022
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Set up Go
+        uses: actions/setup-go@v2
+        with:
+          go-version: 1.19
+
+      - name: E2E Test Windows
+        run: go test -v -race -run TestTacoScript ./e2etests/

@@ -1,0 +1,77 @@
+Run:
+  write-file-1:
+    file.managed:
+      - name: /tmp/test-file.txt
+      - contents: |
+          this is a file
+          created by tacoscript
+      - mode: 0400
+  write-file-2:
+    file.managed:
+      - name: /tmp/test-file.txt
+      - contents: |
+          this is a file
+          created by tacoscript
+      - mode: 0400
+  write-file-3:
+    file.managed:
+      - name: /tmp/test-file.txt
+      - contents: |
+          this is a file
+          created by tacoscript
+      - mode: 0400
+      - creates:
+          - /tmp/test-file.txt
+#  write-file-4:
+#    file.managed:
+#      - name: /tmp/test-file.txt
+#      - contents: |
+#          this is a file
+#          created by tacoscript
+#      - mode: 0400
+#      - onlyif:
+#          - false
+#  write-file-5:
+#    file.managed:
+#      - name: /tmp/test-file.txt
+#      - contents: |
+#          this is a file
+#          created by tacoscript
+#      - mode: 0400
+#      - unless: date
+
+On:
+  - darwin
+  - linux
+
+Expect:
+  PreExec: test -e /tmp/test-file.txt && rm -f /tmp/test-file.txt ||true
+  Summary:
+    Succeeded: 3
+    Changes: 1
+    TotalTasksRun: 3
+  TaskResults:
+    - ID: write-file-1
+      ChangesContains:
+        - "37 bytes written"
+      CommentContains:
+        - File updated
+    - ID: write-file-2
+      HasChanges: false
+      CommentContains:
+        - File not changed file
+    - ID: write-file-3
+      HasChanges: false
+      CommentContains:
+        - File not changed file /tmp/test-file.txt exist
+#    - ID: write-file-4
+#      HasChanges: false
+#      CommentContains:
+#        - File not changed only if condition was false
+#    - ID: write-file-5
+#      HasChanges: false
+#      CommentContains:
+#        - File not changed unless condition is true
+  PostExec: |
+    grep tacoscript /tmp/test-file.txt
+    rm /tmp/test-file.txt

@@ -1,6 +1,8 @@
 package cmd
 
 import (
+	"os"
+
 	"github.com/cloudradar-monitoring/tacoscript/script"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
@@ -17,7 +19,7 @@ var exeCmd = &cobra.Command{
 	RunE: func(cmd *cobra.Command, args []string) error {
 		logrus.Debugf("will execute script %s (abort-on-error=%v)", args[0], AbortOnError)
 
-		return script.RunScript(args[0], AbortOnError)
+		return script.RunScript(args[0], AbortOnError, os.Stdout)
 	},
 	SilenceErrors: true,
 }

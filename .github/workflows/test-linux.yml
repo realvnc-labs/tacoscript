@@ -1,0 +1,16 @@
+name: Test Linux
+on: [push]
+jobs:
+  test:
+    name: Test Linux
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Set up Go
+        uses: actions/setup-go@v2
+        with:
+          go-version: 1.19
+
+      - name: Test Linux
+        run: go test -race ./...

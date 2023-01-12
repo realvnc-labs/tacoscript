@@ -1,0 +1,24 @@
+Run:
+  install-cowsay:
+    pkg.installed:
+      - refresh: true
+      - name: cowsay
+On:
+  - linux
+
+OnlyIf: "[ $(id -u) -eq 0 ] && which apt-get" # Skip test if required package manager is missing
+
+Expect:
+  PreExec: /usr/games/cowsay ok && apt-get -y remove cowsay || true
+  Summary:
+    Succeeded: 1
+    Changes: 0 # must be 1 @todo: fix tacoscript
+    Failed: 0
+    Aborted: 0
+    TotalTasksRun: 1
+  TaskResults:
+    - ID: install-cowsay
+      Result: true
+      ChangesContains:
+        - "cowsay"
+  PostExec: /usr/games/cowsay ok

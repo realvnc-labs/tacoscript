@@ -1,0 +1,31 @@
+Run:
+  write-file:
+    file.managed:
+      - name: C:\Windows\temp\testfile.txt
+      - contents: |
+          this is a file
+          created by tacoscript
+
+On:
+  - windows
+
+Expect:
+  PreExec: |
+    if(test-path -Path  C:\Windows\temp\testfile.txt -PathType leaf) {
+      rm C:\Windows\temp\testfile.txt -force
+    }
+  Summary:
+    Succeeded: 1
+    Changes: 1
+    TotalTasksRun: 1
+  TaskResults:
+    - ID: write-file
+      ChangesContains:
+        - "37 bytes written"
+  PostExec: |
+    $ErrorActionPreference = "Stop"
+    gc C:\Windows\temp\testfile.txt
+    if(-not (Select-String -Path C:\Windows\temp\testfile.txt -Pattern "created by tacoscript" -Quiet)) {
+      Write-Error "string not found"
+    }
+    rm C:\Windows\temp\testfile.txt -force

@@ -4,7 +4,7 @@ import (
 	"time"
 )
 
-type scriptResult struct {
+type Result struct {
 	Results []taskResult
 
 	Summary scriptSummary
@@ -40,4 +40,14 @@ type onlyTime time.Time
 
 func (c onlyTime) MarshalYAML() (interface{}, error) {
 	return time.Time(c).Format(stampMicro), nil
+}
+
+func (c *onlyTime) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	var started string
+	err := unmarshal(&started)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }

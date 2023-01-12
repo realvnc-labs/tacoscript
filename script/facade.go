@@ -2,6 +2,7 @@ package script
 
 import (
 	"context"
+	"io"
 
 	"github.com/cloudradar-monitoring/tacoscript/exec"
 	"github.com/cloudradar-monitoring/tacoscript/pkg"
@@ -11,7 +12,7 @@ import (
 )
 
 // RunScript main entry point for the script execution
-func RunScript(scriptPath string, abortOnError bool) error {
+func RunScript(scriptPath string, abortOnError bool, output io.Writer) error {
 	fileDataProvider := FileDataProvider{
 		Path: scriptPath,
 	}
@@ -68,6 +69,6 @@ func RunScript(scriptPath string, abortOnError bool) error {
 		ExecutorRouter: execRouter,
 	}
 
-	err = runner.Run(context.Background(), scripts, abortOnError)
+	err = runner.Run(context.Background(), scripts, abortOnError, output)
 	return err
 }
