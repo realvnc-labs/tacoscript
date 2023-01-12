@@ -71,7 +71,7 @@ Expect:
 #    - ID: write-file-5
 #      HasChanges: false
 #      CommentContains:
-#        - File not changed only if condition was false
+#        - File not changed unless condition is true
   PostExec: |
     grep tacoscript /tmp/test-file.txt
     rm /tmp/test-file.txt

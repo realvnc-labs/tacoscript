@@ -12,6 +12,16 @@ Run:
       - names:
         - echo line1
         - echo tacoscript
+  echo-4:
+    cmd.run:
+      - name: echo taco
+      - unless:
+          - true
+  echo-5:
+    cmd.run:
+      - name: echo taco
+      - creates:
+          - /etc/hosts
 
 On:
   - darwin
@@ -20,9 +30,9 @@ On:
 Expect:
   PreExec: test -e /tmp/test-file.txt && rm -f /tmp/test-file.txt ||true
   Summary:
-    Succeeded: 3
+    Succeeded: 5
     Changes: 2
-    TotalTasksRun: 3
+    TotalTasksRun: 5
   TaskResults:
     - ID: echo-1
       ChangesContains:
@@ -37,3 +47,11 @@ Expect:
         - line1
         - tacoscript
       HasChanges: true
+    - ID: echo-4
+      CommentContains:
+        - "Command skipped: unless condition is true"
+      HasChanges: false
+    - ID: echo-5
+      CommentContains:
+        - "Command skipped: file /etc/hosts exists"
+      HasChanges: false
