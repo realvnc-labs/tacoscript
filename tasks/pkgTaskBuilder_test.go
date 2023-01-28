@@ -19,21 +19,21 @@ func TestPkgTaskBuilder(t *testing.T) {
 			typeName: PkgInstalled,
 			path:     "vim",
 			ctx: []interface{}{
-				yaml.MapSlice{yaml.MapItem{NameField, "vim"}},
-				yaml.MapSlice{yaml.MapItem{ShellField, "cmd.exe"}},
-				yaml.MapSlice{yaml.MapItem{Version, "1.0.1"}},
-				yaml.MapSlice{yaml.MapItem{Refresh, 1}},
-				yaml.MapSlice{yaml.MapItem{RequireField, []interface{}{
+				yaml.MapSlice{yaml.MapItem{Key: NameField, Value: "vim"}},
+				yaml.MapSlice{yaml.MapItem{Key: ShellField, Value: "cmd.exe"}},
+				yaml.MapSlice{yaml.MapItem{Key: Version, Value: "1.0.1"}},
+				yaml.MapSlice{yaml.MapItem{Key: Refresh, Value: 1}},
+				yaml.MapSlice{yaml.MapItem{Key: RequireField, Value: []interface{}{
 					"req one",
 					"req two",
 					"req three",
 				}}},
-				yaml.MapSlice{yaml.MapItem{OnlyIf, []interface{}{
+				yaml.MapSlice{yaml.MapItem{Key: OnlyIfField, Value: []interface{}{
 					"OnlyIf one",
 					"OnlyIf two",
 					"OnlyIf three",
 				}}},
-				yaml.MapSlice{yaml.MapItem{Unless, []interface{}{
+				yaml.MapSlice{yaml.MapItem{Key: UnlessField, Value: []interface{}{
 					"Unless one",
 				}}},
 			},
@@ -64,9 +64,9 @@ func TestPkgTaskBuilder(t *testing.T) {
 			typeName: PkgUpgraded,
 			path:     "git",
 			ctx: []interface{}{
-				yaml.MapSlice{yaml.MapItem{NameField, "git"}},
-				yaml.MapSlice{yaml.MapItem{Version, "2.0.2"}},
-				yaml.MapSlice{yaml.MapItem{Refresh, "false"}},
+				yaml.MapSlice{yaml.MapItem{Key: NameField, Value: "git"}},
+				yaml.MapSlice{yaml.MapItem{Key: Version, Value: "2.0.2"}},
+				yaml.MapSlice{yaml.MapItem{Key: Refresh, Value: "false"}},
 			},
 			expectedTask: &PkgTask{
 				ActionType:    ActionUpdate,
@@ -81,12 +81,12 @@ func TestPkgTaskBuilder(t *testing.T) {
 			typeName: PkgRemoved,
 			path:     "nano",
 			ctx: []interface{}{
-				yaml.MapSlice{yaml.MapItem{NamesField, []interface{}{
+				yaml.MapSlice{yaml.MapItem{Key: NamesField, Value: []interface{}{
 					"nano",
 					"git",
 				}}},
-				yaml.MapSlice{yaml.MapItem{Refresh, ""}},
-				yaml.MapSlice{yaml.MapItem{"someField", "someValue"}},
+				yaml.MapSlice{yaml.MapItem{Key: Refresh, Value: ""}},
+				yaml.MapSlice{yaml.MapItem{Key: "someField", Value: "someValue"}},
 			},
 			expectedTask: &PkgTask{
 				ActionType: ActionUninstall,
@@ -137,6 +137,7 @@ func assertPkgTaskEquals(t *testing.T, expectedTask, actualTask *PkgTask) {
 	assert.Equal(t, expectedTask.Name, actualTask.Name)
 	assert.Equal(t, expectedTask.Names, actualTask.Names)
 	assert.Equal(t, expectedTask.Require, actualTask.Require)
+	assert.Equal(t, expectedTask.Creates, actualTask.Creates)
 	assert.Equal(t, expectedTask.OnlyIf, actualTask.OnlyIf)
 	assert.Equal(t, expectedTask.Unless, actualTask.Unless)
 	assert.Equal(t, expectedTask.ActionType, actualTask.ActionType)

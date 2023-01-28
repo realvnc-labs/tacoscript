@@ -1,6 +1,7 @@
 package conv
 
 import (
+	"errors"
 	"fmt"
 	"os"
 	"strconv"
@@ -105,4 +106,35 @@ func ConvertToFileMode(val interface{}) (os.FileMode, error) {
 	}
 
 	return os.FileMode(i64), nil
+}
+
+var (
+	ErrFileSizeInvalidUnits = errors.New("file size has invalid units")
+)
+
+func ConvertToFileSize(val interface{}) (convertedVal uint64, err error) {
+	valStr := fmt.Sprint(val)
+	valLen := len(valStr)
+
+	// byte string assumed
+	valPart := valStr[:valLen-1]
+	units := valStr[valLen-1:]
+
+	multiplier := 1024
+	switch units {
+	case "k":
+	case "m":
+		multiplier = 1024 * 1024
+	case "g":
+		multiplier = 1024 * 1024 * 1024
+	default:
+		return 0, ErrFileSizeInvalidUnits
+	}
+
+	valNum, err := strconv.ParseUint(valPart, 10, 64)
+	if err != nil {
+		return 0, err
+	}
+	convertedVal = valNum * uint64(multiplier)
+	return convertedVal, nil
 }

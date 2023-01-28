@@ -171,6 +171,9 @@ func DownloadFtpFile(ctx context.Context, u *url.URL, targetFilePath string) err
 	}
 
 	ftpClient, err := goftp.DialConfig(ftpCfg, u.Host)
+	defer func() {
+		_ = ftpClient.Close()
+	}()
 
 	if err != nil {
 		return err
@@ -180,6 +183,7 @@ func DownloadFtpFile(ctx context.Context, u *url.URL, targetFilePath string) err
 	if err != nil {
 		return err
 	}
+	defer targetFile.Close()
 
 	err = ftpClient.Retrieve(u.Path, targetFile)
 	if err != nil {

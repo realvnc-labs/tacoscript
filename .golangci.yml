@@ -24,6 +24,7 @@ linters-settings:
       - octalLiteral
       - whyNoLint
       - wrapperFunc
+      - paramTypeCombine
   gocyclo:
     min-complexity: 30
   goimports:
@@ -106,6 +107,8 @@ issues:
         - lll
   exclude:
     - composites
+    # govet
+    - "shadow: declaration of .err. shadows declaration"
 
 # golangci.com configuration
 # https://github.com/golangci/golangci/wiki/Configuration

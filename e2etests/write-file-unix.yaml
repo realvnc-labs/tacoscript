@@ -1,19 +1,19 @@
 Run:
-  write-file-1:
+  new-file-exists-created:
     file.managed:
       - name: /tmp/test-file.txt
       - contents: |
           this is a file
           created by tacoscript
       - mode: 0400
-  write-file-2:
+  file-exists-not-created:
     file.managed:
       - name: /tmp/test-file.txt
       - contents: |
           this is a file
           created by tacoscript
       - mode: 0400
-  write-file-3:
+  file-already-exists-no-create:
     file.managed:
       - name: /tmp/test-file.txt
       - contents: |
@@ -22,23 +22,24 @@ Run:
       - mode: 0400
       - creates:
           - /tmp/test-file.txt
-#  write-file-4:
-#    file.managed:
-#      - name: /tmp/test-file.txt
-#      - contents: |
-#          this is a file
-#          created by tacoscript
-#      - mode: 0400
-#      - onlyif:
-#          - false
-#  write-file-5:
-#    file.managed:
-#      - name: /tmp/test-file.txt
-#      - contents: |
-#          this is a file
-#          created by tacoscript
-#      - mode: 0400
-#      - unless: date
+  file-not-created-due-onlyif:
+    file.managed:
+      - name: /tmp/test-file.txt
+      - contents: |
+         this is a file
+         created by tacoscript
+      - mode: 0400
+      - onlyif:
+        - false
+  file-not-created-due-to-unless:
+    file.managed:
+      - name: /tmp/test-file.txt
+      - contents: |
+          this is a file
+          created by tacoscript
+      - mode: 0400
+      - unless:
+        - date
 
 On:
   - darwin
@@ -47,31 +48,31 @@ On:
 Expect:
   PreExec: test -e /tmp/test-file.txt && rm -f /tmp/test-file.txt ||true
   Summary:
-    Succeeded: 3
+    Succeeded: 5
     Changes: 1
-    TotalTasksRun: 3
+    TotalTasksRun: 5
   TaskResults:
-    - ID: write-file-1
+    - ID: new-file-exists-created
       ChangesContains:
         - "37 bytes written"
       CommentContains:
         - File updated
-    - ID: write-file-2
+    - ID: file-exists-not-created
       HasChanges: false
       CommentContains:
         - File not changed file
-    - ID: write-file-3
+    - ID: file-already-exists-no-create
       HasChanges: false
       CommentContains:
-        - File not changed file /tmp/test-file.txt exist
-#    - ID: write-file-4
-#      HasChanges: false
-#      CommentContains:
-#        - File not changed only if condition was false
-#    - ID: write-file-5
-#      HasChanges: false
-#      CommentContains:
-#        - File not changed unless condition is true
+        - File not changed file /tmp/test-file.txt exists
+    - ID: file-not-created-due-onlyif
+      HasChanges: false
+      CommentContains:
+        - File not changed only if condition was false
+    - ID: file-not-created-due-to-unless
+      HasChanges: false
+      CommentContains:
+        - File not changed unless condition is true
   PostExec: |
     grep tacoscript /tmp/test-file.txt
     rm /tmp/test-file.txt

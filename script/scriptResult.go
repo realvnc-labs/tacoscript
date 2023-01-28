@@ -32,6 +32,8 @@ type scriptSummary struct {
 	Changes       int           `yaml:"Changes"`
 	TotalTasksRun int           `yaml:"TotalTasksRun"`
 	TotalRunTime  time.Duration `yaml:"TotalRunTime"`
+
+	Total int `yaml:"-"`
 }
 
 const stampMicro = "15:04:05.000000"

@@ -7,7 +7,7 @@ import (
 )
 
 func Diff(expectedStr, actualStr string) string {
-	contentDiff := diff.Diff(expectedStr, actualStr)
+	contentDiff := diff.Diff(actualStr, expectedStr)
 	if contentDiff == "" {
 		return ""
 	}

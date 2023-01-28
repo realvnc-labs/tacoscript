@@ -5,6 +5,8 @@ import (
 	"strings"
 
 	"github.com/cloudradar-monitoring/tacoscript/conv"
+	"github.com/cloudradar-monitoring/tacoscript/utils"
+	"gopkg.in/yaml.v2"
 )
 
 type Builder interface {
@@ -15,19 +17,40 @@ type BuildRouter struct {
 	Builders map[string]Builder
 }
 
+type taskParamMapFn func(t Task, path string, val interface{}) error
+
+type taskParamsFnMap map[string]taskParamMapFn
+
 func NewBuilderRouter(builders map[string]Builder) BuildRouter {
 	return BuildRouter{
 		Builders: builders,
 	}
 }
 
-func (br BuildRouter) Build(typeName, path string, ctx interface{}) (Task, error) {
+func (br BuildRouter) Build(typeName, path string, params interface{}) (Task, error) {
 	builder, ok := br.Builders[typeName]
 	if !ok {
 		return nil, fmt.Errorf("no builders registered for task type '%s'", typeName)
 	}
 
-	return builder.Build(typeName, path, ctx)
+	return builder.Build(typeName, path, params)
+}
+
+func Build(typeName, path string, params interface{}, task Task, fnMap taskParamsFnMap) (errs *utils.Errors) {
+	errs = &utils.Errors{}
+
+	for _, item := range params.([]interface{}) {
+		row := item.(yaml.MapSlice)[0]
+		key := row.Key.(string)
+		val := row.Value
+		mapFn, ok := fnMap[key]
+		if !ok {
+			continue
+		}
+		errs.Add(mapFn(task, path, val))
+	}
+
+	return errs
 }
 
 func parseCreatesField(val interface{}, path string) (createsItems []string, err error) {
@@ -63,7 +86,7 @@ func parseOnlyIfField(val interface{}, path string) (onlyIf []string, err error)
 		onlyIf, err = conv.ConvertToValues(val, path)
 	}
 
-	return
+	return onlyIf, err
 }
 
 func parseUnlessField(val interface{}, path string) (unless []string, err error) {
@@ -75,7 +98,7 @@ func parseUnlessField(val interface{}, path string) (unless []string, err error)
 		unless, err = conv.ConvertToValues(val, path)
 	}
 
-	return
+	return unless, err
 }
 
 func parseBoolField(val interface{}) bool {

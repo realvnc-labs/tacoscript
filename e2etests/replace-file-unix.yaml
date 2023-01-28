@@ -1,0 +1,66 @@
+Run:
+  write-file:
+    file.managed:
+      - name: /tmp/test-file.txt
+      - contents: |
+          this is a file
+          created by tacoscript
+      - creates:
+        - /tmp/test-file.txt
+  replace-file-skip-as-file-exists:
+    file.replace:
+      - name: /tmp/test-file.txt
+      - pattern: this is a file
+      - repl: this is a modified file
+      - creates: 
+        - /tmp/test-file.txt
+  replace-file:
+    file.replace:
+      - name: /tmp/test-file.txt
+      - pattern: this is a file
+      - repl: this is a replacement file
+      - onlyif:
+        - test -f /tmp/test-file.txt
+  replace-file-skip-again-as-unless-check:
+    file.replace:
+      - name: /tmp/test-file.txt
+      - pattern: this is a replacement file
+      - repl: this is a another replacement file
+      - unless:
+        - test -f /tmp/test-file.txt
+  replace-file-again:
+    file.replace:
+      - name: /tmp/test-file.txt
+      - pattern: this is a replacement file
+      - repl: this is a another replacement file
+      - require:
+        -  replace-file
+
+On:
+  - darwin
+  - linux
+
+Expect:
+  PreExec: test -e /tmp/test-file.txt && rm -f /tmp/test-file.txt ||true
+  Summary:
+    Succeeded: 5
+    Changes: 3
+    TotalTasksRun: 5
+  TaskResults:
+    - ID: write-file
+      ChangesContains:
+        - "37 bytes written"
+    - ID: replace-file-skip-as-file-exists
+      HasChanges: false
+    - ID: replace-file
+      ChangesContains:
+        - "1 replacement(s) made"
+    - ID: replace-file-skip-again-as-unless-check
+      HasChanges: false
+    - ID: replace-file-again
+      ChangesContains:
+        - "1 replacement(s) made"
+  PostExec: |
+    grep tacoscript /tmp/test-file.txt
+    rm /tmp/test-file.txt
+

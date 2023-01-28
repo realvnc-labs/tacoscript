@@ -25,16 +25,10 @@ func (r Runner) Run(ctx context.Context, scripts tasks.Scripts, globalAbortOnErr
 	result := Result{}
 	scriptStart := time.Now()
 
-	succeeded := 0
-	failed := 0
-	tasksRun := 0
-	changes := 0
-	aborted := 0
-
-	total := 0
+	summary := scriptSummary{}
 
 	for _, script := range scripts {
-		total += len(script.Tasks)
+		summary.Total += len(script.Tasks)
 	}
 
 	for _, script := range scripts {
@@ -47,58 +41,58 @@ func (r Runner) Run(ctx context.Context, scripts tasks.Scripts, globalAbortOnErr
 				return err
 			}
 
-			logrus.Debugf("will run task '%s' at path '%s'", task.GetName(), task.GetPath())
+			logrus.Debugf("will run task '%s' at path '%s'", task.GetTypeName(), task.GetPath())
+
 			res := executor.Execute(ctx, task)
 
-			logrus.Debugf("finished task '%s' at path '%s', result: %s", task.GetName(), task.GetPath(), res.String())
+			logrus.Debugf("finished task '%s' at path '%s', result: %s", task.GetTypeName(), task.GetPath(), res.String())
 
 			if res.Succeeded() {
-				succeeded++
+				summary.Succeeded++
 			} else {
-				failed++
+				summary.Failed++
 			}
 
-			tasksRun++
+			summary.TotalTasksRun++
 
 			name := ""
 			comment := ""
 			changeMap := make(map[string]interface{})
 
 			if cmdRunTask, ok := task.(*tasks.CmdRunTask); ok {
-				name = strings.Join(cmdRunTask.GetNames(), "; ")
-
-				if !res.IsSkipped {
-					comment = `Command "` + name + `" run`
-					changeMap["pid"] = res.Pid
-					if runErr, ok := res.Err.(exec.RunError); ok {
-						changeMap["retcode"] = runErr.ExitCode
-					}
-
-					changeMap["stderr"] = strings.TrimSpace(strings.ReplaceAll(res.StdErr, "\r\n", "\n"))
-					changeMap["stdout"] = strings.TrimSpace(strings.ReplaceAll(res.StdOut, "\r\n", "\n"))
-
-					if exec.IsPowerShell(cmdRunTask.Shell) {
-						changeMap["stdout"] = powershellUnquote(changeMap["stdout"].(string))
-					}
-					changes++
-				} else {
-					comment = `Command skipped: ` + res.SkipReason
-				}
-
-				if cmdRunTask.AbortOnError && !res.Succeeded() {
-					abort = true
-					aborted = total - tasksRun
-				}
+				// summary and changeMap will be updated
+				name, comment, abort = handleCmdRunResults(cmdRunTask, &summary, &res, changeMap)
 			}
+
 			if pkgTask, ok := task.(*tasks.PkgTask); ok {
 				name = pkgTask.NamedTask.Name
+			}
+
+			if winRegTask, ok := task.(*tasks.WinRegTask); ok {
+				name = winRegTask.RegPath + `\` + winRegTask.Name
+			}
+
+			if managedTask, ok := task.(*tasks.FileManagedTask); ok {
+				name = managedTask.Name
+				comment = res.Comment
+				if res.Err == nil && !managedTask.Updated {
+					comment = "File not changed " + res.SkipReason
+				}
+			}
+
+			if replaceTask, ok := task.(*tasks.FileReplaceTask); ok {
+				name = replaceTask.Name
+				comment = res.Comment
+				if res.Err == nil && !replaceTask.Updated {
+					comment = "File not changed " + res.SkipReason
+				}
 			}
 
 			if len(res.Changes) > 0 {
 				for k, v := range res.Changes {
 					changeMap[k] = v
 				}
-				changes++
+				summary.Changes++
 			}
 
 			errString := ""
@@ -106,20 +100,9 @@ func (r Runner) Run(ctx context.Context, scripts tasks.Scripts, globalAbortOnErr
 				errString = res.Err.Error()
 			}
 
-			if managedTask, ok := task.(*tasks.FileManagedTask); ok {
-				name = managedTask.Name
-				if errString == "" {
-					if managedTask.Updated {
-						comment = "File updated"
-					} else {
-						comment = "File not changed " + res.SkipReason
-					}
-				}
-			}
-
 			result.Results = append(result.Results, taskResult{
 				ID:       script.ID,
-				Function: task.GetName(),
+				Function: task.GetTypeName(),
 				Name:     name,
 				Result:   res.Succeeded(),
 				Comment:  comment,
@@ -132,21 +115,15 @@ func (r Runner) Run(ctx context.Context, scripts tasks.Scripts, globalAbortOnErr
 
 		if abort || globalAbortOnError {
 			logrus.Debug("aborting due to task failure")
-			aborted = total - tasksRun
+			summary.Aborted = summary.Total - summary.TotalTasksRun
 			break
 		}
 		logrus.Debugf("finished script '%s'", script.ID)
 	}
 
-	result.Summary = scriptSummary{
-		Script:        r.DataProvider.Path,
-		Succeeded:     succeeded,
-		Failed:        failed,
-		Aborted:       aborted,
-		Changes:       changes,
-		TotalTasksRun: tasksRun,
-		TotalRunTime:  time.Since(scriptStart),
-	}
+	summary.Script = r.DataProvider.Path
+	summary.TotalRunTime = time.Since(scriptStart)
+	result.Summary = summary
 
 	y, err := yaml.Marshal(result)
 	if err != nil {
@@ -155,11 +132,44 @@ func (r Runner) Run(ctx context.Context, scripts tasks.Scripts, globalAbortOnErr
 
 	fmt.Fprintln(output, string(y))
 
-	if aborted > 0 || failed > 0 {
-		return fmt.Errorf("%d aborted, %d failed", aborted, failed)
+	if summary.Aborted > 0 || summary.Failed > 0 {
+		return fmt.Errorf("%d aborted, %d failed", summary.Aborted, summary.Failed)
 	}
 
 	return nil
+}
+
+func handleCmdRunResults(
+	cmdRunTask *tasks.CmdRunTask,
+	summary *scriptSummary,
+	res *tasks.ExecutionResult,
+	changeMap map[string]interface{}) (name string, comment string, abort bool) {
+	name = strings.Join(cmdRunTask.GetNames(), "; ")
+
+	if !res.IsSkipped {
+		comment = `Command "` + name + `" run`
+		changeMap["pid"] = res.Pid
+		if runErr, ok := res.Err.(exec.RunError); ok {
+			changeMap["retcode"] = runErr.ExitCode
+		}
+
+		changeMap["stderr"] = strings.TrimSpace(strings.ReplaceAll(res.StdErr, "\r\n", "\n"))
+		changeMap["stdout"] = strings.TrimSpace(strings.ReplaceAll(res.StdOut, "\r\n", "\n"))
+
+		if exec.IsPowerShell(cmdRunTask.Shell) {
+			changeMap["stdout"] = powershellUnquote(changeMap["stdout"].(string))
+		}
+		summary.Changes++
+	} else {
+		comment = `Command skipped: ` + res.SkipReason
+	}
+
+	if cmdRunTask.AbortOnError && !res.Succeeded() {
+		abort = true
+		summary.Aborted = summary.Total - summary.TotalTasksRun
+	}
+
+	return name, comment, abort
 }
 
 // stdout from multiline powershell scripts often includes trailing spaces on each line.

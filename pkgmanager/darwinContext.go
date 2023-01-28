@@ -1,7 +1,7 @@
 //go:build darwin
 // +build darwin
 
-package pkg
+package pkgmanager
 
 import (
 	"fmt"

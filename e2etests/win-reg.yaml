@@ -1,0 +1,75 @@
+Run:
+  reg-value-is-present:
+    win_reg.present:
+      - reg_path: HKLM:\Software\TestTacoScript\UnitTestRun
+      - name: e2etestrun
+      - value: "1234567890"
+      - type: REG_SZ
+  existing-reg-value-is-present:
+    win_reg.present:
+      - reg_path: HKLM:\Software\TestTacoScript\UnitTestRun
+      - name: e2etestrun
+      - value: "1234567890"
+      - type: REG_SZ
+  existing-reg-value-is-absent:
+    win_reg.absent:
+      - reg_path: HKLM:\Software\TestTacoScript\UnitTestRun
+      - name: e2etestrun
+      - require:
+        - reg-value-is-present
+  existing-reg-key-is-absent:
+    win_reg.absent_key:
+      - reg_path: HKLM:\Software\TestTacoScript
+  reg-value-is-present-again:
+    win_reg.present:
+      - reg_path: HKLM:\Software\TestTacoScript\UnitTestRun
+      - name: e2etestrun
+      - value: "1234567890"
+      - type: REG_SZ
+      - shell: powershell.exe
+      - unless:
+        - if (-not (test-path -Path HKLM:\Software\TestTacoScript)) { throw 'missing' }
+  existing-reg-value-is-absent-again:
+    win_reg.absent:
+      - reg_path: HKLM:\Software\TestTacoScript\UnitTestRun
+      - name: e2etestrun
+      - shell: powershell.exe
+      - only-if:
+        - if (test-path -Path HKLM:\Software\TestTacoScript) { throw 'exists' }
+
+On:
+  - windows
+
+Expect:
+  PreExec: |
+    Set-Location HKLM:\Software
+    if(test-path -Path TestTacoScript) {
+      Remove-Item TestTacoScript -recurse
+    }
+  Summary:
+    Succeeded: 6
+    Changes: 5
+    TotalTasksRun: 6
+  TaskResults:
+    - ID: reg-value-is-present
+      ChangesContains:
+        - "added new key"
+    - ID: existing-reg-value-is-present
+      HasChanges: false
+    - ID: existing-reg-value-is-absent
+      ChangesContains:
+        - "value removed"
+    - ID: existing-reg-key-is-absent
+      ChangesContains:
+        - "key removed"
+    - ID: reg-value-is-present-again
+      ChangesContains:
+        - "added new key"
+    - ID: existing-reg-value-is-absent-again
+      ChangesContains:
+        - "value removed"
+  PostExec: |
+    Set-Location HKLM:\Software
+    if(test-path -Path TestTacoScript) {
+      Remove-Item TestTacoScript -recurse
+    }

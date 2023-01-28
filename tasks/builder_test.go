@@ -53,7 +53,7 @@ func TestBuildWithRouting(t *testing.T) {
 		return
 	}
 
-	assert.Equal(t, "successTask", task.GetName())
+	assert.Equal(t, "successTask", task.GetTypeName())
 	assert.Equal(t, "someSuccessPath", task.GetPath())
 	assert.Equal(t, "successTask", successBuilder.TypeName)
 	assert.Equal(t, "someSuccessPath", successBuilder.Path)

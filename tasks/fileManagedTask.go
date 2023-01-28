@@ -10,9 +10,8 @@ import (
 	"time"
 
 	"github.com/cloudradar-monitoring/tacoscript/conv"
-	"gopkg.in/yaml.v2"
 
-	exec2 "github.com/cloudradar-monitoring/tacoscript/exec"
+	tacoexec "github.com/cloudradar-monitoring/tacoscript/exec"
 
 	"github.com/cloudradar-monitoring/tacoscript/utils"
 
@@ -24,92 +23,105 @@ const DefaultFileMode = 0744
 type FileManagedTaskBuilder struct {
 }
 
-type contextProc func(t *FileManagedTask, path string, val interface{}) error
-
-var contextProcMap = map[string]contextProc{
-	NameField: func(t *FileManagedTask, path string, val interface{}) error {
+var FileManagedTaskParamsFnMap = taskParamsFnMap{
+	NameField: func(task Task, path string, val interface{}) error {
+		t := task.(*FileManagedTask)
 		t.Name = fmt.Sprint(val)
 		return nil
 	},
-	UserField: func(t *FileManagedTask, path string, val interface{}) error {
+	UserField: func(task Task, path string, val interface{}) error {
+		t := task.(*FileManagedTask)
 		t.User = fmt.Sprint(val)
 		return nil
 	},
-	CreatesField: func(t *FileManagedTask, path string, val interface{}) error {
-		var err error
-		t.Creates, err = parseCreatesField(val, path)
-		return err
-	},
-	RequireField: func(t *FileManagedTask, path string, val interface{}) error {
-		var err error
-		t.Require, err = parseRequireField(val, path)
-		return err
-	},
-	OnlyIf: func(t *FileManagedTask, path string, val interface{}) error {
-		var err error
-		t.OnlyIf, err = parseOnlyIfField(val, path)
-		return err
-	},
-	SkipVerifyField: func(t *FileManagedTask, path string, val interface{}) error {
+	SkipVerifyField: func(task Task, path string, val interface{}) error {
+		t := task.(*FileManagedTask)
 		t.SkipVerify = conv.ConvertToBool(val)
 		return nil
 	},
-	SourceField: func(t *FileManagedTask, path string, val interface{}) error {
+	SourceField: func(task Task, path string, val interface{}) error {
+		t := task.(*FileManagedTask)
 		t.Source = utils.ParseLocation(fmt.Sprint(val))
 		return nil
 	},
-	SourceHashField: func(t *FileManagedTask, path string, val interface{}) error {
+	SourceHashField: func(task Task, path string, val interface{}) error {
+		t := task.(*FileManagedTask)
 		t.SourceHash = fmt.Sprint(val)
 		return nil
 	},
-	MakeDirsField: func(t *FileManagedTask, path string, val interface{}) error {
+	MakeDirsField: func(task Task, path string, val interface{}) error {
+		t := task.(*FileManagedTask)
 		t.MakeDirs = conv.ConvertToBool(val)
 		return nil
 	},
-	GroupField: func(t *FileManagedTask, path string, val interface{}) error {
+	GroupField: func(task Task, path string, val interface{}) error {
+		t := task.(*FileManagedTask)
 		t.Group = fmt.Sprint(val)
 		return nil
 	},
-	ModeField: func(t *FileManagedTask, path string, val interface{}) error {
+	ModeField: func(task Task, path string, val interface{}) error {
 		var err error
+		t := task.(*FileManagedTask)
 		t.Mode, err = conv.ConvertToFileMode(val)
 		return err
 	},
-	EncodingField: func(t *FileManagedTask, path string, val interface{}) error {
+	EncodingField: func(task Task, path string, val interface{}) error {
+		t := task.(*FileManagedTask)
 		t.Encoding = fmt.Sprint(val)
 		return nil
 	},
-	ContentsField: func(t *FileManagedTask, path string, val interface{}) error {
+	ContentsField: func(task Task, path string, val interface{}) error {
+		t := task.(*FileManagedTask)
 		t.Contents = parseContentsField(val)
 		return nil
 	},
-	ReplaceField: func(t *FileManagedTask, path string, val interface{}) error {
+	ReplaceField: func(task Task, path string, val interface{}) error {
+		t := task.(*FileManagedTask)
 		t.Replace = conv.ConvertToBool(val)
+		return nil
+	},
+	RequireField: func(task Task, path string, val interface{}) error {
+		var err error
+		t := task.(*FileManagedTask)
+		t.Require, err = parseRequireField(val, path)
+		return err
+	},
+	CreatesField: func(task Task, path string, val interface{}) error {
+		var err error
+		t := task.(*FileManagedTask)
+		t.Creates, err = parseCreatesField(val, path)
+		return err
+	},
+	OnlyIfField: func(task Task, path string, val interface{}) error {
+		var err error
+		t := task.(*FileManagedTask)
+		t.OnlyIf, err = parseOnlyIfField(val, path)
+		return err
+	},
+	UnlessField: func(task Task, path string, val interface{}) error {
+		var err error
+		t := task.(*FileManagedTask)
+		t.Unless, err = parseUnlessField(val, path)
+		return err
+	},
+
+	ShellField: func(task Task, path string, val interface{}) error {
+		t := task.(*FileManagedTask)
+		t.Shell = fmt.Sprint(val)
 		return nil
 	},
 }
 
-func (fmtb FileManagedTaskBuilder) Build(typeName, path string, ctx interface{}) (Task, error) {
-	t := &FileManagedTask{
+func (fmtb FileManagedTaskBuilder) Build(typeName, path string, params interface{}) (Task, error) {
+	task := &FileManagedTask{
 		TypeName: typeName,
 		Path:     path,
 		Replace:  true,
 	}
 
-	errs := &utils.Errors{}
+	errs := Build(typeName, path, params, task, FileManagedTaskParamsFnMap)
 
-	for _, item := range ctx.([]interface{}) {
-		row := item.(yaml.MapSlice)[0]
-		key := row.Key.(string)
-		val := row.Value
-		f, ok := contextProcMap[key]
-		if !ok {
-			continue
-		}
-		errs.Add(f(t, path, val))
-	}
-
-	return t, errs.ToError()
+	return task, errs.ToError()
 }
 
 func parseContentsField(val interface{}) sql.NullString {
@@ -140,54 +152,69 @@ type FileManagedTask struct {
 	Source       utils.Location
 	Creates      []string
 	OnlyIf       []string
+	Unless       []string
 	Require      []string
+
+	Shell string
 
 	// was managed file updated?
 	Updated bool
 }
 
-func (crt *FileManagedTask) GetName() string {
-	return crt.TypeName
+func (t *FileManagedTask) GetTypeName() string {
+	return t.TypeName
 }
 
-func (crt *FileManagedTask) GetRequirements() []string {
-	return crt.Require
+func (t *FileManagedTask) GetRequirements() []string {
+	return t.Require
 }
 
-func (crt *FileManagedTask) Validate() error {
+func (t *FileManagedTask) Validate() error {
 	errs := &utils.Errors{}
 
-	err1 := ValidateRequired(crt.Name, crt.Path+"."+NameField)
+	err1 := ValidateRequired(t.Name, t.Path+"."+NameField)
 	errs.Add(err1)
 
-	if crt.Source.IsURL && crt.SourceHash == "" && !crt.SkipVerify {
+	if t.Source.IsURL && t.SourceHash == "" && !t.SkipVerify {
 		errs.Add(
 			fmt.Errorf(
 				`empty '%s' field at path '%s.%s' for remote url source '%s'`,
 				SourceHashField,
-				crt.Path,
+				t.Path,
 				SourceHashField,
-				crt.Source.RawLocation,
+				t.Source.RawLocation,
 			),
 		)
 	}
 
-	if crt.Source.RawLocation == "" && !crt.Contents.Valid {
+	if t.Source.RawLocation == "" && !t.Contents.Valid {
 		errs.Add(fmt.Errorf(
 			`either content or source should be provided for the task at path '%s'`,
-			crt.Path,
+			t.Path,
 		))
 	}
 
 	return errs.ToError()
 }
 
-func (crt *FileManagedTask) GetPath() string {
-	return crt.Path
+func (t *FileManagedTask) GetPath() string {
+	return t.Path
 }
 
-func (crt *FileManagedTask) String() string {
-	return fmt.Sprintf("task '%s' at path '%s'", crt.TypeName, crt.GetPath())
+func (t *FileManagedTask) String() string {
+	return fmt.Sprintf("task '%s' at path '%s'", t.TypeName, t.GetPath())
+}
+
+func (t *FileManagedTask) GetOnlyIfCmds() []string {
+	return t.OnlyIf
+}
+
+func (t *FileManagedTask) GetUnlessCmds() []string {
+	return t.Unless
+}
+
+func (t *FileManagedTask) GetCreatesFilesList() []string {
+	return t.Creates
 }
 
 type HashManager interface {
@@ -198,7 +225,7 @@ type HashManager interface {
 type FileManagedTaskExecutor struct {
 	FsManager   FsManager
 	HashManager HashManager
-	Runner      exec2.Runner
+	Runner      tacoexec.Runner
 }
 
 func (fmte *FileManagedTaskExecutor) Execute(ctx context.Context, task Task) ExecutionResult {
@@ -216,18 +243,30 @@ func (fmte *FileManagedTaskExecutor) Execute(ctx context.Context, task Task) Exe
 	execRes.Name = fileManagedTask.Name
 
 	var stdoutBuf, stderrBuf bytes.Buffer
-	execCtx := &exec2.Context{
+	execCtx := &tacoexec.Context{
 		Ctx:          ctx,
 		StdoutWriter: &stdoutBuf,
 		StderrWriter: &stderrBuf,
 		User:         fileManagedTask.User,
 		Path:         fileManagedTask.Path,
+		Shell:        fileManagedTask.Shell,
 	}
+
 	logrus.Debugf("will check if the task '%s' should be executed", task.GetPath())
-	skipReason, err := fmte.shouldBeExecuted(execCtx, fileManagedTask, &execRes)
+
+	skipReason, err := shouldCheckConditionals(execCtx, fmte.FsManager, fmte.Runner, fileManagedTask)
 	if err != nil {
 		execRes.Err = err
 		return execRes
+	}
+
+	// if core conditionals ok, then check the specific file managed conditions
+	if err == nil && skipReason == "" {
+		skipReason, err = fmte.shouldCheckFileManagedConditions(fileManagedTask, &execRes)
+		if err != nil {
+			execRes.Err = err
+			return execRes
+		}
 	}
 
 	if skipReason != "" {
@@ -263,7 +302,6 @@ func (fmte *FileManagedTaskExecutor) Execute(ctx context.Context, task Task) Exe
 			execRes.Err = err
 			return execRes
 		}
-		fileManagedTask.Updated = true
 
 		var info fs.FileInfo
 		info, err = fmte.FsManager.Stat(fileManagedTask.Name)
@@ -272,8 +310,11 @@ func (fmte *FileManagedTaskExecutor) Execute(ctx context.Context, task Task) Exe
 			return execRes
 		}
 
+		fileManagedTask.Updated = true
+		execRes.Comment = "File updated"
 		execRes.Changes["length"] = fmt.Sprintf("%d bytes written", info.Size())
 	}
+
 	err = fmte.applyFileAttributesToTarget(fileManagedTask)
 	if err != nil {
 		execRes.Err = err
@@ -304,45 +345,10 @@ func (fmte *FileManagedTaskExecutor) fileShouldBeReplaced(fileManagedTask *FileM
 	return true, nil
 }
 
-func (fmte *FileManagedTaskExecutor) checkOnlyIfs(ctx *exec2.Context, fileManagedTask *FileManagedTask) (isSuccess bool, err error) {
-	if len(fileManagedTask.OnlyIf) == 0 {
-		return true, nil
-	}
-
-	newCtx := ctx.Copy()
-
-	newCtx.Cmds = fileManagedTask.OnlyIf
-	err = fmte.Runner.Run(&newCtx)
-
-	if err != nil {
-		runErr, isRunErr := err.(exec2.RunError)
-		if isRunErr {
-			logrus.Debugf("will skip %s since onlyif condition has failed: %v", fileManagedTask.String(), runErr)
-			return false, nil
-		}
-
-		return false, err
-	}
-
-	return true, nil
-}
-
-func (fmte *FileManagedTaskExecutor) shouldBeExecuted(
-	ctx *exec2.Context,
+func (fmte *FileManagedTaskExecutor) shouldCheckFileManagedConditions(
 	fileManagedTask *FileManagedTask,
 	execRes *ExecutionResult,
 ) (skipReason string, err error) {
-	isExists, fileName, err := fmte.checkMissingFileCondition(fileManagedTask)
-	if err != nil {
-		return "", err
-	}
-
-	if isExists {
-		skipReason = fmt.Sprintf("file %s exist", fileName)
-		logrus.Debugf(skipReason+", will skip the execution of %s", fileManagedTask)
-		return skipReason, nil
-	}
-
 	if fileManagedTask.SourceHash != "" {
 		var hashEquals bool
 		hashEquals, _, err = fmte.HashManager.HashEquals(fileManagedTask.SourceHash, fileManagedTask.Name)
@@ -360,15 +366,6 @@ func (fmte *FileManagedTaskExecutor) shouldBeExecuted(
 		}
 	}
 
-	isSuccess, err := fmte.checkOnlyIfs(ctx, fileManagedTask)
-	if err != nil {
-		return "", err
-	}
-
-	if !isSuccess {
-		return onlyIfConditionFailedReason, nil
-	}
-
 	skipReasonForContents, err := fmte.shouldSkipForContentExpectation(fileManagedTask, execRes)
 	if err != nil {
 		return "", err
@@ -379,35 +376,6 @@ func (fmte *FileManagedTaskExecutor) shouldBeExecuted(
 
 	logrus.Debugf("all execution conditions are met, will continue %s", fileManagedTask.String())
 	return "", nil
-}
-
-func (fmte *FileManagedTaskExecutor) checkMissingFileCondition(
-	fileManagedTask *FileManagedTask,
-) (isExists bool, fileName string, err error) {
-	if len(fileManagedTask.Creates) == 0 {
-		fileName = fileManagedTask.Name
-		return
-	}
-
-	for _, missingFileCondition := range fileManagedTask.Creates {
-		if missingFileCondition == "" {
-			continue
-		}
-		isExists, err = fmte.FsManager.FileExists(missingFileCondition)
-		if err != nil {
-			err = fmt.Errorf("failed to check if file '%s' exists: %w", missingFileCondition, err)
-			return
-		}
-
-		if isExists {
-			fileName = missingFileCondition
-			logrus.Debugf("file '%s' exists", missingFileCondition)
-			return true, fileName, nil
-		}
-		logrus.Debugf("file '%s' doesn't exist", missingFileCondition)
-	}
-
-	return false, "", nil
 }
 
 func (fmte *FileManagedTaskExecutor) copySourceToTarget(ctx context.Context, fileManagedTask *FileManagedTask) error {
@@ -438,7 +406,9 @@ func (fmte *FileManagedTaskExecutor) handleRemoteSource(ctx context.Context, fil
 			logrus.Errorf("failed to delete '%s': %v", f, err)
 		}
 	}(tempTargetPath)
+
 	err := fmte.FsManager.DownloadFile(ctx, tempTargetPath, fileManagedTask.Source.URL, fileManagedTask.SkipTLSCheck)
+
 	if err != nil {
 		return err
 	}

@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"errors"
 	"os/exec"
+	"runtime"
 	"testing"
 
 	"github.com/cloudradar-monitoring/tacoscript/conv"
@@ -12,7 +13,16 @@ import (
 )
 
 func TestOSApi(t *testing.T) {
-	cmd := exec.Command("echo", "123")
+	var cmd *exec.Cmd
+	var expectedResult string
+
+	if runtime.GOOS == "windows" {
+		cmd = exec.Command("powershell", "echo 123")
+		expectedResult = "123\r\n"
+	} else {
+		cmd = exec.Command("echo", "123")
+		expectedResult = "123\n"
+	}
 
 	var outBuf bytes.Buffer
 	cmd.Stdout = &outBuf
@@ -24,7 +34,7 @@ func TestOSApi(t *testing.T) {
 		return
 	}
 
-	assert.Equal(t, "123\n", outBuf.String())
+	assert.Equal(t, expectedResult, outBuf.String())
 }
 
 func TestRunner(t *testing.T) {

@@ -48,11 +48,14 @@ func TestFileManagedTaskExecution(t *testing.T) {
 
 	const ftpPort = 3021
 
-	ftpURL, err := apptest.StartFTPServer(ctx, ftpPort, time.Millisecond*300)
+	ftpURL, ftpSrv, err := apptest.StartFTPServer(ctx, ftpPort, time.Millisecond*300)
 	assert.NoError(t, err)
 	if err != nil {
 		return
 	}
+	defer func() {
+		_ = ftpSrv.Shutdown()
+	}()
 
 	httpSrvURL, httpSrv, err := apptest.StartHTTPServer(false)
 	assert.NoError(t, err)
@@ -305,10 +308,10 @@ three`,
 two
 three`,
 			},
-			LogExpectation: `-one
--two
--three
-+one two three
+			LogExpectation: `-one two three
++one
++two
++three
 `,
 		},
 		{
@@ -521,8 +524,8 @@ three`,
 				ExpectedContent:  `一些中文内容`,
 				ExpectedEncoding: "gb18030",
 			},
-			LogExpectation: `-一些中文内容
-+一些中文内
+			LogExpectation: `-一些中文内
++一些中文内容
 `,
 		},
 	}

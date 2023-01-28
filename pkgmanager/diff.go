@@ -1,4 +1,4 @@
-package pkg
+package pkgmanager
 
 type Diff struct {
 	Added   []string

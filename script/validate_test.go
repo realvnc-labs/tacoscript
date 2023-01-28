@@ -12,26 +12,41 @@ import (
 type RequirementsTaskMock struct {
 	RequirementsToGive []string
 	Path               string
+	OnlyIf             []string
+	Unless             []string
+	Creates            []string
 }
 
-func (rtm RequirementsTaskMock) GetName() string {
+func (rtm *RequirementsTaskMock) GetTypeName() string {
 	return ""
 }
 
-func (rtm RequirementsTaskMock) Execute(ctx context.Context) tasks.ExecutionResult {
+func (rtm *RequirementsTaskMock) Execute(ctx context.Context) tasks.ExecutionResult {
 	return tasks.ExecutionResult{}
 }
 
-func (rtm RequirementsTaskMock) Validate() error {
+func (rtm *RequirementsTaskMock) Validate() error {
 	return nil
 }
 
-func (rtm RequirementsTaskMock) GetPath() string {
+func (rtm *RequirementsTaskMock) GetPath() string {
 	return rtm.Path
 }
 
-func (rtm RequirementsTaskMock) GetRequirements() []string {
+func (rtm *RequirementsTaskMock) GetRequirements() []string {
 	return rtm.RequirementsToGive
+}
+
+func (rtm *RequirementsTaskMock) GetOnlyIfCmds() []string {
+	return rtm.OnlyIf
+}
+
+func (rtm *RequirementsTaskMock) GetUnlessCmds() []string {
+	return rtm.Unless
+}
+
+func (rtm *RequirementsTaskMock) GetCreatesFilesList() []string {
+	return rtm.Creates
 }
 
 type errorExpectation struct {
@@ -51,7 +66,7 @@ func TestScriptsValidation(t *testing.T) {
 				{
 					ID: "script one",
 					Tasks: []tasks.Task{
-						RequirementsTaskMock{
+						&RequirementsTaskMock{
 							RequirementsToGive: []string{"script two"},
 							Path:               "script one.RequirementsTaskMock[0]",
 						},
@@ -60,7 +75,7 @@ func TestScriptsValidation(t *testing.T) {
 				{
 					ID: "script two",
 					Tasks: []tasks.Task{
-						RequirementsTaskMock{
+						&RequirementsTaskMock{
 							RequirementsToGive: []string{"script one"},
 							Path:               "script two.RequirementsTaskMock[0]",
 						},
@@ -81,8 +96,8 @@ func TestScriptsValidation(t *testing.T) {
 				{
 					ID: "script 3",
 					Tasks: []tasks.Task{
-						RequirementsTaskMock{},
-						RequirementsTaskMock{
+						&RequirementsTaskMock{},
+						&RequirementsTaskMock{
 							RequirementsToGive: []string{"script 4"},
 						},
 					},
@@ -102,7 +117,7 @@ func TestScriptsValidation(t *testing.T) {
 				{
 					ID: "script 6",
 					Tasks: []tasks.Task{
-						RequirementsTaskMock{
+						&RequirementsTaskMock{
 							RequirementsToGive: []string{"script 7"},
 						},
 					},
@@ -110,7 +125,7 @@ func TestScriptsValidation(t *testing.T) {
 				{
 					ID: "script 7",
 					Tasks: []tasks.Task{
-						RequirementsTaskMock{
+						&RequirementsTaskMock{
 							RequirementsToGive: []string{"script 8"},
 						},
 					},
@@ -118,7 +133,7 @@ func TestScriptsValidation(t *testing.T) {
 				{
 					ID: "script 8",
 					Tasks: []tasks.Task{
-						RequirementsTaskMock{
+						&RequirementsTaskMock{
 							RequirementsToGive: []string{"script 6"},
 						},
 					},
@@ -126,7 +141,7 @@ func TestScriptsValidation(t *testing.T) {
 				{
 					ID: "script 9",
 					Tasks: []tasks.Task{
-						RequirementsTaskMock{
+						&RequirementsTaskMock{
 							RequirementsToGive: []string{"script 6"},
 						},
 					},
@@ -147,7 +162,7 @@ func TestScriptsValidation(t *testing.T) {
 				{
 					ID: "script 10",
 					Tasks: []tasks.Task{
-						RequirementsTaskMock{
+						&RequirementsTaskMock{
 							RequirementsToGive: []string{"script 11"},
 						},
 					},
@@ -155,7 +170,7 @@ func TestScriptsValidation(t *testing.T) {
 				{
 					ID: "script 11",
 					Tasks: []tasks.Task{
-						RequirementsTaskMock{
+						&RequirementsTaskMock{
 							RequirementsToGive: []string{"script 12", "script 13"},
 						},
 					},
@@ -163,7 +178,7 @@ func TestScriptsValidation(t *testing.T) {
 				{
 					ID: "script 13",
 					Tasks: []tasks.Task{
-						RequirementsTaskMock{
+						&RequirementsTaskMock{
 							RequirementsToGive: []string{},
 						},
 					},
@@ -171,7 +186,7 @@ func TestScriptsValidation(t *testing.T) {
 				{
 					ID: "script 12",
 					Tasks: []tasks.Task{
-						RequirementsTaskMock{
+						&RequirementsTaskMock{
 							RequirementsToGive: []string{},
 						},
 					},
@@ -187,7 +202,7 @@ func TestScriptsValidation(t *testing.T) {
 				{
 					ID: "script 20",
 					Tasks: []tasks.Task{
-						RequirementsTaskMock{
+						&RequirementsTaskMock{
 							RequirementsToGive: []string{"script 20"},
 							Path:               "script 20 task 1 path 1",
 						},
@@ -204,7 +219,7 @@ func TestScriptsValidation(t *testing.T) {
 				{
 					ID: "script 30",
 					Tasks: []tasks.Task{
-						RequirementsTaskMock{
+						&RequirementsTaskMock{
 							RequirementsToGive: []string{"script 31", "script 32"},
 							Path:               "path 1",
 						},
@@ -225,18 +240,18 @@ func TestScriptsValidation(t *testing.T) {
 				{
 					ID: "script 32",
 					Tasks: []tasks.Task{
-						RequirementsTaskMock{
+						&RequirementsTaskMock{
 							RequirementsToGive: []string{"script 33", "script 34"},
 						},
 					},
 				},
 				{
 					ID:    "script 33",
-					Tasks: []tasks.Task{RequirementsTaskMock{}},
+					Tasks: []tasks.Task{&RequirementsTaskMock{}},
 				},
 				{
 					ID:    "script 34",
-					Tasks: []tasks.Task{RequirementsTaskMock{}},
+					Tasks: []tasks.Task{&RequirementsTaskMock{}},
 				},
 			},
 			errorExpectation: errorExpectation{
@@ -249,21 +264,21 @@ func TestScriptsValidation(t *testing.T) {
 				{
 					ID: "script 35",
 					Tasks: []tasks.Task{
-						RequirementsTaskMock{
+						&RequirementsTaskMock{
 							RequirementsToGive: []string{"script 36"},
 						},
 					},
 				},
 				{
 					ID: "script 36",
-					Tasks: []tasks.Task{RequirementsTaskMock{
+					Tasks: []tasks.Task{&RequirementsTaskMock{
 						RequirementsToGive: []string{"script 37"},
 						Path:               "path 36",
 					}},
 				},
 				{
 					ID: "script 38",
-					Tasks: []tasks.Task{RequirementsTaskMock{
+					Tasks: []tasks.Task{&RequirementsTaskMock{
 						RequirementsToGive: []string{"script 40"},
 						Path:               "path 38",
 					}},

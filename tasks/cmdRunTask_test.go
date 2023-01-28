@@ -37,7 +37,7 @@ func TestTaskExecution(t *testing.T) {
 						Value: "someenvval2",
 					},
 				},
-				MissingFilesCondition: []string{""},
+				Creates: []string{""},
 			},
 			ExpectedResult: ExecutionResult{
 				IsSkipped: false,
@@ -56,9 +56,9 @@ func TestTaskExecution(t *testing.T) {
 		{
 			Name: "test skip command if file exists",
 			Task: &CmdRunTask{
-				User:                  "some user",
-				NamedTask:             NamedTask{Name: "some parser command"},
-				MissingFilesCondition: []string{"somefile.txt"},
+				User:      "some user",
+				NamedTask: NamedTask{Name: "some parser command"},
+				Creates:   []string{"somefile.txt"},
 			},
 			ExpectedResult: ExecutionResult{
 				IsSkipped: true,
@@ -126,7 +126,7 @@ func TestTaskExecution(t *testing.T) {
 			Name: "test multiple create file conditions",
 			Task: &CmdRunTask{
 				NamedTask: NamedTask{Name: "cmd with many MissingFilesConditions"},
-				MissingFilesCondition: []string{
+				Creates: []string{
 					"file.one",
 					"file.two",
 				},

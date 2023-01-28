@@ -3,6 +3,23 @@ Run:
     pkg.installed:
       - refresh: true
       - name: cowsay
+      - unless:
+        - /usr/games/cowsay
+  install-cowsay-already-installed:
+    pkg.installed:
+      - refresh: true
+      - name: cowsay
+      - creates:
+        - /usr/games/cowsay
+      - require:
+        - install-cowsay
+  remove-cowsay:
+    pkg.removed:
+      - refresh: true
+      - name: cowsay
+      - onlyif:
+        - /usr/games/cowsay
+
 On:
   - linux
 

@@ -27,7 +27,7 @@ type RawDataProvider interface {
 }
 
 type TemplateVariablesProvider interface {
-	GetTemplateVariables() (map[string]interface{}, error)
+	GetTemplateVariables() (utils.TemplateVarsMap, error)
 }
 
 type Builder struct {
@@ -93,10 +93,10 @@ func (p Builder) BuildScripts() (tasks.Scripts, error) {
 	return scripts, errs.ToError()
 }
 
-func (p Builder) render(templateData []byte, variables map[string]interface{}) (result []byte, err error) {
+func (p Builder) render(templateData []byte, variables utils.TemplateVarsMap) (result []byte, err error) {
 	templ := template.New("goyaml")
 
-	pageTemplate, err := templ.Parse(string(templateData))
+	pageTemplate, err := templ.Option("missingkey=zero").Parse(string(templateData))
 	if err != nil {
 		return result, err
 	}
