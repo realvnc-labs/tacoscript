@@ -5,7 +5,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"os"
 	"regexp"
 	"strconv"
 	"time"
@@ -14,6 +13,15 @@ import (
 	tacoexec "github.com/cloudradar-monitoring/tacoscript/exec"
 	"github.com/cloudradar-monitoring/tacoscript/utils"
 	"github.com/sirupsen/logrus"
+)
+
+var (
+	ErrAppendAndPrependSetAtTheSameTime = errors.New("append_if_not_found and prepend_if_not_found cannot be set at the same time." +
+		"please set one or the other")
+)
+
+const (
+	defaultMaxFileSize = "512k"
 )
 
 type FileReplaceTask struct {
@@ -177,15 +185,6 @@ func (t *FileReplaceTask) GetCreatesFilesList() []string {
 	return t.Creates
 }
 
-var (
-	ErrAppendAndPrependSetAtTheSameTime = errors.New("append_if_not_found and prepend_if_not_found cannot be set at the same time." +
-		"please set one or the other")
-)
-
-const (
-	defaultMaxFileSize = "512k"
-)
-
 func (t *FileReplaceTask) Validate() error {
 	errs := &utils.Errors{}
 
@@ -268,7 +267,7 @@ func (frte *FileReplaceTaskExecutor) Execute(ctx context.Context, task Task) Exe
 
 	origFilename := frt.Name
 
-	origfileInfo, err := os.Stat(origFilename)
+	origfileInfo, err := frte.FsManager.Stat(origFilename)
 	if err != nil {
 		execRes.Err = err
 		return execRes
@@ -296,23 +295,23 @@ func (frte *FileReplaceTaskExecutor) Execute(ctx context.Context, task Task) Exe
 		backupFilename = makeBackupFilename(origFilename, frt.BackupExtension)
 	}
 
-	origFileContents, err := os.ReadFile(origFilename)
+	origFileContents, err := frte.FsManager.ReadFile(origFilename)
 	if err != nil {
 		execRes.Err = err
 		return execRes
 	}
 
-	origfileInfo, err = os.Stat(origFilename)
+	origfileInfo, err = frte.FsManager.Stat(origFilename)
 	if err != nil {
 		execRes.Err = err
 		return execRes
 	}
 
-	var updatedFileContents []byte
+	var updatedFileContents string
 	var replacementCount int
 	var additionsCount int
 
-	match := frt.PatternCompiled.Match(origFileContents)
+	match := frt.PatternCompiled.MatchString(origFileContents)
 	if match {
 		updatedFileContents, replacementCount = ReplaceUsingRegexpWithCount(
 			origFileContents,
@@ -325,18 +324,18 @@ func (frte *FileReplaceTaskExecutor) Execute(ctx context.Context, task Task) Exe
 			newContent = frt.NotFoundContent
 		}
 		if frt.AppendIfNotFound {
-			updatedFileContents = append(origFileContents, []byte(newContent)...) //nolint:gocritic // appendAssign
+			updatedFileContents = origFileContents + newContent
 			additionsCount = 1
 		} else if frt.PrependIfNotFound {
-			updatedFileContents = append([]byte(newContent), origFileContents...)
+			updatedFileContents = newContent + origFileContents
 			additionsCount = 1
 		}
 	}
 
 	// will only be non-nil if the original contents have been updated
-	if updatedFileContents != nil {
+	if updatedFileContents != "" {
 		if makeBackup {
-			err := os.WriteFile(backupFilename, origFileContents, origfileInfo.Mode())
+			err := frte.FsManager.WriteFile(backupFilename, origFileContents, origfileInfo.Mode())
 			if err != nil {
 				execRes.Err = err
 				return execRes
@@ -344,13 +343,14 @@ func (frte *FileReplaceTaskExecutor) Execute(ctx context.Context, task Task) Exe
 			logrus.Debugf("created backup file %s for original file %s", backupFilename, origFilename)
 		}
 
-		err = os.WriteFile(frt.Name, updatedFileContents, origfileInfo.Mode())
+		err := frte.FsManager.WriteFile(frt.Name, updatedFileContents, origfileInfo.Mode())
 		if err != nil {
 			if !rollback {
 				execRes.Err = err
 				return execRes
 			}
-			removeBackupErr := os.Remove(backupFilename)
+
+			removeBackupErr := frte.FsManager.Remove(backupFilename)
 			if removeBackupErr != nil {
 				logrus.Infof("failed to remove backup file: %v", removeBackupErr)
 			}
@@ -382,14 +382,14 @@ func makeBackupFilename(origFilename string, ext string) (backupFilename string)
 	return origFilename + "." + ext
 }
 
-func ReplaceUsingRegexpWithCount(contents []byte, re *regexp.Regexp, repl string, maxRepl int) (newContents []byte, replacementCount int) {
+func ReplaceUsingRegexpWithCount(contents string, re *regexp.Regexp, repl string, maxRepl int) (newContents string, replacementCount int) {
 	count := 0
 
-	replContents := re.ReplaceAllFunc(contents, func(matchStr []byte) []byte {
+	replContents := re.ReplaceAllStringFunc(contents, func(matchStr string) string {
 		if maxRepl == 0 || count < maxRepl {
 			// replace again, this time using matched fragment with replacement using closure captured 're'
 			count++
-			return re.ReplaceAll(matchStr, []byte(repl))
+			return re.ReplaceAllString(matchStr, repl)
 		}
 
 		// if the max replacements has been reached then just use the original match string without replacement

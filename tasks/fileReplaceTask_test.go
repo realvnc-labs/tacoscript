@@ -9,6 +9,7 @@ import (
 	"testing"
 
 	"github.com/cloudradar-monitoring/tacoscript/conv"
+	"github.com/cloudradar-monitoring/tacoscript/utils"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -124,7 +125,9 @@ func TestShouldFailWhenTargetFileNotFound(t *testing.T) {
 
 	testFilename := getTestFilename()
 
-	executor := &FileReplaceTaskExecutor{}
+	executor := &FileReplaceTaskExecutor{
+		FsManager: &utils.FsManager{},
+	}
 	task := &FileReplaceTask{
 		Path:    "replace-1",
 		Name:    testFilename,
@@ -197,7 +200,9 @@ func TestShouldMakeBackupOfOriginalFileWhenBackupExtensionSet(t *testing.T) {
 	WriteTestFile(t, testFilename, simpleTestFileContents)
 	defer os.Remove(testFilename)
 
-	executor := &FileReplaceTaskExecutor{}
+	executor := &FileReplaceTaskExecutor{
+		FsManager: &utils.FsManager{},
+	}
 	task := &FileReplaceTask{
 		Path:            "replace-1",
 		Name:            testFilename,
@@ -225,7 +230,9 @@ func TestShouldNotMakeBackupOfOriginalFileWhenBackupExtensionNotSet(t *testing.T
 	WriteTestFile(t, testFilename, simpleTestFileContents)
 	defer os.Remove(testFilename)
 
-	executor := &FileReplaceTaskExecutor{}
+	executor := &FileReplaceTaskExecutor{
+		FsManager: &utils.FsManager{},
+	}
 	task := &FileReplaceTask{
 		Path:    "replace-1",
 		Name:    testFilename,
@@ -252,7 +259,9 @@ func TestShouldReplaceAllMatchingItems(t *testing.T) {
 	WriteTestFile(t, testFilename, simpleTestFileContentWithRepetition)
 	defer os.Remove(testFilename)
 
-	executor := &FileReplaceTaskExecutor{}
+	executor := &FileReplaceTaskExecutor{
+		FsManager: &utils.FsManager{},
+	}
 	task := &FileReplaceTask{
 		Path:    "replace-1",
 		Name:    testFilename,
@@ -287,7 +296,9 @@ func TestShouldNotReplaceAnything(t *testing.T) {
 	origfileInfo, err := os.Stat(testFilename)
 	require.NoError(t, err)
 
-	executor := &FileReplaceTaskExecutor{}
+	executor := &FileReplaceTaskExecutor{
+		FsManager: &utils.FsManager{},
+	}
 	task := &FileReplaceTask{
 		Path:    "replace-1",
 		Name:    testFilename,
@@ -320,7 +331,9 @@ func TestShouldReplaceCountMatchingItems(t *testing.T) {
 	WriteTestFile(t, testFilename, simpleTestFileContentWithRepetition)
 	defer os.Remove(testFilename)
 
-	executor := &FileReplaceTaskExecutor{}
+	executor := &FileReplaceTaskExecutor{
+		FsManager: &utils.FsManager{},
+	}
 	task := &FileReplaceTask{
 		Path:    "replace-1",
 		Name:    testFilename,
@@ -354,7 +367,9 @@ func TestShouldSkipWhenFilesizeTooLarge(t *testing.T) {
 	WriteTestFile(t, testFilename, largerContents)
 	defer os.Remove(testFilename)
 
-	executor := &FileReplaceTaskExecutor{}
+	executor := &FileReplaceTaskExecutor{
+		FsManager: &utils.FsManager{},
+	}
 	task := &FileReplaceTask{
 		Path:        "replace-1",
 		Name:        testFilename,
@@ -384,7 +399,9 @@ func TestShouldErrorIfTargetNotRegularFile(t *testing.T) {
 		testFilename = "/tmp"
 	}
 
-	executor := &FileReplaceTaskExecutor{}
+	executor := &FileReplaceTaskExecutor{
+		FsManager: &utils.FsManager{},
+	}
 	task := &FileReplaceTask{
 		Path:    "replace-1",
 		Name:    testFilename,
@@ -409,7 +426,9 @@ func TestShouldAppendNotFoundContent(t *testing.T) {
 	WriteTestFile(t, testFilename, simpleTestFileContentWithRepetition)
 	defer os.Remove(testFilename)
 
-	executor := &FileReplaceTaskExecutor{}
+	executor := &FileReplaceTaskExecutor{
+		FsManager: &utils.FsManager{},
+	}
 	task := &FileReplaceTask{
 		Path:             "replace-1",
 		Name:             testFilename,
@@ -445,7 +464,9 @@ func TestShouldPrependNotFoundContent(t *testing.T) {
 	WriteTestFile(t, testFilename, simpleTestFileContentWithRepetition)
 	defer os.Remove(testFilename)
 
-	executor := &FileReplaceTaskExecutor{}
+	executor := &FileReplaceTaskExecutor{
+		FsManager: &utils.FsManager{},
+	}
 	task := &FileReplaceTask{
 		Path:              "replace-1",
 		Name:              testFilename,
@@ -481,7 +502,9 @@ func TestShouldUseReplContentWhenWhenNoNotFoundContent(t *testing.T) {
 	WriteTestFile(t, testFilename, simpleTestFileContentWithRepetition)
 	defer os.Remove(testFilename)
 
-	executor := &FileReplaceTaskExecutor{}
+	executor := &FileReplaceTaskExecutor{
+		FsManager: &utils.FsManager{},
+	}
 	task := &FileReplaceTask{
 		Path:    "replace-1",
 		Name:    testFilename,
