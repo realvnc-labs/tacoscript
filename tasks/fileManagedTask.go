@@ -600,7 +600,7 @@ func (fmte *FileManagedTaskExecutor) shouldSkipForContentExpectation(
 		}).Debugf(`file '%s' differs from the expected content field, will copy diff to file`, fileManagedTask.Name)
 
 	execRes.Changes["diff"] = contentDiff
-
+	execRes.Changes["size_diff"] = fmt.Sprintf("%d bytes", len(fileManagedTask.Contents.String)-len(actualContents))
 	return "", nil
 }
 

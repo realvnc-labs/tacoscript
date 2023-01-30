@@ -40,6 +40,7 @@ type fileManagedTestCase struct {
 	FileExpectation        *apptest.FileExpectation
 	ExpectedCmdStrs        []string
 	ErrorExpectation       *apptest.ErrorExpectation
+	ChangeExpectations     map[string]string
 }
 
 func TestFileManagedTaskExecution(t *testing.T) {
@@ -293,12 +294,13 @@ func TestFileManagedTaskExecution(t *testing.T) {
 					Valid: true,
 					String: `one
 two
-three`,
+three
+four`,
 				},
 				Replace: true,
 				Mode:    0777,
 			},
-			ContentToWrite: "one two three",
+			ContentToWrite: "one two three four five",
 			ExpectedResult: ExecutionResult{},
 			FileExpectation: &apptest.FileExpectation{
 				FilePath:     "contentsToFile.txt",
@@ -306,12 +308,18 @@ three`,
 				ExpectedMode: 0777,
 				ExpectedContent: `one
 two
-three`,
+three
+four`,
 			},
-			LogExpectation: `-one two three
+			ChangeExpectations: map[string]string{
+				"size_diff": "-5 bytes",
+				"length":    "18 bytes written",
+			},
+			LogExpectation: `-one two three four five
 +one
 +two
 +three
++four
 `,
 		},
 		{
@@ -609,6 +617,22 @@ func assertTestCase(t *testing.T, tc *fileManagedTestCase, res *ExecutionResult,
 
 	if !isExpectationMatched {
 		assert.Fail(t, nonMatchedReason)
+	}
+
+	if tc.ChangeExpectations != nil {
+		for expChangeKey, expValue := range tc.ChangeExpectations {
+			found := false
+			for key, value := range res.Changes {
+				if expChangeKey == key {
+					assert.Equal(t, expValue, value)
+					found = true
+					break
+				}
+			}
+			if !found {
+				assert.True(t, found, "expected change "+expChangeKey+" not found")
+			}
+		}
 	}
 }
 
