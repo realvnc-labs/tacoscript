@@ -29,6 +29,19 @@ Run:
           # file is missing so the exception will be thrown
         - if (-not (test-path -Path  C:\Windows\temp\testfile.txt -PathType leaf)) { throw 'missing' }
       - shell: powershell.exe
+  dont-write-file-onlyif:
+    file.managed:
+      - name: C:\Windows\temp\testfile2.txt
+      - contents: 0
+      - onlyif:
+          - throw 1 # aka return false
+      - shell: powershell.exe
+  dont-write-file-creates:
+    file.managed:
+      - name: C:\Windows\temp\testfile2.txt
+      - contents: 0
+      - creates:
+          - C:\Windows\temp\testfile.txt
 
 On:
   - windows
@@ -39,9 +52,9 @@ Expect:
       rm C:\Windows\temp\testfile.txt -force
     }
   Summary:
-    Succeeded: 3
+    Succeeded: 5
     Changes: 2
-    TotalTasksRun: 3
+    TotalTasksRun: 5
   TaskResults:
     - ID: write-file
       ChangesContains:
@@ -51,6 +64,12 @@ Expect:
     - ID: write-file-as-file-exists
       ChangesContains:
         - "58 bytes written"
+    - ID: dont-write-file-onlyif
+      CommentContains:
+        - File not changed only if condition was false
+    - ID: dont-write-file-creates
+      CommentContains:
+        - File not changed file C:\Windows\temp\testfile.txt exists
   PostExec: |
     $ErrorActionPreference = "Stop"
     gc C:\Windows\temp\testfile.txt
