@@ -8,8 +8,14 @@ import (
 	tacoexec "github.com/cloudradar-monitoring/tacoscript/exec"
 )
 
-func shouldCheckConditionals(ctx *tacoexec.Context, fsManager FsManager, runner tacoexec.Runner, task Task) (
+func checkConditionals(ctx *tacoexec.Context, fsManager FsManager, runner tacoexec.Runner, task Task) (
 	skipExecutionReason string, err error) {
+	defer func() {
+		if skipExecutionReason != "" {
+			logrus.Debugf(skipExecutionReason+", will skip the execution of %s", task.GetPath())
+		}
+	}()
+
 	isExists, filename, err := checkMissingFileCondition(fsManager, task)
 	if err != nil {
 		return "", err
@@ -17,7 +23,6 @@ func shouldCheckConditionals(ctx *tacoexec.Context, fsManager FsManager, runner 
 
 	if isExists {
 		skipExecutionReason = fmt.Sprintf("file %s exists", filename)
-		logrus.Debugf(skipExecutionReason+", will skip the execution of %s", task.GetPath())
 		return skipExecutionReason, nil
 	}
 
@@ -27,7 +32,8 @@ func shouldCheckConditionals(ctx *tacoexec.Context, fsManager FsManager, runner 
 	}
 
 	if !isSuccess {
-		return onlyIfConditionFailedReason, nil
+		skipExecutionReason = onlyIfConditionFailedReason
+		return skipExecutionReason, nil
 	}
 
 	isExpectationSuccess, err := checkUnless(ctx, runner, task)
@@ -37,7 +43,6 @@ func shouldCheckConditionals(ctx *tacoexec.Context, fsManager FsManager, runner 
 
 	if !isExpectationSuccess {
 		skipExecutionReason = "unless condition is true"
-		logrus.Debugf(skipExecutionReason+", will skip %s", task.GetPath())
 		return skipExecutionReason, nil
 	}
 
@@ -49,7 +54,7 @@ func checkMissingFileCondition(fsManager FsManager, task Task) (isExists bool, f
 	createsFilesList := task.GetCreatesFilesList()
 
 	if len(createsFilesList) == 0 {
-		return
+		return false, "", nil
 	}
 
 	for _, missingFileCondition := range createsFilesList {
@@ -59,7 +64,7 @@ func checkMissingFileCondition(fsManager FsManager, task Task) (isExists bool, f
 		isExists, err = fsManager.FileExists(missingFileCondition)
 		if err != nil {
 			err = fmt.Errorf("failed to check if file '%s' exists: %w", missingFileCondition, err)
-			return
+			return false, "", err
 		}
 
 		if isExists {
@@ -69,22 +74,22 @@ func checkMissingFileCondition(fsManager FsManager, task Task) (isExists bool, f
 		logrus.Debugf("file '%s' doesn't exist", missingFileCondition)
 	}
 
-	return
+	return false, "", nil
+}
+
+func runCommands(ctx *tacoexec.Context, runner tacoexec.Runner, cmds []string) (err error) {
+	newCtx := ctx.Copy()
+	newCtx.Cmds = cmds
+	return runner.Run(&newCtx)
 }
 
 func checkUnless(ctx *tacoexec.Context, runner tacoexec.Runner, task Task) (isExpectationSuccess bool, err error) {
-	unlessCmds := task.GetUnlessCmds()
-
-	if len(unlessCmds) == 0 {
+	cmds := task.GetUnlessCmds()
+	if len(cmds) == 0 {
 		return true, nil
 	}
 
-	newCtx := ctx.Copy()
-
-	newCtx.Cmds = unlessCmds
-
-	err = runner.Run(&newCtx)
-
+	err = runCommands(ctx, runner, cmds)
 	if err != nil {
 		runErr, isRunErr := err.(tacoexec.RunError)
 		if isRunErr {
@@ -100,18 +105,12 @@ func checkUnless(ctx *tacoexec.Context, runner tacoexec.Runner, task Task) (isEx
 }
 
 func checkOnlyIfs(ctx *tacoexec.Context, runner tacoexec.Runner, task Task) (isSuccess bool, err error) {
-	onlyIfCmds := task.GetOnlyIfCmds()
-
-	if len(onlyIfCmds) == 0 {
+	cmds := task.GetOnlyIfCmds()
+	if len(cmds) == 0 {
 		return true, nil
 	}
 
-	newCtx := ctx.Copy()
-
-	newCtx.Cmds = onlyIfCmds
-
-	err = runner.Run(&newCtx)
-
+	err = runCommands(ctx, runner, cmds)
 	if err != nil {
 		runErr, isRunErr := err.(tacoexec.RunError)
 		if isRunErr {

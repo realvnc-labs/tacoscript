@@ -114,6 +114,8 @@ type PkgTask struct {
 	Creates       []string
 	OnlyIf        []string
 	Unless        []string
+
+	Updated bool
 }
 
 func (pt *PkgTask) GetTypeName() string {
@@ -199,7 +201,7 @@ func (pte *PkgTaskExecutor) Execute(ctx context.Context, task Task) ExecutionRes
 	}
 
 	logrus.Debugf("will check if the task '%s' should be executed", task.GetPath())
-	skipReason, err := shouldCheckConditionals(execCtx, pte.FsManager, pte.Runner, pkgTask)
+	skipReason, err := checkConditionals(execCtx, pte.FsManager, pte.Runner, pkgTask)
 	if err != nil {
 		execRes.Err = err
 		return execRes
@@ -225,6 +227,8 @@ func (pte *PkgTaskExecutor) Execute(ctx context.Context, task Task) ExecutionRes
 
 	execRes.IsSkipped = false
 	execRes.Duration = time.Since(start)
+
+	pkgTask.Updated = true
 
 	logrus.Debugf("the task '%s' is finished for %v", execRes.Name, execRes.Duration)
 	return execRes

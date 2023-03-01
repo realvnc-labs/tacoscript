@@ -256,7 +256,3 @@ func TestShouldEnsureRegistryKeyIsAbsent(t *testing.T) {
 	assert.NoError(t, err)
 	assert.False(t, found)
 }
-
-func TestShouldEnsureConditionalsAreChecked(t *testing.T) {
-	t.Skip()
-}

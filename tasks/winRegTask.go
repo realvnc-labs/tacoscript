@@ -227,7 +227,7 @@ func (wrte *WinRegTaskExecutor) Execute(ctx context.Context, task Task) Executio
 	}
 
 	logrus.Debugf("will check if the task '%s' should be executed", task.GetPath())
-	skipReason, err := shouldCheckConditionals(execCtx, wrte.FsManager, wrte.Runner, wrt)
+	skipReason, err := checkConditionals(execCtx, wrte.FsManager, wrte.Runner, wrt)
 	if err != nil {
 		execRes.Err = err
 		return execRes

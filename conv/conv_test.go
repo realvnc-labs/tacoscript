@@ -15,14 +15,19 @@ func TestShouldConvertFileSizeToUInt64(t *testing.T) {
 		expectedErr   error
 	}{
 		{
-			name:        "error when no units",
-			inputStr:    "100",
-			expectedErr: conv.ErrFileSizeInvalidUnits,
-		},
-		{
 			name:        "error when unknown units",
 			inputStr:    "100t",
 			expectedErr: conv.ErrFileSizeInvalidUnits,
+		},
+		{
+			name:          "assume bytes",
+			inputStr:      "100",
+			expectedValue: 100,
+		},
+		{
+			name:          "100b",
+			inputStr:      "100b",
+			expectedValue: 100,
 		},
 		{
 			name:          "100k",
@@ -38,6 +43,16 @@ func TestShouldConvertFileSizeToUInt64(t *testing.T) {
 			name:          "300g",
 			inputStr:      "300g",
 			expectedValue: uint64(300 * 1024 * 1024 * 1024),
+		},
+		{
+			name:        "error when not a number, but valid units",
+			inputStr:    "bbb",
+			expectedErr: conv.ErrNotANumber,
+		},
+		{
+			name:        "error when not a number",
+			inputStr:    "bbc",
+			expectedErr: conv.ErrNotANumber,
 		},
 	}
 	for _, tc := range cases {

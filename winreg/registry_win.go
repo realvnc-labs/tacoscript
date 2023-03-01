@@ -170,8 +170,10 @@ func getValueByType(k registry.Key, name string, valType RegistryType) (val any,
 	switch valType {
 	case REG_SZ:
 		val, actualType, err = k.GetStringValue(name)
+		return val, actualType, err
 	case REG_BINARY:
 		val, actualType, err = k.GetBinaryValue(name)
+		return val, actualType, err
 	case REG_DWORD:
 		intVal, actualType, err = k.GetIntegerValue(name)
 		return uint32(intVal), actualType, err
@@ -179,9 +181,8 @@ func getValueByType(k registry.Key, name string, valType RegistryType) (val any,
 		intVal, actualType, err = k.GetIntegerValue(name)
 		return intVal, actualType, err
 	default:
-		err = ErrUnknownValType
+		return nil, 0, ErrUnknownValType
 	}
-	return val, actualType, err
 }
 
 func setValueByType(k registry.Key, name string, val any, valType RegistryType) (err error) {

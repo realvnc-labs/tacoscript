@@ -66,10 +66,18 @@ func (r Runner) Run(ctx context.Context, scripts tasks.Scripts, globalAbortOnErr
 
 			if pkgTask, ok := task.(*tasks.PkgTask); ok {
 				name = pkgTask.NamedTask.Name
+				comment = res.Comment
+				if res.Err == nil && !pkgTask.Updated {
+					comment = "Package not updated " + res.SkipReason
+				}
 			}
 
 			if winRegTask, ok := task.(*tasks.WinRegTask); ok {
 				name = winRegTask.RegPath + `\` + winRegTask.Name
+				comment = res.Comment
+				if res.Err == nil && !winRegTask.Updated {
+					comment = "Windows registry not updated " + res.SkipReason
+				}
 			}
 
 			if managedTask, ok := task.(*tasks.FileManagedTask); ok {

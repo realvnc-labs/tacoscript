@@ -19,6 +19,7 @@ func DeleteKeyRecursive(regPath string) error {
 	}
 
 	var access uint32 = registry.QUERY_VALUE | registry.ENUMERATE_SUB_KEYS | registry.SET_VALUE
+
 	k, err := registry.OpenKey(rootKey, keyPath, access)
 	if err != nil {
 		return err
@@ -26,12 +27,8 @@ func DeleteKeyRecursive(regPath string) error {
 
 	defer k.Close()
 
-	keyNames, err := k.ReadSubKeyNames(0)
-	if err != nil {
-		return fmt.Errorf("failed to get %q key from registry error: %v", regPath, err)
-	}
-
-	if err := deleteSubKeys(rootKey, keyPath, keyNames, access); err != nil {
+	// delete sub keys
+	if err := deleteSubKeysRecursively(rootKey, k, keyPath, access); err != nil {
 		return err
 	}
 
@@ -42,32 +39,10 @@ func DeleteKeyRecursive(regPath string) error {
 	return nil
 }
 
-func deleteSubKeys(rootKey registry.Key, rpath string, keyNames []string, access uint32) error {
-	for _, keyName := range keyNames {
-		keyPath := fmt.Sprintf("%s\\%s", rpath, keyName)
-
-		k, err := registry.OpenKey(rootKey, keyPath, access)
-		if err != nil {
-			return fmt.Errorf("path %q not found on registry: %v", keyPath, err)
-		}
-
-		// delete sub keys
-		if err := deleteSubKeysRecursively(rootKey, k, keyPath, access); err != nil {
-			return err
-		}
-
-		if err := registry.DeleteKey(k, ""); err != nil {
-			return fmt.Errorf("cannot delete key path : %q error: %v", keyPath, err)
-		}
-	}
-
-	return nil
-}
-
 func deleteSubKeysRecursively(rootKey registry.Key, k registry.Key, rpath string, access uint32) error {
 	subKeyNames, err := k.ReadSubKeyNames(0)
 	if err != nil {
-		return nil
+		return err
 	}
 
 	for _, subKeyName := range subKeyNames {

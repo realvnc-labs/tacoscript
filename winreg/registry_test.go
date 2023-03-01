@@ -5,6 +5,8 @@ package winreg_test
 
 import (
 	"errors"
+	"fmt"
+	"strconv"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -217,4 +219,65 @@ func TestShouldEnsureExistingRegistryKeyIsAbsent(t *testing.T) {
 	found, _, err = winreg.GetValue(keyPathToRemove, altName, winreg.REG_SZ)
 	require.NoError(t, err)
 	assert.False(t, found)
+}
+
+func TestShouldDeleteSubKeyRecursively(t *testing.T) {
+	keyPath := createTestRegBranch(t)
+
+	updated, desc, err := winreg.RemoveKey(keyPath + `\2`)
+	assert.NoError(t, err)
+
+	// updated set to true indicates that a value was removed
+	assert.True(t, updated)
+	assert.Equal(t, "key removed", desc)
+
+	found, _, err := winreg.GetValue(keyPath+`\2`, "2", winreg.REG_SZ)
+	require.NoError(t, err)
+	assert.False(t, found)
+
+	found, _, err = winreg.GetValue(keyPath+`\6`, "4", winreg.REG_SZ)
+	require.NoError(t, err)
+	assert.True(t, found)
+}
+
+func TestShouldDeleteSubKeyWithoutChildrenRecursively(t *testing.T) {
+	keyPath := createTestRegBranch(t)
+
+	updated, desc, err := winreg.RemoveKey(keyPath + `\6`)
+	assert.NoError(t, err)
+
+	// updated set to true indicates that a value was removed
+	assert.True(t, updated)
+	assert.Equal(t, "key removed", desc)
+
+	found, _, err := winreg.GetValue(keyPath+`\6`, "4", winreg.REG_SZ)
+	require.NoError(t, err)
+	assert.False(t, found)
+
+	found, _, err = winreg.GetValue(keyPath+`\2`, "4", winreg.REG_SZ)
+	require.NoError(t, err)
+	assert.True(t, found)
+}
+
+func createTestRegBranch(t *testing.T) (keyPath string) {
+	keyPath = newTestKeyPath(testKey)
+	fmt.Printf("keyPath = %+v\n", keyPath)
+
+	createBranchLeaves(t, keyPath, 0, 9)
+	createBranchLeaves(t, keyPath+`\2`, 2, 5)
+	createBranchLeaves(t, keyPath+`\2\2`, 5, 7)
+	createBranchLeaves(t, keyPath+`\2\2\3`, 2, 3)
+	createBranchLeaves(t, keyPath+`\2\2\3\4`, 2, 3)
+	createBranchLeaves(t, keyPath+`\2\2\3\5`, 2, 3)
+	createBranchLeaves(t, keyPath+`\2\2\4`, 1, 7)
+	createBranchLeaves(t, keyPath+`\6`, 4, 8)
+
+	return keyPath
+}
+
+func createBranchLeaves(t *testing.T, keyPath string, from int, to int) {
+	for i := from; i <= to; i++ {
+		_, _, err := winreg.SetValue(keyPath, strconv.Itoa(i), strconv.Itoa(i), winreg.REG_SZ)
+		require.NoError(t, err)
+	}
 }

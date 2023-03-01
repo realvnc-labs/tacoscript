@@ -26,7 +26,7 @@ maintain-my-file:
     - source: https://github.com/notepad-plus-plus/notepad-plus-plus/releases/download/v7.8.8/npp.7.8.8.Installer.x64.exe
     - source_hash: md5=79eef25f9b0b2c642c62b7f737d4f53f
     - makedirs: true # default false
-    - replace: false # default true
+    - repl: false # default true
     - creates: 'C:\Program Files\notepad++\notepad++.exe'
 ```
 
@@ -182,7 +182,7 @@ another-url:
   file.managed:
     - name: /tmp/sub/some/dir/utf8-js-1.json
     - makedirs: true
-    - replace: false
+    - repl: false
     - user: root
     - group: root
     - mode: 0755
@@ -457,7 +457,7 @@ We can read it as following:
 Contains the regular expression to search for in the target file. The regular expressions supported use the golang regexp engine.
 Group replacements are supported using the standard `()` and `$` notations.
 
-### `replace`
+### `repl`
 
 {{< parameter required=1 type=string >}}
 
@@ -487,8 +487,8 @@ If set to `true` then either the text specified by the `not_found_content` will 
 
 {{< parameter type=string >}}
 
-The text specified by this property will Used when either the `append_if_not_found` or `prepend_if_not_found` parameters
-re set to `true`. The text will be appended or prepended to the target file accordingly.
+The text specified by this property will be used when either the `append_if_not_found` or `prepend_if_not_found`
+parameters are set to `true`. The text will be appended or prepended to the target file accordingly.
 
 ### `backup`
 

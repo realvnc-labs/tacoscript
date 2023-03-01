@@ -184,7 +184,7 @@ func (crte *CmdRunTaskExecutor) Execute(ctx context.Context, task Task) Executio
 		Shell:        cmdRunTask.Shell,
 	}
 
-	shouldNotBeExecutedReason, err := shouldCheckConditionals(execCtx, crte.FsManager, crte.Runner, cmdRunTask)
+	shouldNotBeExecutedReason, err := checkConditionals(execCtx, crte.FsManager, crte.Runner, cmdRunTask)
 	if err != nil {
 		execRes.Err = err
 		return execRes

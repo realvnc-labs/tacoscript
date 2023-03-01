@@ -6,61 +6,109 @@ Run:
           this is a file
           created by tacoscript
       - creates:
-        - /tmp/test-file.txt
+          - /tmp/test-file.txt
   replace-file-skip-as-file-exists:
     file.replace:
       - name: /tmp/test-file.txt
       - pattern: this is a file
       - repl: this is a modified file
-      - creates: 
-        - /tmp/test-file.txt
+      - creates:
+          - /tmp/test-file.txt
   replace-file:
     file.replace:
       - name: /tmp/test-file.txt
       - pattern: this is a file
       - repl: this is a replacement file
       - onlyif:
-        - test -f /tmp/test-file.txt
+          - test -f /tmp/test-file.txt
   replace-file-skip-again-as-unless-check:
     file.replace:
       - name: /tmp/test-file.txt
       - pattern: this is a replacement file
       - repl: this is a another replacement file
       - unless:
-        - test -f /tmp/test-file.txt
+          - test -f /tmp/test-file.txt
   replace-file-again:
     file.replace:
       - name: /tmp/test-file.txt
       - pattern: this is a replacement file
       - repl: this is a another replacement file
       - require:
-        -  replace-file
+          - replace-file
+  replace-with-backup:
+    file.replace:
+      - name: /tmp/test-file.txt
+      - pattern: tacoscript
+      - repl: Tacoscript
+      - backup: backup
+      - require:
+          - replace-file
+  replace-with-append:
+    file.replace:
+      - name: /tmp/test-file.txt
+      - pattern: bunny
+      - repl: appended this line because a bunny was not found
+      - append_if_not_found: true
+  replace-with-prepent:
+    file.replace:
+      - name: /tmp/test-file.txt
+      - pattern: rabbit
+      - repl: prepended this line because a rabbit was not found
+      - prepend_if_not_found: true
+  dont-replace-max-file-size:
+    file.replace:
+      - name: /tmp/big.txt
+      - pattern: ignore
+      - repl: nothing
+      - max_file_size: 1k
 
 On:
   - darwin
   - linux
 
 Expect:
-  PreExec: test -e /tmp/test-file.txt && rm -f /tmp/test-file.txt ||true
+  PreExec: |
+    test -e /tmp/test-file.txt && rm -f /tmp/test-file.txt ||true
+    openssl rand -base64 1024 >/tmp/big.txt
   Summary:
-    Succeeded: 5
-    Changes: 3
-    TotalTasksRun: 5
+    Succeeded: 9
+    Changes: 6
+    TotalTasksRun: 9
   TaskResults:
     - ID: write-file
       ChangesContains:
         - "37 bytes written"
     - ID: replace-file-skip-as-file-exists
       HasChanges: false
+      CommentContains:
+        - "File not changed"
     - ID: replace-file
-      ChangesContains:
+      ChangeContains:
         - "1 replacement(s) made"
     - ID: replace-file-skip-again-as-unless-check
       HasChanges: false
+      CommentContains:
+        - "File not changed"
     - ID: replace-file-again
+      ChangeContains:
+        - "1 replacement(s) made"
+    - ID: replace-with-backup
       ChangesContains:
         - "1 replacement(s) made"
+    - ID: replace-with-append
+      ChangesContains:
+        - "1 addition(s) made"
+    - ID: replace-with-prepent
+      ChangesContains:
+        - "1 addition(s) made"
+    - ID: dont-replace-max-file-size
+      CommentContains:
+        - File not changed file size is greater than max_file_size
   PostExec: |
-    grep tacoscript /tmp/test-file.txt
+    grep "this is a another replacement file" /tmp/test-file.txt
+    tail -n1 /tmp/test-file.txt|grep "a bunny was not found" /tmp/test-file.txt
+    head -n1 /tmp/test-file.txt|grep "a rabbit was not found" /tmp/test-file.txt
     rm /tmp/test-file.txt
-
+    test -e /tmp/test-file.txt.backup
+    rm /tmp/test-file.txt.backup
+    rm /tmp/big.txt

@@ -254,7 +254,7 @@ func (fmte *FileManagedTaskExecutor) Execute(ctx context.Context, task Task) Exe
 
 	logrus.Debugf("will check if the task '%s' should be executed", task.GetPath())
 
-	skipReason, err := shouldCheckConditionals(execCtx, fmte.FsManager, fmte.Runner, fileManagedTask)
+	skipReason, err := checkConditionals(execCtx, fmte.FsManager, fmte.Runner, fileManagedTask)
 	if err != nil {
 		execRes.Err = err
 		return execRes
@@ -262,7 +262,7 @@ func (fmte *FileManagedTaskExecutor) Execute(ctx context.Context, task Task) Exe
 
 	// if core conditionals ok, then check the specific file managed conditions
 	if err == nil && skipReason == "" {
-		skipReason, err = fmte.shouldCheckFileManagedConditions(fileManagedTask, &execRes)
+		skipReason, err = fmte.checkFileManagedConditions(fileManagedTask, &execRes)
 		if err != nil {
 			execRes.Err = err
 			return execRes
@@ -345,7 +345,7 @@ func (fmte *FileManagedTaskExecutor) fileShouldBeReplaced(fileManagedTask *FileM
 	return true, nil
 }
 
-func (fmte *FileManagedTaskExecutor) shouldCheckFileManagedConditions(
+func (fmte *FileManagedTaskExecutor) checkFileManagedConditions(
 	fileManagedTask *FileManagedTask,
 	execRes *ExecutionResult,
 ) (skipReason string, err error) {

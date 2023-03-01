@@ -30,17 +30,17 @@ func init() {
 }
 
 type fileManagedTestCase struct {
-	Name                   string
-	ContentToWrite         string
-	ContentEncodingToWrite string
-	LogExpectation         string
-	Task                   *FileManagedTask
-	ExpectedResult         ExecutionResult
-	RunnerMock             *appExec.SystemRunner
-	FileExpectation        *apptest.FileExpectation
-	ExpectedCmdStrs        []string
-	ErrorExpectation       *apptest.ErrorExpectation
-	ChangeExpectations     map[string]string
+	Name                string
+	InitialFileContents string
+	ContentEncoding     string
+	LogExpectation      string
+	Task                *FileManagedTask
+	ExpectedResult      ExecutionResult
+	RunnerMock          *appExec.SystemRunner
+	FileExpectation     *apptest.FileExpectation
+	ExpectedCmdStrs     []string
+	ErrorExpectation    *apptest.ErrorExpectation
+	ChangeExpectations  map[string]string
 }
 
 func TestFileManagedTaskExecution(t *testing.T) {
@@ -128,7 +128,7 @@ func TestFileManagedTaskExecution(t *testing.T) {
 			ExpectedResult: ExecutionResult{
 				IsSkipped: true,
 			},
-			ContentToWrite: "one two three",
+			InitialFileContents: "one two three",
 		},
 		{
 			Name: "test_wrong_hash_format_error",
@@ -300,8 +300,8 @@ four`,
 				Replace: true,
 				Mode:    0777,
 			},
-			ContentToWrite: "one two three four five",
-			ExpectedResult: ExecutionResult{},
+			InitialFileContents: "one two three four five",
+			ExpectedResult:      ExecutionResult{},
 			FileExpectation: &apptest.FileExpectation{
 				FilePath:     "contentsToFile.txt",
 				ShouldExist:  true,
@@ -334,7 +334,7 @@ two
 three`,
 				},
 			},
-			ContentToWrite: `one
+			InitialFileContents: `one
 two
 three`,
 			ExpectedResult: ExecutionResult{IsSkipped: true},
@@ -400,7 +400,7 @@ three`,
 				},
 				Mode: 0777,
 			},
-			ContentToWrite: "one two three",
+			InitialFileContents: "one two three",
 			FileExpectation: &apptest.FileExpectation{
 				FilePath:        "existingFileToReplace.txt",
 				ShouldExist:     true,
@@ -420,7 +420,7 @@ three`,
 					Valid:  true,
 				},
 			},
-			ContentToWrite: "one",
+			InitialFileContents: "one",
 			FileExpectation: &apptest.FileExpectation{
 				FilePath:        "existingFileToReplace2.txt",
 				ShouldExist:     true,
@@ -440,7 +440,7 @@ three`,
 					RawLocation: httpSrvURL.String(),
 				},
 			},
-			ContentToWrite: " ",
+			InitialFileContents: " ",
 			FileExpectation: &apptest.FileExpectation{
 				FilePath:        "skipVerifyFileSuccess.txt",
 				ShouldExist:     true,
@@ -460,7 +460,7 @@ three`,
 					RawLocation: ftpURL.String(),
 				},
 			},
-			ContentToWrite: "one two three",
+			InitialFileContents: "one two three",
 			FileExpectation: &apptest.FileExpectation{
 				FilePath:        "skipVerifyFileNoChange.txt",
 				ShouldExist:     true,
@@ -481,7 +481,7 @@ three`,
 				},
 				Mode: 0777,
 			},
-			ContentToWrite: " ",
+			InitialFileContents: " ",
 			FileExpectation: &apptest.FileExpectation{
 				FilePath:        "skipVerifyFileLocalSuccess.txt",
 				ShouldExist:     true,
@@ -522,9 +522,9 @@ three`,
 				Mode:     0777,
 				Encoding: "gb18030",
 			},
-			ContentToWrite:         "一些中文内",
-			ContentEncodingToWrite: "gb18030",
-			ExpectedResult:         ExecutionResult{},
+			InitialFileContents: "一些中文内",
+			ContentEncoding:     "gb18030",
+			ExpectedResult:      ExecutionResult{},
 			FileExpectation: &apptest.FileExpectation{
 				FilePath:         "encodingWithContentCompare.txt",
 				ShouldExist:      true,
@@ -547,12 +547,12 @@ three`,
 		tc := testCase
 		lc := logsCollection
 		t.Run(tc.Name, func(tt *testing.T) {
-			if tc.ContentToWrite != "" {
+			if tc.InitialFileContents != "" {
 				var e error
-				if tc.ContentEncodingToWrite != "" {
-					e = utils.WriteEncodedFile(tc.ContentEncodingToWrite, tc.ContentToWrite, tc.Task.Name, 0600)
+				if tc.ContentEncoding != "" {
+					e = utils.WriteEncodedFile(tc.ContentEncoding, tc.InitialFileContents, tc.Task.Name, 0600)
 				} else {
-					e = os.WriteFile(tc.Task.Name, []byte(tc.ContentToWrite), 0600)
+					e = os.WriteFile(tc.Task.Name, []byte(tc.InitialFileContents), 0600)
 				}
 				assert.NoError(t, e)
 			}

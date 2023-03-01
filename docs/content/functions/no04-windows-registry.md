@@ -47,7 +47,7 @@ This is the `name` of the registry value to ensure is present at the registry pa
 
 {{< parameter required=1 type=string >}}
 
-This is the value that must be is present. If there is no value currently then a new value will be set.
+This is the value that must be present. If there is no value currently then a new value will be set.
 If there is an existing value then it will be replaced.
 
 ### `type`

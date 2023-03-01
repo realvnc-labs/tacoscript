@@ -25,10 +25,10 @@ const (
 )
 
 type FileReplaceTask struct {
-	TypeName string
-	Path     string
+	TypeName string // TaskType
+	Path     string // TaskName
 
-	Name              string
+	Name              string // Target
 	Pattern           string
 	Repl              string
 	Count             int
@@ -47,8 +47,8 @@ type FileReplaceTask struct {
 	Shell string
 
 	// values created during task build
-	MaxFileSizeCalculated uint64
-	PatternCompiled       *regexp.Regexp
+	maxFileSizeCalculated uint64
+	patternCompiled       *regexp.Regexp
 
 	// was replace file updated?
 	Updated bool
@@ -203,7 +203,7 @@ func (t *FileReplaceTask) Validate() error {
 		if err != nil {
 			errs.Add(err)
 		}
-		t.PatternCompiled = compiledRegExp
+		t.patternCompiled = compiledRegExp
 	}
 
 	if t.MaxFileSize == "" {
@@ -214,7 +214,7 @@ func (t *FileReplaceTask) Validate() error {
 	if err != nil {
 		errs.Add(err)
 	}
-	t.MaxFileSizeCalculated = MaxFileSizeCalculated
+	t.maxFileSizeCalculated = MaxFileSizeCalculated
 
 	if t.AppendIfNotFound && t.PrependIfNotFound {
 		errs.Add(ErrAppendAndPrependSetAtTheSameTime)
@@ -241,6 +241,7 @@ func (frte *FileReplaceTaskExecutor) Execute(ctx context.Context, task Task) Exe
 	}
 
 	execRes.Name = frt.Name
+	execRes.Comment = "File not changed"
 
 	var stdoutBuf, stderrBuf bytes.Buffer
 	execCtx := &tacoexec.Context{
@@ -252,7 +253,7 @@ func (frte *FileReplaceTaskExecutor) Execute(ctx context.Context, task Task) Exe
 	}
 
 	logrus.Debugf("will check if the task '%s' should be executed", task.GetPath())
-	skipReason, err := shouldCheckConditionals(execCtx, frte.FsManager, frte.Runner, frt)
+	skipReason, err := checkConditionals(execCtx, frte.FsManager, frte.Runner, frt)
 	if err != nil {
 		execRes.Err = err
 		return execRes
@@ -278,7 +279,7 @@ func (frte *FileReplaceTaskExecutor) Execute(ctx context.Context, task Task) Exe
 		return execRes
 	}
 
-	if uint64(origfileInfo.Size()) > frt.MaxFileSizeCalculated {
+	if uint64(origfileInfo.Size()) > frt.maxFileSizeCalculated {
 		logrus.Debugf("the task '%s' will be be skipped", task.GetPath())
 		execRes.IsSkipped = true
 		execRes.SkipReason = "file size is greater than max_file_size"
@@ -287,7 +288,6 @@ func (frte *FileReplaceTaskExecutor) Execute(ctx context.Context, task Task) Exe
 
 	start := time.Now()
 
-	rollback := false
 	backupFilename := ""
 	makeBackup := frt.BackupExtension != ""
 
@@ -301,21 +301,15 @@ func (frte *FileReplaceTaskExecutor) Execute(ctx context.Context, task Task) Exe
 		return execRes
 	}
 
-	origfileInfo, err = frte.FsManager.Stat(origFilename)
-	if err != nil {
-		execRes.Err = err
-		return execRes
-	}
-
 	var updatedFileContents string
 	var replacementCount int
 	var additionsCount int
 
-	match := frt.PatternCompiled.MatchString(origFileContents)
+	match := frt.patternCompiled.MatchString(origFileContents)
 	if match {
 		updatedFileContents, replacementCount = ReplaceUsingRegexpWithCount(
 			origFileContents,
-			frt.PatternCompiled,
+			frt.patternCompiled,
 			frt.Repl,
 			frt.Count)
 	} else {
@@ -323,12 +317,11 @@ func (frte *FileReplaceTaskExecutor) Execute(ctx context.Context, task Task) Exe
 		if frt.NotFoundContent != "" {
 			newContent = frt.NotFoundContent
 		}
+		additionsCount = 1
 		if frt.AppendIfNotFound {
 			updatedFileContents = origFileContents + newContent
-			additionsCount = 1
 		} else if frt.PrependIfNotFound {
 			updatedFileContents = newContent + origFileContents
-			additionsCount = 1
 		}
 	}
 
@@ -345,15 +338,6 @@ func (frte *FileReplaceTaskExecutor) Execute(ctx context.Context, task Task) Exe
 
 		err := frte.FsManager.WriteFile(frt.Name, updatedFileContents, origfileInfo.Mode())
 		if err != nil {
-			if !rollback {
-				execRes.Err = err
-				return execRes
-			}
-
-			removeBackupErr := frte.FsManager.Remove(backupFilename)
-			if removeBackupErr != nil {
-				logrus.Infof("failed to remove backup file: %v", removeBackupErr)
-			}
 			execRes.Err = err
 			return execRes
 		}
@@ -387,8 +371,9 @@ func ReplaceUsingRegexpWithCount(contents string, re *regexp.Regexp, repl string
 
 	replContents := re.ReplaceAllStringFunc(contents, func(matchStr string) string {
 		if maxRepl == 0 || count < maxRepl {
-			// replace again, this time using matched fragment with replacement using closure captured 're'
 			count++
+			// replace again, this time using matched fragment with replacement using closure captured 're'
+			// this ensures that any reg exp group replacements or similar are applied
 			return re.ReplaceAllString(matchStr, repl)
 		}
 

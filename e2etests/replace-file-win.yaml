@@ -6,7 +6,7 @@ Run:
           this is a file
           created by tacoscript
       - creates:
-        - C:\Windows\temp\testfile.txt
+          - C:\Windows\temp\testfile.txt
   replace-file-skip-as-file-exists:
     file.replace:
       - name: C:\Windows\temp\testfile.txt
@@ -14,7 +14,7 @@ Run:
       - repl: this is a modified file
       - unless:
           # file exists so the exception will not be thrown
-        - if (-not (test-path -Path  C:\Windows\temp\testfile.txt -PathType leaf)) { throw 'missing' }
+          - if (-not (test-path -Path  C:\Windows\temp\testfile.txt -PathType leaf)) { throw 'missing' }
       - shell: powershell.exe
   replace-file:
     file.replace:
@@ -23,7 +23,7 @@ Run:
       - repl: this is a replacement file
       - onlyif:
           # file exists so the exception will not be thrown
-        - if (-not (test-path -Path  C:\Windows\temp\testfile.txt -PathType leaf)) { throw 'missing' }
+          - if (-not (test-path -Path  C:\Windows\temp\testfile.txt -PathType leaf)) { throw 'missing' }
       - shell: powershell.exe
   replace-file-again:
     file.replace:
@@ -31,7 +31,7 @@ Run:
       - pattern: this is a replacement file
       - repl: this is a another replacement file
       - require:
-        -  replace-file
+          - replace-file
 
 On:
   - windows

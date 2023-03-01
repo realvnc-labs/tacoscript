@@ -48,7 +48,7 @@ func TestFileReplaceTaskValidation(t *testing.T) {
 			Task: FileReplaceTask{
 				Name:        "some p",
 				Pattern:     "search for this text",
-				MaxFileSize: "100",
+				MaxFileSize: "100c",
 			},
 			ExpectedErrorStr: conv.ErrFileSizeInvalidUnits.Error(),
 		},
@@ -75,7 +75,7 @@ func TestFileReplaceTaskValidation(t *testing.T) {
 					assert.Equal(t, defaultMaxFileSize, tc.Task.MaxFileSize)
 					fileSize, err := conv.ConvertToFileSize(defaultMaxFileSize)
 					require.NoError(t, err)
-					assert.Equal(t, fileSize, tc.Task.MaxFileSizeCalculated)
+					assert.Equal(t, fileSize, tc.Task.maxFileSizeCalculated)
 				}
 			} else {
 				assert.ErrorContains(t, err, tc.ExpectedErrorStr)
@@ -98,10 +98,8 @@ line 4
 )
 
 func getTestFilename() (name string) {
-	if runtime.GOOS == "windows" {
-		return `c:\windows\temp\testfile.txt`
-	}
-	return "/tmp/testfile.txt"
+	name = os.TempDir() + "/testfile.txt"
+	return name
 }
 
 func WriteTestFile(t *testing.T, filename string, contents string) {
@@ -142,9 +140,9 @@ func TestShouldFailWhenTargetFileNotFound(t *testing.T) {
 
 	var expectedErrStr string
 	if runtime.GOOS == "windows" {
-		expectedErrStr = "CreateFile c:\\windows\\temp\\testfile.txt: The system cannot find the file specified."
+		expectedErrStr = fmt.Sprintf("CreateFile %s: The system cannot find the file specified.", testFilename)
 	} else {
-		expectedErrStr = "stat /tmp/testfile.txt: no such file or directory"
+		expectedErrStr = fmt.Sprintf("stat %s: no such file or directory", testFilename)
 	}
 
 	require.EqualError(t, res.Err, expectedErrStr)
@@ -276,6 +274,7 @@ func TestShouldReplaceAllMatchingItems(t *testing.T) {
 	require.NoError(t, res.Err)
 	require.True(t, task.Updated)
 
+	assert.Equal(t, res.Comment, "File updated")
 	assert.Equal(t, res.Changes["count"], "4 replacement(s) made")
 
 	contents := ReadFileContents(t, testFilename)
@@ -312,6 +311,7 @@ func TestShouldNotReplaceAnything(t *testing.T) {
 	res := executor.Execute(ctx, task)
 	require.NoError(t, res.Err)
 	require.False(t, task.Updated)
+	assert.Equal(t, res.Comment, "File not changed")
 	assert.NotContains(t, res.Changes, "count")
 
 	currContents := ReadFileContents(t, testFilename)
@@ -349,6 +349,7 @@ func TestShouldReplaceCountMatchingItems(t *testing.T) {
 	require.NoError(t, res.Err)
 	require.True(t, task.Updated)
 
+	assert.Equal(t, res.Comment, "File updated")
 	assert.Equal(t, res.Changes["count"], "2 replacement(s) made")
 
 	contents := ReadFileContents(t, testFilename)
@@ -449,6 +450,7 @@ func TestShouldAppendNotFoundContent(t *testing.T) {
 
 	assert.Equal(t, 42, len(contents))
 
+	assert.Equal(t, res.Comment, "File updated")
 	assert.Equal(t, res.Changes["count"], "1 addition(s) made")
 
 	index := strings.Index(contents, "an extra line")
@@ -483,6 +485,7 @@ func TestShouldPrependNotFoundContent(t *testing.T) {
 	require.NoError(t, res.Err)
 	require.True(t, task.Updated)
 
+	assert.Equal(t, res.Comment, "File updated")
 	assert.Equal(t, res.Changes["count"], "1 addition(s) made")
 
 	contents := ReadFileContents(t, testFilename)
@@ -520,6 +523,9 @@ func TestShouldUseReplContentWhenWhenNoNotFoundContent(t *testing.T) {
 	res := executor.Execute(ctx, task)
 	require.NoError(t, res.Err)
 	require.True(t, task.Updated)
+
+	assert.Equal(t, res.Comment, "File updated")
+	assert.Equal(t, res.Changes["count"], "1 addition(s) made")
 
 	contents := ReadFileContents(t, testFilename)
 

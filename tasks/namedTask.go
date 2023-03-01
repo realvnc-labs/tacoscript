@@ -1,6 +1,6 @@
 package tasks
 
-type NamedTask struct {
+type NamedTask struct { // Targets
 	Name  string
 	Names []string
 }
