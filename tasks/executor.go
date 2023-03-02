@@ -14,9 +14,9 @@ type ExecutorRouter struct {
 }
 
 func (er ExecutorRouter) GetExecutor(task Task) (Executor, error) {
-	e, ok := er.Executors[task.GetName()]
+	e, ok := er.Executors[task.GetTypeName()]
 	if !ok {
-		return nil, fmt.Errorf("cannot find executor for task %s", task.GetName())
+		return nil, fmt.Errorf("cannot find executor for task %s", task.GetTypeName())
 	}
 
 	return e, nil

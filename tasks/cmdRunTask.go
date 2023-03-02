@@ -7,8 +7,7 @@ import (
 	"strings"
 	"time"
 
-	exec2 "github.com/cloudradar-monitoring/tacoscript/exec"
-	"gopkg.in/yaml.v2"
+	tacoexec "github.com/cloudradar-monitoring/tacoscript/exec"
 
 	"github.com/cloudradar-monitoring/tacoscript/utils"
 
@@ -21,14 +20,14 @@ type CmdRunTask struct {
 	TypeName string
 	Path     string
 	NamedTask
-	WorkingDir            string
-	User                  string
-	Shell                 string
-	Envs                  conv.KeyValues
-	MissingFilesCondition []string
-	Require               []string
-	OnlyIf                []string
-	Unless                []string
+	WorkingDir string
+	User       string
+	Shell      string
+	Envs       conv.KeyValues
+	Creates    []string
+	Require    []string
+	OnlyIf     []string
+	Unless     []string
 
 	// aborts task execution if one task fails
 	AbortOnError bool
@@ -37,60 +36,86 @@ type CmdRunTask struct {
 type CmdRunTaskBuilder struct {
 }
 
-func (crtb CmdRunTaskBuilder) Build(typeName, path string, ctx interface{}) (Task, error) {
-	t := &CmdRunTask{
+var cmdRunTaskParamsFnMap = taskParamsFnMap{
+	NameField: func(task Task, path string, val interface{}) error {
+		t := task.(*CmdRunTask)
+		t.Name = fmt.Sprint(val)
+		return nil
+	},
+	CwdField: func(task Task, path string, val interface{}) error {
+		t := task.(*CmdRunTask)
+		t.WorkingDir = fmt.Sprint(val)
+		return nil
+	},
+	UserField: func(task Task, path string, val interface{}) error {
+		t := task.(*CmdRunTask)
+		t.User = fmt.Sprint(val)
+		return nil
+	},
+	EnvField: func(task Task, path string, val interface{}) error {
+		var err error
+		t := task.(*CmdRunTask)
+		t.Envs, err = conv.ConvertToKeyValues(val, path)
+		return err
+	},
+	NamesField: func(task Task, path string, val interface{}) error {
+		var err error
+		t := task.(*CmdRunTask)
+		t.Names, err = conv.ConvertToValues(val, path)
+		return err
+	},
+	AbortOnErrorField: func(task Task, path string, val interface{}) error {
+		t := task.(*CmdRunTask)
+		t.AbortOnError = conv.ConvertToBool(val)
+		return nil
+	},
+
+	CreatesField: func(task Task, path string, val interface{}) error {
+		var err error
+		t := task.(*CmdRunTask)
+		t.Creates, err = parseCreatesField(val, path)
+		return err
+	},
+	OnlyIfField: func(task Task, path string, val interface{}) error {
+		var err error
+		t := task.(*CmdRunTask)
+		t.OnlyIf, err = parseOnlyIfField(val, path)
+		return err
+	},
+	UnlessField: func(task Task, path string, val interface{}) error {
+		var err error
+		t := task.(*CmdRunTask)
+		t.Unless, err = parseUnlessField(val, path)
+		return err
+	},
+
+	RequireField: func(task Task, path string, val interface{}) error {
+		var err error
+		t := task.(*CmdRunTask)
+		t.Require, err = parseRequireField(val, path)
+		return err
+	},
+
+	ShellField: func(task Task, path string, val interface{}) error {
+		valStr := fmt.Sprint(val)
+		t := task.(*CmdRunTask)
+		t.Shell = valStr
+		return nil
+	},
+}
+
+func (crtb CmdRunTaskBuilder) Build(typeName, path string, params interface{}) (t Task, err error) {
+	task := &CmdRunTask{
 		TypeName: typeName,
 		Path:     path,
 	}
 
-	errs := utils.Errors{}
+	errs := Build(typeName, path, params, task, cmdRunTaskParamsFnMap)
 
-	for _, item := range ctx.([]interface{}) {
-		row := item.(yaml.MapSlice)[0]
-		key := row.Key.(string)
-		val := row.Value
-
-		var err error
-		switch key {
-		case NameField:
-			t.Name = fmt.Sprint(val)
-		case CwdField:
-			t.WorkingDir = fmt.Sprint(val)
-		case UserField:
-			t.User = fmt.Sprint(val)
-		case ShellField:
-			t.Shell = fmt.Sprint(val)
-		case EnvField:
-			var envs conv.KeyValues
-			envs, err = conv.ConvertToKeyValues(val, path)
-			errs.Add(err)
-			t.Envs = envs
-		case CreatesField:
-			t.MissingFilesCondition, err = parseCreatesField(val, path)
-			errs.Add(err)
-		case NamesField:
-			var names []string
-			names, err = conv.ConvertToValues(val, path)
-			errs.Add(err)
-			t.Names = names
-		case RequireField:
-			t.Require, err = parseRequireField(val, path)
-			errs.Add(err)
-		case OnlyIf:
-			t.OnlyIf, err = parseOnlyIfField(val, path)
-			errs.Add(err)
-		case Unless:
-			t.Unless, err = parseUnlessField(val, path)
-			errs.Add(err)
-		case AbortOnErrorField:
-			t.AbortOnError = conv.ConvertToBool(val)
-		}
-	}
-
-	return t, errs.ToError()
+	return task, errs.ToError()
 }
 
-func (crt *CmdRunTask) GetName() string {
+func (crt *CmdRunTask) GetTypeName() string {
 	return crt.TypeName
 }
 
@@ -120,8 +145,20 @@ func (crt *CmdRunTask) String() string {
 	return conv.ConvertSourceToJSONStrIfPossible(crt)
 }
 
+func (crt *CmdRunTask) GetOnlyIfCmds() []string {
+	return crt.OnlyIf
+}
+
+func (crt *CmdRunTask) GetUnlessCmds() []string {
+	return crt.Unless
+}
+
+func (crt *CmdRunTask) GetCreatesFilesList() []string {
+	return crt.Creates
+}
+
 type CmdRunTaskExecutor struct {
-	Runner    exec2.Runner
+	Runner    tacoexec.Runner
 	FsManager FsManager
 }
 
@@ -135,7 +172,7 @@ func (crte *CmdRunTaskExecutor) Execute(ctx context.Context, task Task) Executio
 	execRes.Name = strings.Join(cmdRunTask.GetNames(), "; ")
 
 	var stdoutBuf, stderrBuf bytes.Buffer
-	execCtx := &exec2.Context{
+	execCtx := &tacoexec.Context{
 		Ctx:          ctx,
 		StdoutWriter: &stdoutBuf,
 		StderrWriter: &stderrBuf,
@@ -147,7 +184,7 @@ func (crte *CmdRunTaskExecutor) Execute(ctx context.Context, task Task) Executio
 		Shell:        cmdRunTask.Shell,
 	}
 
-	shouldNotBeExecutedReason, err := crte.shouldBeExecuted(execCtx, cmdRunTask)
+	shouldNotBeExecutedReason, err := checkConditionals(execCtx, crte.FsManager, crte.Runner, cmdRunTask)
 	if err != nil {
 		execRes.Err = err
 		return execRes
@@ -175,113 +212,4 @@ func (crte *CmdRunTaskExecutor) Execute(ctx context.Context, task Task) Executio
 	execRes.Pid = execCtx.Pid
 
 	return execRes
-}
-
-func (crte *CmdRunTaskExecutor) checkOnlyIfs(ctx *exec2.Context, cmdRunTask *CmdRunTask) (isSuccess bool, err error) {
-	if len(cmdRunTask.OnlyIf) == 0 {
-		return true, nil
-	}
-
-	newCtx := ctx.Copy()
-
-	newCtx.Cmds = cmdRunTask.OnlyIf
-	err = crte.Runner.Run(&newCtx)
-
-	if err != nil {
-		runErr, isRunErr := err.(exec2.RunError)
-		if isRunErr {
-			logrus.Debugf("will skip %s since onlyif condition has failed: %v", cmdRunTask.Path, runErr)
-			return false, nil
-		}
-
-		return false, err
-	}
-
-	return true, nil
-}
-
-func (crte *CmdRunTaskExecutor) checkUnless(ctx *exec2.Context, cmdRunTask *CmdRunTask) (isExpectationSuccess bool, err error) {
-	if len(cmdRunTask.Unless) == 0 {
-		return true, nil
-	}
-
-	newCtx := ctx.Copy()
-
-	newCtx.Cmds = cmdRunTask.Unless
-
-	err = crte.Runner.Run(&newCtx)
-
-	if err != nil {
-		runErr, isRunErr := err.(exec2.RunError)
-		if isRunErr {
-			logrus.Infof("will continue cmd since at least one unless condition has failed: %v", runErr)
-			return true, nil
-		}
-
-		return false, err
-	}
-
-	logrus.Debugf("any unless condition didn't fail for task '%s'", cmdRunTask.Path)
-	return false, nil
-}
-
-func (crte *CmdRunTaskExecutor) shouldBeExecuted(ctx *exec2.Context, cmdRunTask *CmdRunTask) (skipExecutionReason string, err error) {
-	isExists, filename, err := crte.checkMissingFileCondition(cmdRunTask)
-	if err != nil {
-		return "", err
-	}
-
-	if isExists {
-		skipExecutionReason = fmt.Sprintf("file %s exists", filename)
-		logrus.Debugf(skipExecutionReason+", will skip the execution of %s", cmdRunTask.Path)
-		return skipExecutionReason, nil
-	}
-
-	isSuccess, err := crte.checkOnlyIfs(ctx, cmdRunTask)
-	if err != nil {
-		return "", err
-	}
-
-	if !isSuccess {
-		return onlyIfConditionFailedReason, nil
-	}
-
-	isExpectationSuccess, err := crte.checkUnless(ctx, cmdRunTask)
-	if err != nil {
-		return "", err
-	}
-
-	if !isExpectationSuccess {
-		skipExecutionReason = "unless condition is true"
-		logrus.Debugf(skipExecutionReason+", will skip %s", cmdRunTask.Path)
-		return skipExecutionReason, nil
-	}
-
-	logrus.Debugf("all execution conditions are met, will continue %s", cmdRunTask.Path)
-	return "", nil
-}
-
-func (crte *CmdRunTaskExecutor) checkMissingFileCondition(cmdRunTask *CmdRunTask) (isExists bool, filename string, err error) {
-	if len(cmdRunTask.MissingFilesCondition) == 0 {
-		return
-	}
-
-	for _, missingFileCondition := range cmdRunTask.MissingFilesCondition {
-		if missingFileCondition == "" {
-			continue
-		}
-		isExists, err = crte.FsManager.FileExists(missingFileCondition)
-		if err != nil {
-			err = fmt.Errorf("failed to check if file '%s' exists: %w", missingFileCondition, err)
-			return
-		}
-
-		if isExists {
-			logrus.Debugf("file '%s' exists", missingFileCondition)
-			return true, missingFileCondition, nil
-		}
-		logrus.Debugf("file '%s' doesn't exist", missingFileCondition)
-	}
-
-	return
 }

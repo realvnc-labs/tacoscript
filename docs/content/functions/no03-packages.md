@@ -1,8 +1,9 @@
 ---
-title: "Packages"
-weight: 2
+title: 'Packages'
+weight: 3
 slug: packages
 ---
+
 {{< toc >}}
 
 ## Preface
@@ -35,10 +36,10 @@ system. The `bash` shell will be used. Before running installation it will updat
 (`refresh` = true). If this script is executed under the Ubuntu/Debian Linux OS, the tacoscript will execute this
 command as:
 
-````shell
+```shell
 apt update -y
 apt install -y neovim=0.4.3-3
-````
+```
 
 The script will be only executed after `create-file` script. So the tacoscript interpreter will make sure that the
 `create-file` script is executed before `install-neovim` and only if it was successful.
@@ -111,7 +112,7 @@ If true, the tacoscript will update list of available packages, e.g. execute `ap
 ### OS Support
 
 | OS      | OS Platform   | Package manager           | Installation script to be executed, e.g. vim |
-|---------|---------------|---------------------------|----------------------------------------------|
+| ------- | ------------- | ------------------------- | -------------------------------------------- |
 | macOS   | Darwin        | brew                      | `brew install vim`                           |
 | Linux   | Ubuntu/Debian | apt (fallback to apt-get) | `apt install -y vim`                         |
 | Linux   | CentOS/Redhat | dnf (fallback to yum)     | `dnf install -y vim`                         |
@@ -188,12 +189,12 @@ See #pkg.installed for reverence.
 
 ### OS Support
 
-| OS      | OS Platform   | Package manager           | Installation script to be executed, e.g. vim    |
-|---------|---------------|---------------------------|-------------------------------------------------|
-| macOS   | Darwin        | brew                      | `brew upgrade vim`                              |
-| Linux   | Ubuntu/Debian | apt (fallback to apt-get) | `apt upgrade -y vim`                            |
-| Linux   | CentOS/Redhat | dnf (fallback to yum)     | `dnf upgrade -y vim`                            |
-| Windows | Windows       | choco                     | `choco upgrade -y vim`                          |
+| OS      | OS Platform   | Package manager           | Installation script to be executed, e.g. vim |
+| ------- | ------------- | ------------------------- | -------------------------------------------- |
+| macOS   | Darwin        | brew                      | `brew upgrade vim`                           |
+| Linux   | Ubuntu/Debian | apt (fallback to apt-get) | `apt upgrade -y vim`                         |
+| Linux   | CentOS/Redhat | dnf (fallback to yum)     | `dnf upgrade -y vim`                         |
+| Windows | Windows       | choco                     | `choco upgrade -y vim`                       |
 
 Note if a corresponding package manager is not installed on the host system, a fallback will be used.
 If both are not available, the script will fail. If the package is not yet installed, the behaviour will vary
@@ -264,12 +265,12 @@ See #pkg.installed for reverence.
 
 ### OS Support
 
-| OS      | OS Platform   | Package manager           | Installation script to be executed, e.g. vim    |
-|---------|---------------|---------------------------|-------------------------------------------------|
-| macOS   | Darwin        | brew                      | `brew uninstall vim`                            |
-| Linux   | Ubuntu/Debian | apt (fallback to apt-get) | `apt remove -y vim`                             |
-| Linux   | CentOS/Redhat | dnf (fallback to yum)     | `dnf remove -y vim`                             |
-| Windows | Windows       | choco                     | `choco uninstall -y vim`                        |
+| OS      | OS Platform   | Package manager           | Installation script to be executed, e.g. vim |
+| ------- | ------------- | ------------------------- | -------------------------------------------- |
+| macOS   | Darwin        | brew                      | `brew uninstall vim`                         |
+| Linux   | Ubuntu/Debian | apt (fallback to apt-get) | `apt remove -y vim`                          |
+| Linux   | CentOS/Redhat | dnf (fallback to yum)     | `dnf remove -y vim`                          |
+| Windows | Windows       | choco                     | `choco uninstall -y vim`                     |
 
 Note if a corresponding package manager is not installed on the host system, a fallback be used.
 If both are not available, the script will fail.

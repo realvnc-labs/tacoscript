@@ -13,9 +13,12 @@ type TaskMock struct {
 	ID           string
 	ExecResult   tasks.ExecutionResult
 	Requirements []string
+	OnlyIf       []string
+	Unless       []string
+	Creates      []string
 }
 
-func (tm *TaskMock) GetName() string {
+func (tm *TaskMock) GetTypeName() string {
 	return "TaskMock"
 }
 
@@ -29,6 +32,18 @@ func (tm *TaskMock) GetPath() string {
 
 func (tm *TaskMock) GetRequirements() []string {
 	return tm.Requirements
+}
+
+func (tm *TaskMock) GetOnlyIfCmds() []string {
+	return tm.OnlyIf
+}
+
+func (tm *TaskMock) GetUnlessCmds() []string {
+	return tm.Unless
+}
+
+func (tm *TaskMock) GetCreatesFilesList() []string {
+	return tm.Creates
 }
 
 type ExecutorMock struct {

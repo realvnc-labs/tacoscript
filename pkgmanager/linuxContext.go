@@ -1,7 +1,7 @@
 //go:build linux
 // +build linux
 
-package pkg
+package pkgmanager
 
 import (
 	"fmt"
@@ -40,7 +40,7 @@ func init() {
 		logrus.Error(err)
 		return
 	}
-	osPlatform = templateVariables[utils.OSPlatform].(string)
+	osPlatform = templateVariables[utils.OSPlatform]
 }
 
 func BuildManagementCmdsProviders() ([]ManagementCmdsProvider, error) {

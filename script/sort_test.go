@@ -17,13 +17,13 @@ func TestSort(t *testing.T) {
 				{
 					ID: "script 7",
 					Tasks: []tasks.Task{
-						RequirementsTaskMock{
+						&RequirementsTaskMock{
 							RequirementsToGive: []string{"script 5"},
 						},
-						RequirementsTaskMock{
+						&RequirementsTaskMock{
 							RequirementsToGive: []string{"script 6"},
 						},
-						RequirementsTaskMock{
+						&RequirementsTaskMock{
 							RequirementsToGive: []string{"script 1"},
 						},
 					},
@@ -43,7 +43,7 @@ func TestSort(t *testing.T) {
 				{
 					ID: "script 8",
 					Tasks: []tasks.Task{
-						RequirementsTaskMock{
+						&RequirementsTaskMock{
 							RequirementsToGive: []string{"script 1"},
 						},
 					},
@@ -64,7 +64,7 @@ func TestSort(t *testing.T) {
 				{
 					ID: "script 1",
 					Tasks: []tasks.Task{
-						RequirementsTaskMock{
+						&RequirementsTaskMock{
 							RequirementsToGive: []string{"script 2", "script 3"},
 						},
 					},
@@ -85,13 +85,13 @@ func TestSort(t *testing.T) {
 				{
 					ID: "script 12",
 					Tasks: []tasks.Task{
-						RequirementsTaskMock{
+						&RequirementsTaskMock{
 							RequirementsToGive: []string{"script 10"},
 						},
-						RequirementsTaskMock{
+						&RequirementsTaskMock{
 							RequirementsToGive: []string{"script 10"},
 						},
-						RequirementsTaskMock{
+						&RequirementsTaskMock{
 							RequirementsToGive: []string{"script 11"},
 						},
 					},
@@ -99,7 +99,7 @@ func TestSort(t *testing.T) {
 				{
 					ID: "script 10",
 					Tasks: []tasks.Task{
-						RequirementsTaskMock{
+						&RequirementsTaskMock{
 							RequirementsToGive: []string{"script 11"},
 						},
 					},

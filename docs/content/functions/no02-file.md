@@ -1,8 +1,9 @@
 ---
-title: "File"
+title: 'File'
 weight: 2
 slug: file
 ---
+
 {{< toc >}}
 
 ## Preface
@@ -25,7 +26,7 @@ maintain-my-file:
     - source: https://github.com/notepad-plus-plus/notepad-plus-plus/releases/download/v7.8.8/npp.7.8.8.Installer.x64.exe
     - source_hash: md5=79eef25f9b0b2c642c62b7f737d4f53f
     - makedirs: true # default false
-    - replace: false # default true
+    - repl: false # default true
     - creates: 'C:\Program Files\notepad++\notepad++.exe'
 ```
 
@@ -56,7 +57,7 @@ another-file:
     - mode: 0755
     - encoding: UTF-8
     - onlyif:
-      - which apache2
+        - which apache2
 ```
 
 We can read it as following:
@@ -181,7 +182,7 @@ another-url:
   file.managed:
     - name: /tmp/sub/some/dir/utf8-js-1.json
     - makedirs: true
-    - replace: false
+    - repl: false
     - user: root
     - group: root
     - mode: 0755
@@ -194,7 +195,7 @@ another-url:
   file.managed:
     - name: /tmp/sub/some/dir/utf8-js-1.json
     - makedirs: true
-    - creates:  /tmp/sub/some/dir/utf8-js-1.json
+    - creates: /tmp/sub/some/dir/utf8-js-1.json
     - user: root
     - group: root
     - mode: 0755
@@ -345,57 +346,159 @@ After this script, the file `my-file-win1251.txt` will be saved in windows1251 e
 
 {{< expand "list of supported encoding names" "click to expand..." >}}
 
-* codepage037
-* codepage1047
-* codepage1140
-* codepage437
-* codepage850
-* codepage852
-* codepage855
-* codepage858
-* codepage860
-* codepage862
-* codepage863
-* codepage865
-* codepage866
-* iso8859_1
-* iso8859_10
-* iso8859_13
-* iso8859_14
-* iso8859_15
-* iso8859_16
-* iso8859_2
-* iso8859_3
-* iso8859_4
-* iso8859_5
-* iso8859_6
-* iso8859_7
-* iso8859_8
-* iso8859_9
-* koi8r
-* koi8u
-* macintosh
-* macintoshcyrillic
-* windows1250
-* windows1251
-* windows1252
-* windows1253
-* windows1254
-* windows1255
-* windows1256
-* windows1257
-* windows1258
-* windows874
-* gb18030
-* gbk
-* big5
-* eucjp
-* iso2022jp
-* shiftJIS
-* euckr
-* utf16be
-* utf16le
-* utf8
-* utf-8
-{{< /expand >}}
-Tacoscript will fail, if an unsupported encoding is provided.
+- codepage037
+- codepage1047
+- codepage1140
+- codepage437
+- codepage850
+- codepage852
+- codepage855
+- codepage858
+- codepage860
+- codepage862
+- codepage863
+- codepage865
+- codepage866
+- iso8859_1
+- iso8859_10
+- iso8859_13
+- iso8859_14
+- iso8859_15
+- iso8859_16
+- iso8859_2
+- iso8859_3
+- iso8859_4
+- iso8859_5
+- iso8859_6
+- iso8859_7
+- iso8859_8
+- iso8859_9
+- koi8r
+- koi8u
+- macintosh
+- macintoshcyrillic
+- windows1250
+- windows1251
+- windows1252
+- windows1253
+- windows1254
+- windows1255
+- windows1256
+- windows1257
+- windows1258
+- windows874
+- gb18030
+- gbk
+- big5
+- eucjp
+- iso2022jp
+- shiftJIS
+- euckr
+- utf16be
+- utf16le
+- utf8
+- utf-8
+  {{< /expand >}}
+  Tacoscript will fail, if an unsupported encoding is provided.
+
+## `file.replace`
+
+The task `file.replace` allows you to replace the contents of files using regular expressions.
+
+`file.replace` has following format:
+
+```yaml
+maintain-my-file:
+  file.replace:
+    - name: ~/.aws/config
+    - pattern: region = us-east-1
+    - repl: region = ap-southeast-1
+    - onlyif:
+      ~/.aws/config
+```
+
+We can interpret this script as:
+
+1. Only perform this task if the file `~/.aws/config` exists
+2. Using `~/.aws/config`, replace `region = us-east-1` with `region = ap-southeast-1`
+3. No backup will be made as the `backup` property is not set
+
+Here is another `file.replace` task:
+
+```yaml
+another-file:
+  file.replace:
+    - name: ~/.aws/config
+    - pattern: region = us-east-2(.*)$
+    - repl: region = us-west-2$1
+    - backup: "bak"
+    - onlyif:
+      ~/.aws/config
+```
+
+We can read it as following:
+
+1. Only perform this task if the file `~/.aws/config` exists
+2. Using `~/.aws/config` then using a regex pattern, replace the `us-east-2` region with `ap-southeast-2` but keep the same availability zone
+3. Make a backup with the extension `.bak`
+
+{{< heading-supported-parameters >}}
+
+### `name`
+
+{{< parameter required=1 type=string >}}
+
+`name` is the file path of the target file. `file.replaced` will search the contents of this file for the `pattern` provided.
+
+### `pattern`
+
+{{< parameter required=1 type=string >}}
+
+Contains the regular expression to search for in the target file. The regular expressions supported use the golang regexp engine.
+Group replacements are supported using the standard `()` and `$` notations.
+
+### `repl`
+
+{{< parameter required=1 type=string >}}
+
+This is the text that will replace any text matching the `pattern` specified in the file indicated by `name`.
+
+### `count`
+
+{{< parameter type=string >}}
+
+The number of replacements in the target file can be limited by using the `count` parameter.
+
+### `append_if_not_found`
+
+{{< parameter type=string >}}
+
+If set to `true` then either the text specified by the `not_found_content` will be appended to the target file. If the
+`not_found_context` parameter is empty then any content in the `repl` parameter will be used.
+
+### `prepend_if_not_found`
+
+{{< parameter type=string >}}
+
+If set to `true` then either the text specified by the `not_found_content` will be prepended to the target file. If the
+`not_found_context` parameter is empty then any content in the `repl` parameter will be used.
+
+### `not_found_content`
+
+{{< parameter type=string >}}
+
+The text specified by this property will be used when either the `append_if_not_found` or `prepend_if_not_found`
+parameters are set to `true`. The text will be appended or prepended to the target file accordingly.
+
+### `backup`
+
+{{< parameter type=string >}}
+
+If set then this value will be used as an filename extension to be added to a backup copy of the target file. If not set
+then no backup file will be created.
+
+### `max_file_size`
+
+{{< parameter type=string default="500k">}}
+
+If set then target files whose size is greater will be skipped.

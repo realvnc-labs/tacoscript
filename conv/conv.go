@@ -1,9 +1,11 @@
 package conv
 
 import (
+	"errors"
 	"fmt"
 	"os"
 	"strconv"
+	"strings"
 
 	"gopkg.in/yaml.v2"
 )
@@ -105,4 +107,64 @@ func ConvertToFileMode(val interface{}) (os.FileMode, error) {
 	}
 
 	return os.FileMode(i64), nil
+}
+
+var (
+	ErrNotANumber           = errors.New("file size is not a number")
+	ErrFileSizeInvalidUnits = errors.New("file size has invalid units")
+)
+
+func ConvertToFileSize(val interface{}) (convertedVal uint64, err error) {
+	valStr := fmt.Sprint(val)
+	valLen := len(valStr)
+
+	// byte string assumed
+	valPart := valStr[:valLen-1]
+	units := valStr[valLen-1:]
+
+	if !isNumber(valPart) {
+		return 0, ErrNotANumber
+	}
+
+	// assume bytes to start with
+	multiplier := 1
+
+	// if we have units, work out the multiplier
+	if !isNumber(units) {
+		multiplier, err = getMultiplierFromUnits(units)
+		if err != nil {
+			return 0, err
+		}
+	} else {
+		// make sure to include the last digit again
+		valPart = valStr
+	}
+
+	valNum, err := strconv.ParseUint(valPart, 10, 64)
+	if err != nil {
+		return 0, err
+	}
+	convertedVal = valNum * uint64(multiplier)
+	return convertedVal, nil
+}
+
+func getMultiplierFromUnits(units string) (multiplier int, err error) {
+	switch strings.ToLower(units) {
+	case "b":
+		multiplier = 1
+	case "k":
+		multiplier = 1024
+	case "m":
+		multiplier = 1024 * 1024
+	case "g":
+		multiplier = 1024 * 1024 * 1024
+	default:
+		return 0, ErrFileSizeInvalidUnits
+	}
+	return multiplier, nil
+}
+
+func isNumber(str string) bool {
+	_, err := strconv.Atoi(str)
+	return err == nil
 }

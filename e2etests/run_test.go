@@ -151,11 +151,11 @@ func TestTacoScript(t *testing.T) {
 			// Validate the results are as expected
 			assert.NoError(t, err)
 			assert.Equal(t, tacoTempFile, result.Summary.Script, "Validating Summary.Script")
-			assert.Equal(t, result.Summary.Changes, test.Expect.Summary.Changes, "Validating Summary.Changes")
-			assert.Equal(t, result.Summary.Succeeded, test.Expect.Summary.Succeeded, "Validating Summary.Succeeded")
-			assert.Equal(t, result.Summary.Aborted, test.Expect.Summary.Aborted, "Validating Summary.Aborted")
-			assert.Equal(t, result.Summary.Failed, test.Expect.Summary.Failed, "Validating Summary.Failed")
-			assert.Equal(t, result.Summary.TotalTasksRun, test.Expect.Summary.TotalTasksRun, "Validating Summary.TotalTasksRun")
+			assert.Equal(t, test.Expect.Summary.Changes, result.Summary.Changes, "Validating Summary.Changes")
+			assert.Equal(t, test.Expect.Summary.Succeeded, result.Summary.Succeeded, "Validating Summary.Succeeded")
+			assert.Equal(t, test.Expect.Summary.Aborted, result.Summary.Aborted, "Validating Summary.Aborted")
+			assert.Equal(t, test.Expect.Summary.Failed, result.Summary.Failed, "Validating Summary.Failed")
+			assert.Equal(t, test.Expect.Summary.TotalTasksRun, result.Summary.TotalTasksRun, "Validating Summary.TotalTasksRun")
 
 			// Range over the results of each task
 			for _, taskResult := range result.Results {

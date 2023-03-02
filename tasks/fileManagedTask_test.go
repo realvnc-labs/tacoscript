@@ -30,16 +30,17 @@ func init() {
 }
 
 type fileManagedTestCase struct {
-	Name                   string
-	ContentToWrite         string
-	ContentEncodingToWrite string
-	LogExpectation         string
-	Task                   *FileManagedTask
-	ExpectedResult         ExecutionResult
-	RunnerMock             *appExec.SystemRunner
-	FileExpectation        *apptest.FileExpectation
-	ExpectedCmdStrs        []string
-	ErrorExpectation       *apptest.ErrorExpectation
+	Name                string
+	InitialFileContents string
+	ContentEncoding     string
+	LogExpectation      string
+	Task                *FileManagedTask
+	ExpectedResult      ExecutionResult
+	RunnerMock          *appExec.SystemRunner
+	FileExpectation     *apptest.FileExpectation
+	ExpectedCmdStrs     []string
+	ErrorExpectation    *apptest.ErrorExpectation
+	ChangeExpectations  map[string]string
 }
 
 func TestFileManagedTaskExecution(t *testing.T) {
@@ -48,11 +49,14 @@ func TestFileManagedTaskExecution(t *testing.T) {
 
 	const ftpPort = 3021
 
-	ftpURL, err := apptest.StartFTPServer(ctx, ftpPort, time.Millisecond*300)
+	ftpURL, ftpSrv, err := apptest.StartFTPServer(ctx, ftpPort, time.Millisecond*300)
 	assert.NoError(t, err)
 	if err != nil {
 		return
 	}
+	defer func() {
+		_ = ftpSrv.Shutdown()
+	}()
 
 	httpSrvURL, httpSrv, err := apptest.StartHTTPServer(false)
 	assert.NoError(t, err)
@@ -124,7 +128,7 @@ func TestFileManagedTaskExecution(t *testing.T) {
 			ExpectedResult: ExecutionResult{
 				IsSkipped: true,
 			},
-			ContentToWrite: "one two three",
+			InitialFileContents: "one two three",
 		},
 		{
 			Name: "test_wrong_hash_format_error",
@@ -290,25 +294,32 @@ func TestFileManagedTaskExecution(t *testing.T) {
 					Valid: true,
 					String: `one
 two
-three`,
+three
+four`,
 				},
 				Replace: true,
 				Mode:    0777,
 			},
-			ContentToWrite: "one two three",
-			ExpectedResult: ExecutionResult{},
+			InitialFileContents: "one two three four five",
+			ExpectedResult:      ExecutionResult{},
 			FileExpectation: &apptest.FileExpectation{
 				FilePath:     "contentsToFile.txt",
 				ShouldExist:  true,
 				ExpectedMode: 0777,
 				ExpectedContent: `one
 two
-three`,
+three
+four`,
 			},
-			LogExpectation: `-one
--two
--three
-+one two three
+			ChangeExpectations: map[string]string{
+				"size_diff": "-5 bytes",
+				"length":    "18 bytes written",
+			},
+			LogExpectation: `-one two three four five
++one
++two
++three
++four
 `,
 		},
 		{
@@ -323,7 +334,7 @@ two
 three`,
 				},
 			},
-			ContentToWrite: `one
+			InitialFileContents: `one
 two
 three`,
 			ExpectedResult: ExecutionResult{IsSkipped: true},
@@ -389,7 +400,7 @@ three`,
 				},
 				Mode: 0777,
 			},
-			ContentToWrite: "one two three",
+			InitialFileContents: "one two three",
 			FileExpectation: &apptest.FileExpectation{
 				FilePath:        "existingFileToReplace.txt",
 				ShouldExist:     true,
@@ -409,7 +420,7 @@ three`,
 					Valid:  true,
 				},
 			},
-			ContentToWrite: "one",
+			InitialFileContents: "one",
 			FileExpectation: &apptest.FileExpectation{
 				FilePath:        "existingFileToReplace2.txt",
 				ShouldExist:     true,
@@ -429,7 +440,7 @@ three`,
 					RawLocation: httpSrvURL.String(),
 				},
 			},
-			ContentToWrite: " ",
+			InitialFileContents: " ",
 			FileExpectation: &apptest.FileExpectation{
 				FilePath:        "skipVerifyFileSuccess.txt",
 				ShouldExist:     true,
@@ -449,7 +460,7 @@ three`,
 					RawLocation: ftpURL.String(),
 				},
 			},
-			ContentToWrite: "one two three",
+			InitialFileContents: "one two three",
 			FileExpectation: &apptest.FileExpectation{
 				FilePath:        "skipVerifyFileNoChange.txt",
 				ShouldExist:     true,
@@ -470,7 +481,7 @@ three`,
 				},
 				Mode: 0777,
 			},
-			ContentToWrite: " ",
+			InitialFileContents: " ",
 			FileExpectation: &apptest.FileExpectation{
 				FilePath:        "skipVerifyFileLocalSuccess.txt",
 				ShouldExist:     true,
@@ -511,9 +522,9 @@ three`,
 				Mode:     0777,
 				Encoding: "gb18030",
 			},
-			ContentToWrite:         "一些中文内",
-			ContentEncodingToWrite: "gb18030",
-			ExpectedResult:         ExecutionResult{},
+			InitialFileContents: "一些中文内",
+			ContentEncoding:     "gb18030",
+			ExpectedResult:      ExecutionResult{},
 			FileExpectation: &apptest.FileExpectation{
 				FilePath:         "encodingWithContentCompare.txt",
 				ShouldExist:      true,
@@ -521,8 +532,8 @@ three`,
 				ExpectedContent:  `一些中文内容`,
 				ExpectedEncoding: "gb18030",
 			},
-			LogExpectation: `-一些中文内容
-+一些中文内
+			LogExpectation: `-一些中文内
++一些中文内容
 `,
 		},
 	}
@@ -536,12 +547,12 @@ three`,
 		tc := testCase
 		lc := logsCollection
 		t.Run(tc.Name, func(tt *testing.T) {
-			if tc.ContentToWrite != "" {
+			if tc.InitialFileContents != "" {
 				var e error
-				if tc.ContentEncodingToWrite != "" {
-					e = utils.WriteEncodedFile(tc.ContentEncodingToWrite, tc.ContentToWrite, tc.Task.Name, 0600)
+				if tc.ContentEncoding != "" {
+					e = utils.WriteEncodedFile(tc.ContentEncoding, tc.InitialFileContents, tc.Task.Name, 0600)
 				} else {
-					e = os.WriteFile(tc.Task.Name, []byte(tc.ContentToWrite), 0600)
+					e = os.WriteFile(tc.Task.Name, []byte(tc.InitialFileContents), 0600)
 				}
 				assert.NoError(t, e)
 			}
@@ -606,6 +617,22 @@ func assertTestCase(t *testing.T, tc *fileManagedTestCase, res *ExecutionResult,
 
 	if !isExpectationMatched {
 		assert.Fail(t, nonMatchedReason)
+	}
+
+	if tc.ChangeExpectations != nil {
+		for expChangeKey, expValue := range tc.ChangeExpectations {
+			found := false
+			for key, value := range res.Changes {
+				if expChangeKey == key {
+					assert.Equal(t, expValue, value)
+					found = true
+					break
+				}
+			}
+			if !found {
+				assert.True(t, found, "expected change "+expChangeKey+" not found")
+			}
+		}
 	}
 }
 

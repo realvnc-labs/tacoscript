@@ -13,10 +13,13 @@ type Script struct {
 }
 
 type Task interface {
-	GetName() string
+	GetTypeName() string
 	Validate() error
 	GetPath() string
 	GetRequirements() []string
+	GetCreatesFilesList() []string
+	GetOnlyIfCmds() []string
+	GetUnlessCmds() []string
 }
 
 type ExecutionResult struct {

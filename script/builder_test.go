@@ -45,9 +45,12 @@ type TaskBuilderTaskMock struct {
 	Context         interface{}
 	ValidationError error
 	Requirements    []string
+	OnlyIf          []string
+	Unless          []string
+	Creates         []string
 }
 
-func (tm *TaskBuilderTaskMock) GetName() string {
+func (tm *TaskBuilderTaskMock) GetTypeName() string {
 	return tm.TypeName
 }
 
@@ -75,12 +78,24 @@ func (tm *TaskBuilderTaskMock) GetRequirements() []string {
 	return tm.Requirements
 }
 
+func (tm *TaskBuilderTaskMock) GetOnlyIfCmds() []string {
+	return tm.OnlyIf
+}
+
+func (tm *TaskBuilderTaskMock) GetUnlessCmds() []string {
+	return tm.Unless
+}
+
+func (tm *TaskBuilderTaskMock) GetCreatesFilesList() []string {
+	return tm.Creates
+}
+
 type TemplateVariablesProviderMock struct {
-	Variables              map[string]interface{}
+	Variables              utils.TemplateVarsMap
 	TemplateVariablesError error
 }
 
-func (tvpm TemplateVariablesProviderMock) GetTemplateVariables() (map[string]interface{}, error) {
+func (tvpm TemplateVariablesProviderMock) GetTemplateVariables() (utils.TemplateVarsMap, error) {
 	return tvpm.Variables, tvpm.TemplateVariablesError
 }
 
@@ -94,7 +109,7 @@ func TestBuilder(t *testing.T) {
 		ExpectedErrMsg         string
 		ExpectedScripts        tasks.Scripts
 		TaskRequirements       []string
-		TemplateVariables      map[string]interface{}
+		TemplateVariables      utils.TemplateVarsMap
 		TemplateVariablesError error
 	}{
 		{
@@ -107,20 +122,20 @@ func TestBuilder(t *testing.T) {
 							TypeName: "cmd.run",
 							Path:     "cwd.cmd.run[1]",
 							Context: []interface{}{
-								yaml.MapSlice{yaml.MapItem{tasks.NameField, "echo ${PASSWORD}"}},
-								yaml.MapSlice{yaml.MapItem{tasks.CwdField, "/usr/tmp"}},
-								yaml.MapSlice{yaml.MapItem{tasks.ShellField, "zsh"}},
-								yaml.MapSlice{yaml.MapItem{tasks.EnvField, []interface{}{
-									yaml.MapSlice{yaml.MapItem{"PASSWORD", "bunny"}},
+								yaml.MapSlice{yaml.MapItem{Key: tasks.NameField, Value: "echo ${PASSWORD}"}},
+								yaml.MapSlice{yaml.MapItem{Key: tasks.CwdField, Value: "/usr/tmp"}},
+								yaml.MapSlice{yaml.MapItem{Key: tasks.ShellField, Value: "zsh"}},
+								yaml.MapSlice{yaml.MapItem{Key: tasks.EnvField, Value: []interface{}{
+									yaml.MapSlice{yaml.MapItem{Key: "PASSWORD", Value: "bunny"}},
 								}}},
-								yaml.MapSlice{yaml.MapItem{tasks.CreatesField, "/tmp/my-date.txt"}},
-								yaml.MapSlice{yaml.MapItem{tasks.UserField, "root"}},
-								yaml.MapSlice{yaml.MapItem{tasks.NamesField, []interface{}{
+								yaml.MapSlice{yaml.MapItem{Key: tasks.CreatesField, Value: "/tmp/my-date.txt"}},
+								yaml.MapSlice{yaml.MapItem{Key: tasks.UserField, Value: "root"}},
+								yaml.MapSlice{yaml.MapItem{Key: tasks.NamesField, Value: []interface{}{
 									"name one",
 									"name two",
 									"name three",
 								}}},
-								yaml.MapSlice{yaml.MapItem{tasks.OnlyIf, "echo 1"}},
+								yaml.MapSlice{yaml.MapItem{Key: tasks.OnlyIfField, Value: "echo 1"}},
 							},
 							ValidationError: nil,
 						},
@@ -160,17 +175,17 @@ func TestBuilder(t *testing.T) {
 							TypeName: "cmd.run",
 							Path:     "cwd.cmd.run[1]",
 							Context: []interface{}{
-								yaml.MapSlice{yaml.MapItem{tasks.NamesField, []interface{}{
+								yaml.MapSlice{yaml.MapItem{Key: tasks.NamesField, Value: []interface{}{
 									"run one",
 									"run two",
 									"run three",
 								}}},
-								yaml.MapSlice{yaml.MapItem{tasks.RequireField, []interface{}{
+								yaml.MapSlice{yaml.MapItem{Key: tasks.RequireField, Value: []interface{}{
 									"req one",
 									"req two",
 									"req three",
 								}}},
-								yaml.MapSlice{yaml.MapItem{tasks.OnlyIf, []interface{}{
+								yaml.MapSlice{yaml.MapItem{Key: tasks.OnlyIfField, Value: []interface{}{
 									"onlyif one",
 									"onlyif two",
 									"onlyif three",
@@ -192,14 +207,14 @@ func TestBuilder(t *testing.T) {
 							TypeName: "cmd.run",
 							Path:     "manyCreates.cmd.run[1]",
 							Context: []interface{}{
-								yaml.MapSlice{yaml.MapItem{tasks.NameField, "many creates cmd"}},
-								yaml.MapSlice{yaml.MapItem{tasks.RequireField, "require one"}},
-								yaml.MapSlice{yaml.MapItem{tasks.CreatesField, []interface{}{
+								yaml.MapSlice{yaml.MapItem{Key: tasks.NameField, Value: "many creates cmd"}},
+								yaml.MapSlice{yaml.MapItem{Key: tasks.RequireField, Value: "require one"}},
+								yaml.MapSlice{yaml.MapItem{Key: tasks.CreatesField, Value: []interface{}{
 									"create one",
 									"create two",
 									"create three",
 								}}},
-								yaml.MapSlice{yaml.MapItem{tasks.Unless, "some expected false condition"}},
+								yaml.MapSlice{yaml.MapItem{Key: tasks.UnlessField, Value: "some expected false condition"}},
 							},
 							ValidationError: nil,
 						},
@@ -215,7 +230,7 @@ func TestBuilder(t *testing.T) {
 		},
 		{
 			YamlFileName: "test9.go.yaml",
-			TemplateVariables: map[string]interface{}{
+			TemplateVariables: utils.TemplateVarsMap{
 				utils.OSFamily: "RedHat",
 			},
 			ExpectedScripts: tasks.Scripts{
@@ -226,8 +241,8 @@ func TestBuilder(t *testing.T) {
 							TypeName: "cmd.run",
 							Path:     "template.cmd.run[1]",
 							Context: []interface{}{
-								yaml.MapSlice{yaml.MapItem{tasks.NameField, "yum --version"}},
-								yaml.MapSlice{yaml.MapItem{tasks.CreatesField, []interface{}{
+								yaml.MapSlice{yaml.MapItem{Key: tasks.NameField, Value: "yum --version"}},
+								yaml.MapSlice{yaml.MapItem{Key: tasks.CreatesField, Value: []interface{}{
 									"test.txt",
 								}}},
 							},
@@ -239,7 +254,7 @@ func TestBuilder(t *testing.T) {
 		},
 		{
 			YamlFileName: "test9.go.yaml",
-			TemplateVariables: map[string]interface{}{
+			TemplateVariables: utils.TemplateVarsMap{
 				utils.OSFamily: "Ubuntu",
 			},
 			ExpectedScripts: tasks.Scripts{
@@ -250,8 +265,8 @@ func TestBuilder(t *testing.T) {
 							TypeName: "cmd.run",
 							Path:     "template.cmd.run[1]",
 							Context: []interface{}{
-								yaml.MapSlice{yaml.MapItem{tasks.NameField, "apt --version"}},
-								yaml.MapSlice{yaml.MapItem{tasks.CreatesField, []interface{}{
+								yaml.MapSlice{yaml.MapItem{Key: tasks.NameField, Value: "apt --version"}},
+								yaml.MapSlice{yaml.MapItem{Key: tasks.CreatesField, Value: []interface{}{
 									"test.txt",
 								}}},
 							},
@@ -262,7 +277,7 @@ func TestBuilder(t *testing.T) {
 			},
 		},
 		{
-			TemplateVariables: map[string]interface{}{
+			TemplateVariables: utils.TemplateVarsMap{
 				utils.OSFamily: "",
 			},
 			YamlFileName:           "test9.go.yaml",

@@ -8,9 +8,8 @@ import (
 	"time"
 
 	"github.com/cloudradar-monitoring/tacoscript/conv"
-	"gopkg.in/yaml.v2"
 
-	exec2 "github.com/cloudradar-monitoring/tacoscript/exec"
+	tacoexec "github.com/cloudradar-monitoring/tacoscript/exec"
 
 	"github.com/cloudradar-monitoring/tacoscript/utils"
 
@@ -28,78 +27,79 @@ const (
 type PkgTaskBuilder struct {
 }
 
-type pkgContextProc func(t *PkgTask, path string, val interface{}) error
-
-var pkgContextProcMap = map[string]pkgContextProc{
-	NameField: func(t *PkgTask, path string, val interface{}) error {
+var pkgTaskParamsFnMap = taskParamsFnMap{
+	NameField: func(task Task, path string, val interface{}) error {
+		t := task.(*PkgTask)
 		t.Name = fmt.Sprint(val)
 		return nil
 	},
-	ShellField: func(t *PkgTask, path string, val interface{}) error {
+	ShellField: func(task Task, path string, val interface{}) error {
+		t := task.(*PkgTask)
 		t.Shell = fmt.Sprint(val)
 		return nil
 	},
-	RequireField: func(t *PkgTask, path string, val interface{}) error {
+	RequireField: func(task Task, path string, val interface{}) error {
 		var err error
+		t := task.(*PkgTask)
 		t.Require, err = parseRequireField(val, path)
 		return err
 	},
-	OnlyIf: func(t *PkgTask, path string, val interface{}) error {
+	CreatesField: func(task Task, path string, val interface{}) error {
 		var err error
+		t := task.(*PkgTask)
+		t.Creates, err = parseCreatesField(val, path)
+		return err
+	},
+	OnlyIfField: func(task Task, path string, val interface{}) error {
+		var err error
+		t := task.(*PkgTask)
 		t.OnlyIf, err = parseOnlyIfField(val, path)
 		return err
 	},
-	Unless: func(t *PkgTask, path string, val interface{}) error {
+	UnlessField: func(task Task, path string, val interface{}) error {
 		var err error
+		t := task.(*PkgTask)
 		t.Unless, err = parseUnlessField(val, path)
 		return err
 	},
-	Version: func(t *PkgTask, path string, val interface{}) error {
+	Version: func(task Task, path string, val interface{}) error {
+		t := task.(*PkgTask)
 		t.Version = fmt.Sprint(val)
 		return nil
 	},
-	Refresh: func(t *PkgTask, path string, val interface{}) error {
+	Refresh: func(task Task, path string, val interface{}) error {
+		t := task.(*PkgTask)
 		t.ShouldRefresh = parseBoolField(val)
 		return nil
 	},
-	NamesField: func(t *PkgTask, path string, val interface{}) error {
+	NamesField: func(task Task, path string, val interface{}) error {
 		var names []string
 		var err error
+		t := task.(*PkgTask)
 		names, err = conv.ConvertToValues(val, path)
 		t.Names = names
 		return err
 	},
 }
 
-func (fmtb PkgTaskBuilder) Build(typeName, path string, ctx interface{}) (Task, error) {
-	t := &PkgTask{
+func (fmtb PkgTaskBuilder) Build(typeName, path string, params interface{}) (Task, error) {
+	task := &PkgTask{
 		TypeName: typeName,
 		Path:     path,
 	}
 
 	switch typeName {
 	case PkgInstalled:
-		t.ActionType = ActionInstall
+		task.ActionType = ActionInstall
 	case PkgRemoved:
-		t.ActionType = ActionUninstall
+		task.ActionType = ActionUninstall
 	case PkgUpgraded:
-		t.ActionType = ActionUpdate
+		task.ActionType = ActionUpdate
 	}
 
-	errs := &utils.Errors{}
+	errs := Build(typeName, path, params, task, pkgTaskParamsFnMap)
 
-	for _, item := range ctx.([]interface{}) {
-		row := item.(yaml.MapSlice)[0]
-		key := row.Key.(string)
-		val := row.Value
-		f, ok := pkgContextProcMap[key]
-		if !ok {
-			continue
-		}
-		errs.Add(f(t, path, val))
-	}
-
-	return t, errs.ToError()
+	return task, errs.ToError()
 }
 
 type PkgTask struct {
@@ -111,11 +111,14 @@ type PkgTask struct {
 	Version       string
 	ShouldRefresh bool
 	Require       []string
+	Creates       []string
 	OnlyIf        []string
 	Unless        []string
+
+	Updated bool
 }
 
-func (pt *PkgTask) GetName() string {
+func (pt *PkgTask) GetTypeName() string {
 	return pt.TypeName
 }
 
@@ -149,6 +152,18 @@ func (pt *PkgTask) String() string {
 	return fmt.Sprintf("task '%s' at path '%s'", pt.TypeName, pt.GetPath())
 }
 
+func (pt *PkgTask) GetOnlyIfCmds() []string {
+	return pt.OnlyIf
+}
+
+func (pt *PkgTask) GetUnlessCmds() []string {
+	return pt.Unless
+}
+
+func (pt *PkgTask) GetCreatesFilesList() []string {
+	return pt.Creates
+}
+
 type PackageManagerExecutionResult struct {
 	Output  string
 	Comment string
@@ -162,7 +177,8 @@ type PackageManager interface {
 
 type PkgTaskExecutor struct {
 	PackageManager PackageManager
-	Runner         exec2.Runner
+	Runner         tacoexec.Runner
+	FsManager      *utils.FsManager
 }
 
 func (pte *PkgTaskExecutor) Execute(ctx context.Context, task Task) ExecutionResult {
@@ -178,13 +194,14 @@ func (pte *PkgTaskExecutor) Execute(ctx context.Context, task Task) ExecutionRes
 	execRes.Name = strings.Join(pkgTask.GetNames(), "; ")
 
 	var stdoutBuf, stderrBuf bytes.Buffer
-	execCtx := &exec2.Context{
+	execCtx := &tacoexec.Context{
 		Ctx:          ctx,
 		StdoutWriter: &stdoutBuf,
 		StderrWriter: &stderrBuf,
 	}
+
 	logrus.Debugf("will check if the task '%s' should be executed", task.GetPath())
-	skipReason, err := pte.shouldBeExecuted(execCtx, pkgTask)
+	skipReason, err := checkConditionals(execCtx, pte.FsManager, pte.Runner, pkgTask)
 	if err != nil {
 		execRes.Err = err
 		return execRes
@@ -211,84 +228,8 @@ func (pte *PkgTaskExecutor) Execute(ctx context.Context, task Task) ExecutionRes
 	execRes.IsSkipped = false
 	execRes.Duration = time.Since(start)
 
+	pkgTask.Updated = true
+
 	logrus.Debugf("the task '%s' is finished for %v", execRes.Name, execRes.Duration)
 	return execRes
-}
-
-func (pte *PkgTaskExecutor) checkOnlyIfs(ctx *exec2.Context, pkgTask *PkgTask) (isSuccess bool, err error) {
-	if len(pkgTask.OnlyIf) == 0 {
-		return true, nil
-	}
-
-	newCtx := ctx.Copy()
-
-	newCtx.Cmds = pkgTask.OnlyIf
-	err = pte.Runner.Run(&newCtx)
-
-	if err != nil {
-		runErr, isRunErr := err.(exec2.RunError)
-		if isRunErr {
-			logrus.Debugf("will skip %s since onlyif condition has failed: %v", pkgTask, runErr)
-			return false, nil
-		}
-
-		return false, err
-	}
-
-	return true, nil
-}
-
-func (pte *PkgTaskExecutor) shouldBeExecuted(
-	ctx *exec2.Context,
-	pkgTask *PkgTask,
-) (skipReason string, err error) {
-	isSuccess, err := pte.checkOnlyIfs(ctx, pkgTask)
-	if err != nil {
-		return "", err
-	}
-
-	if !isSuccess {
-		return onlyIfConditionFailedReason, nil
-	}
-
-	isExpectationSuccess, err := pte.checkUnless(ctx, pkgTask)
-	if err != nil {
-		return "", err
-	}
-
-	if !isExpectationSuccess {
-		skipReason = fmt.Sprintf("unless condition is true, will skip %s", pkgTask.Path)
-		logrus.Debug(skipReason)
-		return skipReason, nil
-	}
-
-	logrus.Debugf("all execution conditions are met, will continue %s", pkgTask)
-	return "", nil
-}
-
-func (pte *PkgTaskExecutor) checkUnless(ctx *exec2.Context, pkgTask *PkgTask) (isExpectationSuccess bool, err error) {
-	if len(pkgTask.Unless) == 0 {
-		isExpectationSuccess = true
-		err = nil
-		return
-	}
-
-	newCtx := ctx.Copy()
-
-	newCtx.Cmds = pkgTask.Unless
-
-	err = pte.Runner.Run(&newCtx)
-
-	if err != nil {
-		runErr, isRunErr := err.(exec2.RunError)
-		if isRunErr {
-			logrus.Infof("will continue cmd since at least one unless condition has failed: %v", runErr)
-			return true, nil
-		}
-
-		return false, err
-	}
-
-	logrus.Infof("any unless condition didn't fail for task '%s'", pkgTask.Path)
-	return false, nil
 }

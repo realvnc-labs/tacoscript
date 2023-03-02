@@ -1,0 +1,66 @@
+Run:
+  write-file:
+    file.managed:
+      - name: C:\Windows\temp\testfile.txt
+      - contents: |
+          this is a file
+          created by tacoscript
+      - creates:
+          - C:\Windows\temp\testfile.txt
+  replace-file-skip-as-file-exists:
+    file.replace:
+      - name: C:\Windows\temp\testfile.txt
+      - pattern: this is a file
+      - repl: this is a modified file
+      - unless:
+          # file exists so the exception will not be thrown
+          - if (-not (test-path -Path  C:\Windows\temp\testfile.txt -PathType leaf)) { throw 'missing' }
+      - shell: powershell.exe
+  replace-file:
+    file.replace:
+      - name: C:\Windows\temp\testfile.txt
+      - pattern: this is a file
+      - repl: this is a replacement file
+      - onlyif:
+          # file exists so the exception will not be thrown
+          - if (-not (test-path -Path  C:\Windows\temp\testfile.txt -PathType leaf)) { throw 'missing' }
+      - shell: powershell.exe
+  replace-file-again:
+    file.replace:
+      - name: C:\Windows\temp\testfile.txt
+      - pattern: this is a replacement file
+      - repl: this is a another replacement file
+      - require:
+          - replace-file
+
+On:
+  - windows
+
+Expect:
+  PreExec: |
+    if(test-path -Path  C:\Windows\temp\testfile.txt -PathType leaf) {
+      rm C:\Windows\temp\testfile.txt -force
+    }
+  Summary:
+    Succeeded: 4
+    Changes: 3
+    TotalTasksRun: 4
+  TaskResults:
+    - ID: write-file
+      ChangesContains:
+        - "37 bytes written"
+    - ID: replace-file-skip-as-file-exists
+      HasChanges: false
+    - ID: replace-file
+      ChangesContains:
+        - "1 replacement(s) made"
+    - ID: replace-file-again
+      ChangesContains:
+        - "1 replacement(s) made"
+  PostExec: |
+    $ErrorActionPreference = "Stop"
+    gc C:\Windows\temp\testfile.txt
+    if(-not (Select-String -Path C:\Windows\temp\testfile.txt -Pattern "created by tacoscript" -Quiet)) {
+      Write-Error "string not found"
+    }
+    rm C:\Windows\temp\testfile.txt -force

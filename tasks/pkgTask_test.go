@@ -97,7 +97,7 @@ func TestPkgTaskName(t *testing.T) {
 		TypeName: PkgRemoved,
 	}
 
-	assert.Equal(t, PkgRemoved, task.GetName())
+	assert.Equal(t, PkgRemoved, task.GetTypeName())
 }
 
 func TestPkgTaskRequire(t *testing.T) {

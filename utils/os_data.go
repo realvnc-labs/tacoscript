@@ -6,6 +6,8 @@ import (
 	"github.com/shirou/gopsutil/host"
 )
 
+type TemplateVarsMap map[string]string
+
 const (
 	OSKernel = "taco_os_kernel" // windows, linux, freebsd
 	// see https://gist.github.com/asukakenji/f15ba7e588ac42795f421b48b8aede63#a-list-of-valid-goos-values
@@ -19,13 +21,13 @@ const (
 type OSDataProvider struct {
 }
 
-func (odp OSDataProvider) GetTemplateVariables() (map[string]interface{}, error) {
+func (odp OSDataProvider) GetTemplateVariables() (TemplateVarsMap, error) {
 	h, err := host.Info()
 	if err != nil {
-		return map[string]interface{}{}, err
+		return TemplateVarsMap{}, err
 	}
 
-	return map[string]interface{}{
+	return TemplateVarsMap{
 		OSKernel:     strings.ToLower(h.OS),
 		OSFamily:     strings.ToLower(h.PlatformFamily),
 		Architecture: strings.ToLower(h.KernelArch),

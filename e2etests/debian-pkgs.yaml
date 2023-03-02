@@ -3,6 +3,23 @@ Run:
     pkg.installed:
       - refresh: true
       - name: cowsay
+      - unless:
+          - /usr/games/cowsay
+  install-cowsay-already-installed:
+    pkg.installed:
+      - refresh: true
+      - name: cowsay
+      - creates:
+          - /usr/games/cowsay
+      - require:
+          - install-cowsay
+  remove-cowsay:
+    pkg.removed:
+      - refresh: true
+      - name: cowsay
+      - onlyif:
+          - /usr/games/cowsay
+
 On:
   - linux
 
@@ -11,14 +28,21 @@ OnlyIf: "[ $(id -u) -eq 0 ] && which apt-get" # Skip test if required package ma
 Expect:
   PreExec: /usr/games/cowsay ok && apt-get -y remove cowsay || true
   Summary:
-    Succeeded: 1
-    Changes: 0 # must be 1 @todo: fix tacoscript
+    Succeeded: 3
+    Changes: 2
     Failed: 0
     Aborted: 0
-    TotalTasksRun: 1
+    TotalTasksRun: 3
   TaskResults:
     - ID: install-cowsay
       Result: true
       ChangesContains:
-        - "cowsay"
-  PostExec: /usr/games/cowsay ok
+        - "added"
+    - ID: install-cowsay-already-installed
+      Result: true
+      CommentContains:
+        - "not updated"
+    - ID: remove-cowsay
+      Result: true
+      ChangesContains:
+        - "removed"

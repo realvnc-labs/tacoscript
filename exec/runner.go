@@ -2,7 +2,6 @@ package exec
 
 import (
 	"io"
-	"io/ioutil"
 	"os"
 	"os/exec"
 	"runtime"
@@ -118,7 +117,7 @@ func (sr SystemRunner) Run(execContext *Context) error {
 			tmpPattern = "taco-*.ps1"
 		}
 	}
-	tmpFile, err := ioutil.TempFile(os.TempDir(), tmpPattern)
+	tmpFile, err := os.CreateTemp(os.TempDir(), tmpPattern)
 	if err != nil {
 		return err
 	}

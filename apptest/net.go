@@ -26,16 +26,16 @@ func StartHTTPServer(isHTTPS bool) (u *url.URL, srv *httptest.Server, err error)
 	return
 }
 
-func StartFTPServer(ctx context.Context, port int, waitForStarting time.Duration) (*url.URL, error) {
+func StartFTPServer(ctx context.Context, port int, waitForStarting time.Duration) (*url.URL, *server.Server, error) {
 	path, err := os.Getwd()
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
 	ftpHost := fmt.Sprintf("ftp://root:root@localhost:%d", port)
 	ftpHostURL, err := url.Parse(ftpHost)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
 	factory := &filedriver.FileDriverFactory{
@@ -72,8 +72,8 @@ func StartFTPServer(ctx context.Context, port int, waitForStarting time.Duration
 
 	select {
 	case err := <-errChan:
-		return ftpHostURL, err
+		return ftpHostURL, nil, err
 	case <-time.After(waitForStarting):
-		return ftpHostURL, nil
+		return ftpHostURL, ftpSrvr, nil
 	}
 }
