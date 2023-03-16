@@ -22,7 +22,7 @@ func (tm *TaskMock) GetTypeName() string {
 	return "TaskMock"
 }
 
-func (tm *TaskMock) Validate() error {
+func (tm *TaskMock) Validate(goos string) error {
 	return nil
 }
 

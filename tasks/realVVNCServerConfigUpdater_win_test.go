@@ -5,6 +5,7 @@ package tasks
 
 import (
 	"context"
+	"runtime"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -53,7 +54,7 @@ func TestShouldSetSimpleConfigRegistryParam(t *testing.T) {
 		tracker:    newTrackerWithSingleFieldStatus("encryption", "Encryption"),
 	}
 
-	err := task.Validate()
+	err := task.Validate(runtime.GOOS)
 	require.NoError(t, err)
 
 	res := executor.Execute(ctx, task)
@@ -87,7 +88,7 @@ func TestShouldUpdateSimpleConfigRegistryParam(t *testing.T) {
 		tracker:    newTrackerWithSingleFieldStatus("encryption", "Encryption"),
 	}
 
-	err := setupTask.Validate()
+	err := setupTask.Validate(runtime.GOOS)
 	require.NoError(t, err)
 
 	res := executor.Execute(ctx, setupTask)
@@ -101,7 +102,7 @@ func TestShouldUpdateSimpleConfigRegistryParam(t *testing.T) {
 		tracker:    newTrackerWithSingleFieldStatus("encryption", "Encryption"),
 	}
 
-	err = task.Validate()
+	err = task.Validate(runtime.GOOS)
 	require.NoError(t, err)
 
 	res = executor.Execute(ctx, task)
@@ -143,7 +144,7 @@ func TestShouldClearSimpleConfigRegistryParam(t *testing.T) {
 		},
 	}
 
-	err := setupTask.Validate()
+	err := setupTask.Validate(runtime.GOOS)
 	require.NoError(t, err)
 
 	res := executor.Execute(ctx, setupTask)
@@ -165,7 +166,7 @@ func TestShouldClearSimpleConfigRegistryParam(t *testing.T) {
 		},
 	}
 
-	err = clearTask.Validate()
+	err = clearTask.Validate(runtime.GOOS)
 	require.NoError(t, err)
 
 	res = executor.Execute(ctx, clearTask)

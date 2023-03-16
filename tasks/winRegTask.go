@@ -79,7 +79,7 @@ func (wrt *WinRegTask) GetRequirements() []string {
 	return wrt.Require
 }
 
-func (wrt *WinRegTask) Validate() error {
+func (wrt *WinRegTask) Validate(goos string) error {
 	errs := &utils.Errors{}
 
 	if wrt.ActionType == 0 {

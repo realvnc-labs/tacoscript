@@ -87,7 +87,7 @@ func (crt *CmdRunTask) GetRequirements() []string {
 	return crt.Require
 }
 
-func (crt *CmdRunTask) Validate() error {
+func (crt *CmdRunTask) Validate(goos string) error {
 	errs := &utils.Errors{}
 	err1 := ValidateRequired(crt.Named.Name, crt.Path+"."+NameField)
 	err2 := ValidateRequiredMany(crt.Named.Names, crt.Path+"."+NamesField)

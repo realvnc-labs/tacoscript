@@ -42,7 +42,7 @@ func TestShouldPerformSimpleConfigParamUpdate(t *testing.T) {
 		task.ConfigFile = "../realvnc/test/realvncserver-config.conf"
 	}
 
-	err := task.Validate()
+	err := task.Validate(runtime.GOOS)
 	require.NoError(t, err)
 
 	res := executor.Execute(ctx, task)

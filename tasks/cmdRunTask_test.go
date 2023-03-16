@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"os/exec"
+	"runtime"
 	"strings"
 	"testing"
 
@@ -399,7 +400,7 @@ func TestCmdRunTaskValidation(t *testing.T) {
 	}
 
 	for _, testCase := range testCases {
-		err := testCase.Task.Validate()
+		err := testCase.Task.Validate(runtime.GOOS)
 		if testCase.ExpectedError == "" {
 			assert.NoError(t, err)
 		} else {

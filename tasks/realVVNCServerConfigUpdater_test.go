@@ -7,6 +7,7 @@ import (
 	"context"
 	"io/fs"
 	"os"
+	"runtime"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -65,7 +66,7 @@ func TestShouldUpdateSimpleConfigFileParam(t *testing.T) {
 		Encryption: "AlwaysOn",
 	}
 
-	err := task.Validate()
+	err := task.Validate(runtime.GOOS)
 	require.NoError(t, err)
 
 	res := executor.Execute(ctx, task)
@@ -106,7 +107,7 @@ func TestShouldAddSimpleConfigFileParam(t *testing.T) {
 		BlankScreen: true,
 	}
 
-	err := task.Validate()
+	err := task.Validate(runtime.GOOS)
 	require.NoError(t, err)
 
 	res := executor.Execute(ctx, task)
@@ -146,7 +147,7 @@ func TestShouldAddSimpleConfigWhenNoExistingConfigFileParam(t *testing.T) {
 		BlankScreen: true,
 	}
 
-	err := task.Validate()
+	err := task.Validate(runtime.GOOS)
 	require.NoError(t, err)
 
 	res := executor.Execute(ctx, task)
@@ -195,7 +196,7 @@ func TestShouldRemoveSimpleConfigFileParam(t *testing.T) {
 		Encryption: "!UNSET!",
 	}
 
-	err := task.Validate()
+	err := task.Validate(runtime.GOOS)
 	require.NoError(t, err)
 
 	res := executor.Execute(ctx, task)
@@ -211,15 +212,63 @@ func TestShouldRemoveSimpleConfigFileParam(t *testing.T) {
 	assert.NotContains(t, string(contents), "Encryption")
 }
 
-func TestShouldErrWhenConfigFilenameMissing(t *testing.T) {
-	task := &RealVNCServerTask{
-		Path: "realvnc-server-1",
-		tracker: &FieldStatusTracker{
-			withNewValue("encryption", "Encryption"),
+func TestShouldMakeReloadCmdLine(t *testing.T) {
+	cases := []struct {
+		name            string
+		task            *RealVNCServerTask
+		goos            string
+		expectedCmdLine string
+		expectedParams  []string
+	}{
+		{
+			name: "linux default",
+			task: &RealVNCServerTask{
+				Path:       "MyTask",
+				ServerMode: UserServerMode,
+			},
+			goos:            "linux",
+			expectedCmdLine: "/usr/bin/vncserver-x11",
+			expectedParams:  []string{"-reload"},
 		},
-		Encryption: "AlwaysOn",
+		{
+			name: "linux user server mode",
+			task: &RealVNCServerTask{
+				Path:       "MyTask",
+				ServerMode: UserServerMode,
+			},
+			goos:            "linux",
+			expectedCmdLine: "/usr/bin/vncserver-x11",
+			expectedParams:  []string{"-reload"},
+		},
+		{
+			name: "linux service server mode",
+			task: &RealVNCServerTask{
+				Path:       "MyTask",
+				ServerMode: ServiceServerMode,
+			},
+			goos:            "linux",
+			expectedCmdLine: "/usr/bin/vncserver-x11",
+			expectedParams:  []string{"-service", "-reload"},
+		},
+		{
+			name: "linux virtual server mode",
+			task: &RealVNCServerTask{
+				Path:       "MyTask",
+				ServerMode: VirtualServerMode,
+			},
+			goos:            "linux",
+			expectedCmdLine: "/usr/bin/vnclicense",
+			expectedParams:  []string{"-reload"},
+		},
 	}
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			err := tc.task.Validate(tc.goos)
+			require.NoError(t, err)
 
-	err := task.Validate()
-	require.Equal(t, err.Error(), ErrConfigFileMustBeSpecifiedMsg)
+			cmdLine, params := makeReloadCmdLine(tc.task, tc.goos)
+			assert.Equal(t, tc.expectedCmdLine, cmdLine)
+			assert.Equal(t, tc.expectedParams, params)
+		})
+	}
 }

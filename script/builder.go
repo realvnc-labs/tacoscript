@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	"runtime"
 	"text/template"
 
 	"gopkg.in/yaml.v2"
@@ -79,7 +80,7 @@ func (p Builder) BuildScripts() (tasks.Scripts, error) {
 					return tasks.Scripts{}, err
 				}
 
-				err = task.Validate()
+				err = task.Validate(runtime.GOOS)
 				if err != nil {
 					errs.Add(err)
 				}

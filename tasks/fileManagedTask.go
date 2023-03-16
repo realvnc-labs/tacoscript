@@ -111,7 +111,7 @@ func (t *FileManagedTask) GetRequirements() []string {
 	return t.Require
 }
 
-func (t *FileManagedTask) Validate() error {
+func (t *FileManagedTask) Validate(goos string) error {
 	errs := &utils.Errors{}
 
 	err1 := ValidateRequired(t.Name, t.Path+"."+NameField)

@@ -96,7 +96,7 @@ func (pt *PkgTask) GetRequirements() []string {
 	return pt.Require
 }
 
-func (pt *PkgTask) Validate() error {
+func (pt *PkgTask) Validate(goos string) error {
 	errs := &utils.Errors{}
 
 	err1 := ValidateRequired(pt.Named.Name, pt.Path+"."+NameField)

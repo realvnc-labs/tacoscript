@@ -18,7 +18,7 @@ used by the RealVNC configuration files. Tacoscript automatically handles the tr
 ## `realvnc_server.config_update`
 
 The task `realvnc_server.config_update` allows you to update a limited set of your your RealVNC
-configuration. Updating the RealVNC configuration on both linux/mac and windows machines is supported.
+configuration. Updating the RealVNC configuration on both Linux/Mac and Windows machines is supported.
 
 `realvnc_server.config_update` has following format:
 
@@ -34,16 +34,16 @@ We can interpret this script as:
 1. Either add or update the RealVNC `Encryption` configuration parameter to be `AlwaysOn` and add or
    update the `BlankScreen` parameter to `true`. If the is a current setting then it will be replaced
    with the new value. If the setting is not currently set then it will added (either to the end of the
-   configuration file for linux/mac or as a new registry setting for Windows).
+   configuration file for Linux/Mac or as a new registry setting for Windows).
 
 {{< heading-supported-parameters >}}
 
 ### `config_file`
 
-{{< parameter required=1 type=string >}}
+{{< parameter type=string default="depends on platform and server mode">}}
 
-When using with linux/mac then the path to the config file must be specified. When using Windows the
-parameter is ignored.
+When using with Linux/Mac then the path to the config file will default according to the `ServerMode`
+(see below). When using Windows the parameter is ignored.
 
 If there is no existing config file then a new file will be created with the config parameters
 added. The file will have regular permissions of `0644`.
@@ -52,8 +52,9 @@ added. The file will have regular permissions of `0644`.
 
 {{< parameter required=0 type=string default="Service" >}}
 
-The `server_mode` parameter tells tacoscript whether to target a `Service` or
-`User` mode for the RealVNC server.
+The `server_mode` parameter tells tacoscript whether to target a `Service`,
+`User` or `Virtual` mode for the RealVNC server. `Virtual` mode is only supported when running
+Linux.
 
 ### `exec_path`
 
@@ -61,7 +62,7 @@ The `server_mode` parameter tells tacoscript whether to target a `Service` or
 
 The `exec_path` parameter can be used to override the default path for the RealVNC
 server executable used to reload the config parameters. RealVNC defaults are used
-depending on the platform (e.g. `linux` or `windows`) and the `server_mode` (specified
+depending on the platform (e.g. Linux or Windows) and the `server_mode` (specified
 above). See the RealVNC docs for more information.
 
 ### `exec_cmd`
@@ -70,26 +71,34 @@ above). See the RealVNC docs for more information.
 
 The `exec_cmd` parameter can be used to override the default name for the RealVNC
 server executable used to reload the config parameters. RealVNC defaults are used
-depending on the platform (e.g. `linux` or `windows`) and the `server_mode` (specified
+depending on the platform (e.g. Linux or Windows) and the `server_mode` (specified
 above).
 
 ### `skip_reload`
 
-{{< parameter required=0 type=string default="false" >}}
+{{< parameter required=0 type=bool default="false" >}}
 
 if the `skip_reload` parameter is set then Tacoscript will NOT attempt to automatically
 reload the config parameters after an update.
+
+### `use_vnclicense_reload`
+
+{{< parameter required=0 type=bool default="false" >}}
+
+If set to `true` then will trigger a configuration parameters reload via the `vnclicense`
+executable. Will be forced to `true` when using `Virtual` mode, otherwise defaults to `false`.
+Can be used when the `ServerMode` is `Service` or `User` but must be explicit set to `true`.
 
 ### `backup`
 
 {{< parameter required=0 type=string default="bak" >}}
 
-If using linux/mac then the `backup` parameter can be used to specify the backup
+If using Linux/Mac then the `backup` parameter can be used to specify the backup
 extension for the config file backup.
 
 ### `skip_backup`
 
-{{< parameter required=0 type=string default="false" >}}
+{{< parameter required=0 type=bool default="false" >}}
 
 If set to `true` then a backup file will not be created. Linux/Mac only.
 
@@ -99,48 +108,72 @@ For details on each parameter, please see the links below.
 
 ### `encryption`
 
+{{< parameter required=0 type=string >}}
+
 [here](https://help.realvnc.com/hc/en-us/articles/360002251297-VNC-Server-Parameter-Reference#Encryption)
 
 ### `authentication`
+
+{{< parameter required=0 type=string >}}
 
 [here](https://help.realvnc.com/hc/en-us/articles/360002251297-VNC-Server-Parameter-Reference#Authentication)
 
 ### `permissions`
 
+{{< parameter required=0 type=string >}}
+
 [here](https://help.realvnc.com/hc/en-us/articles/360002251297-VNC-Server-Parameter-Reference#Permissions)
 
 ### `query_connect`
+
+{{< parameter required=0 type=string >}}
 
 [here](https://help.realvnc.com/hc/en-us/articles/360002251297-VNC-Server-Parameter-Reference#Query_Connect)
 
 ### `query_only_if_logged_on`
 
+{{< parameter required=0 type=bool >}}
+
 [here](https://help.realvnc.com/hc/en-us/articles/360002251297-VNC-Server-Parameter-Reference#Query_Only_If_Logged_On)
 
 ### `query_connect_timeout`
+
+{{< parameter required=0 type=int >}}
 
 [here](https://help.realvnc.com/hc/en-us/articles/360002251297-VNC-Server-Parameter-Reference#Query_Connect_Timeout)
 
 ### `blank_screen`
 
+{{< parameter required=0 type=bool >}}
+
 [here](https://help.realvnc.com/hc/en-us/articles/360002251297-VNC-Server-Parameter-Reference#Blank_Screen)
 
 ### `conn_notify_timeout`
+
+{{< parameter required=0 type=int >}}
 
 [here](https://help.realvnc.com/hc/en-us/articles/360002251297-VNC-Server-Parameter-Reference#Conn_Notify_Timeout)
 
 ### `conn_notify_always`
 
+{{< parameter required=0 type=bool >}}
+
 [here](https://help.realvnc.com/hc/en-us/articles/360002251297-VNC-Server-Parameter-Reference#Conn_Notify_Always)
 
 ### `idle_timeout`
+
+{{< parameter required=0 type=int >}}
 
 [here](https://help.realvnc.com/hc/en-us/articles/360002251297-VNC-Server-Parameter-Reference#Idle_Timeout)
 
 ### `log`
 
+{{< parameter required=0 type=string >}}
+
 [here](https://help.realvnc.com/hc/en-us/articles/360002251297-VNC-Server-Parameter-Reference#Log)
 
 ### `capture_method`
+
+{{< parameter required=0 type=string >}}
 
 [here](https://help.realvnc.com/hc/en-us/articles/360002251297-VNC-Server-Parameter-Reference#Capture_Method)

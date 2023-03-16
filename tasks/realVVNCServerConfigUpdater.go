@@ -21,10 +21,11 @@ import (
 )
 
 const (
-	DefaultMacExecPath   = `/Library/vnc`
-	DefaultMacExecName   = `vncserver`
-	DefaultLinuxExecPath = `/usr/bin`
-	DefaultLinuxExecCmd  = `vncserver-x11`
+	DefaultMacExecPath           = `/Library/vnc`
+	DefaultMacExecName           = `vncserver`
+	DefaultLinuxExecPath         = `/usr/bin`
+	DefaultLinuxExecCmd          = `vncserver-x11`
+	DefaultLinuxLicenseReloadCmd = `vnclicense`
 
 	DefaultConfigFilePermissions = 0644
 )
@@ -295,7 +296,7 @@ func commitChanges(rvst *RealVNCServerTask, tempFile *os.File) (err error) {
 func (rvste *RealVNCServerTaskExecutor) ReloadConfig(rvst *RealVNCServerTask) (err error) {
 	var cmd *exec.Cmd
 
-	execCmd, params := rvste.makeReloadCmdLine(rvst)
+	execCmd, params := makeReloadCmdLine(rvst, runtime.GOOS)
 
 	cmd = exec.Command(execCmd, params...)
 
@@ -315,17 +316,23 @@ func (rvste *RealVNCServerTaskExecutor) ReloadConfig(rvst *RealVNCServerTask) (e
 	return nil
 }
 
-func (rvste *RealVNCServerTaskExecutor) makeReloadCmdLine(rvst *RealVNCServerTask) (cmd string, params []string) {
+func makeReloadCmdLine(rvst *RealVNCServerTask, goos string) (cmd string, params []string) {
 	baseCmdLine := `%s/%s`
 	argumentList := []string{`-service`, `-reload`}
 	if rvst.ServerMode == UserServerMode {
 		argumentList = []string{`-reload`}
 	}
 
-	if runtime.GOOS == "darwin" {
+	if goos == "darwin" {
 		cmd = fmt.Sprintf(baseCmdLine, DefaultMacExecPath, DefaultMacExecName)
 	} else {
-		cmd = fmt.Sprintf(baseCmdLine, DefaultLinuxExecPath, DefaultLinuxExecCmd)
+		// linux only
+		if rvst.UseVNCLicenseReload {
+			cmd = fmt.Sprintf(baseCmdLine, DefaultLinuxExecPath, DefaultLinuxLicenseReloadCmd)
+			argumentList = []string{`-reload`}
+		} else {
+			cmd = fmt.Sprintf(baseCmdLine, DefaultLinuxExecPath, DefaultLinuxExecCmd)
+		}
 	}
 
 	return cmd, argumentList

@@ -65,11 +65,13 @@ const (
 	LogField                     = "log"
 	CaptureMethodField           = "capture_method"
 
-	ConfigFileField = "config_file"
-	ServerModeField = "server_mode"
-	ExecPathField   = "exec_path"
-	ExecCmdField    = "exec_cmd"
-	SkipReloadField = "skip_reload"
+	ConfigFileField     = "config_file"
+	ServerModeField     = "server_mode"
+	ExecPathField       = "exec_path"
+	ExecCmdField        = "exec_cmd"
+	SkipReloadField     = "skip_reload"
+	UseVNCLicenseReload = "use_vnclicense_reload"
+
 	SkipBackupField = "skip_backup"
 )
 

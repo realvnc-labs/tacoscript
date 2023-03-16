@@ -67,7 +67,7 @@ func TestFileReplaceTaskValidation(t *testing.T) {
 	for _, testCase := range testCases {
 		tc := testCase
 		t.Run(tc.Name, func(t *testing.T) {
-			err := tc.Task.Validate()
+			err := tc.Task.Validate(runtime.GOOS)
 
 			if tc.ExpectedErrorStr != "" {
 				assert.ErrorContains(t, err, tc.ExpectedErrorStr)
@@ -135,7 +135,7 @@ func TestShouldFailWhenTargetFileNotFound(t *testing.T) {
 		Repl:    "not a test",
 	}
 
-	err := task.Validate()
+	err := task.Validate(runtime.GOOS)
 	require.NoError(t, err)
 
 	res := executor.Execute(ctx, task)
@@ -182,7 +182,7 @@ func TestShouldFailWhenMandatoryParamsMissing(t *testing.T) {
 	}
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
-			err := tc.task.Validate()
+			err := tc.task.Validate(runtime.GOOS)
 			if tc.expectedErrStr != "" {
 				assert.Contains(t, err.Error(), tc.expectedErrStr)
 			} else {
@@ -212,7 +212,7 @@ func TestShouldMakeBackupOfOriginalFileWhenBackupExtensionSet(t *testing.T) {
 	}
 	defer os.Remove(testFilename + "." + task.BackupExtension)
 
-	err := task.Validate()
+	err := task.Validate(runtime.GOOS)
 	require.NoError(t, err)
 
 	res := executor.Execute(ctx, task)
@@ -241,7 +241,7 @@ func TestShouldNotMakeBackupOfOriginalFileWhenBackupExtensionNotSet(t *testing.T
 		// BackupExtension: "bak",
 	}
 
-	err := task.Validate()
+	err := task.Validate(runtime.GOOS)
 	require.NoError(t, err)
 
 	res := executor.Execute(ctx, task)
@@ -269,7 +269,7 @@ func TestShouldReplaceAllMatchingItems(t *testing.T) {
 		Repl:    "new line",
 	}
 
-	err := task.Validate()
+	err := task.Validate(runtime.GOOS)
 	require.NoError(t, err)
 
 	res := executor.Execute(ctx, task)
@@ -307,7 +307,7 @@ func TestShouldNotReplaceAnything(t *testing.T) {
 		Repl:    "new line",
 	}
 
-	err = task.Validate()
+	err = task.Validate(runtime.GOOS)
 	require.NoError(t, err)
 
 	res := executor.Execute(ctx, task)
@@ -344,7 +344,7 @@ func TestShouldReplaceCountMatchingItems(t *testing.T) {
 		Count:   2,
 	}
 
-	err := task.Validate()
+	err := task.Validate(runtime.GOOS)
 	require.NoError(t, err)
 
 	res := executor.Execute(ctx, task)
@@ -381,7 +381,7 @@ func TestShouldSkipWhenFilesizeTooLarge(t *testing.T) {
 		MaxFileSize: "1k",
 	}
 
-	err := task.Validate()
+	err := task.Validate(runtime.GOOS)
 	require.NoError(t, err)
 
 	res := executor.Execute(ctx, task)
@@ -412,7 +412,7 @@ func TestShouldErrorIfTargetNotRegularFile(t *testing.T) {
 		Repl:    "new line",
 	}
 
-	err := task.Validate()
+	err := task.Validate(runtime.GOOS)
 	require.NoError(t, err)
 
 	res := executor.Execute(ctx, task)
@@ -441,7 +441,7 @@ func TestShouldAppendNotFoundContent(t *testing.T) {
 		AppendIfNotFound: true,
 	}
 
-	err := task.Validate()
+	err := task.Validate(runtime.GOOS)
 	require.NoError(t, err)
 
 	res := executor.Execute(ctx, task)
@@ -480,7 +480,7 @@ func TestShouldPrependNotFoundContent(t *testing.T) {
 		PrependIfNotFound: true,
 	}
 
-	err := task.Validate()
+	err := task.Validate(runtime.GOOS)
 	require.NoError(t, err)
 
 	res := executor.Execute(ctx, task)
@@ -519,7 +519,7 @@ func TestShouldUseReplContentWhenWhenNoNotFoundContent(t *testing.T) {
 		AppendIfNotFound: true,
 	}
 
-	err := task.Validate()
+	err := task.Validate(runtime.GOOS)
 	require.NoError(t, err)
 
 	res := executor.Execute(ctx, task)

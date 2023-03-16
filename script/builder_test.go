@@ -58,7 +58,7 @@ func (tm *TaskBuilderTaskMock) Execute(ctx context.Context) tasks.ExecutionResul
 	return tasks.ExecutionResult{}
 }
 
-func (tm *TaskBuilderTaskMock) Validate() error {
+func (tm *TaskBuilderTaskMock) Validate(goos string) error {
 	return tm.ValidationError
 }
 

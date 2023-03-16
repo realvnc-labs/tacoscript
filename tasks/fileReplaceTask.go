@@ -105,7 +105,7 @@ func (t *FileReplaceTask) IsChangeField(inputKey string) (excluded bool) {
 	return false
 }
 
-func (t *FileReplaceTask) Validate() error {
+func (t *FileReplaceTask) Validate(goos string) error {
 	errs := &utils.Errors{}
 
 	err := ValidateRequired(t.Name, t.Path+"."+NameField)

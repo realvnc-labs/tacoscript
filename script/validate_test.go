@@ -25,7 +25,7 @@ func (rtm *RequirementsTaskMock) Execute(ctx context.Context) tasks.ExecutionRes
 	return tasks.ExecutionResult{}
 }
 
-func (rtm *RequirementsTaskMock) Validate() error {
+func (rtm *RequirementsTaskMock) Validate(goos string) error {
 	return nil
 }
 

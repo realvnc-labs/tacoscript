@@ -16,6 +16,7 @@ import (
 const (
 	ServiceServerMode = "Service"
 	UserServerMode    = "User"
+	VirtualServerMode = "Virtual"
 )
 
 var (
@@ -39,12 +40,12 @@ type RealVNCServerTask struct {
 	Log                     string `taco:"log"`
 	CaptureMethod           int    `taco:"capture_method"`
 
-	ConfigFile string `taco:"config_file"` // config file path for non-windows
-	ServerMode string `taco:"server_mode"` // server mode for windows (registry keys)
-
-	ExecPath   string `taco:"exec_path"`
-	ExecCmd    string `taco:"exec_cmd"`
-	SkipReload bool   `taco:"skip_reload"`
+	ConfigFile          string `taco:"config_file"` // config file path for non-windows
+	ServerMode          string `taco:"server_mode"` // server mode for windows (registry keys)
+	ExecPath            string `taco:"exec_path"`
+	ExecCmd             string `taco:"exec_cmd"`
+	SkipReload          bool   `taco:"skip_reload"`
+	UseVNCLicenseReload bool   `taco:"use_vnclicense_reload"`
 
 	Backup     string `taco:"backup"`
 	SkipBackup bool   `taco:"skip_backup"`

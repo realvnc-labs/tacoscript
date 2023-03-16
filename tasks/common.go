@@ -14,7 +14,7 @@ type Script struct {
 
 type Task interface {
 	GetTypeName() string
-	Validate() error
+	Validate(goos string) error
 	GetPath() string
 	GetRequirements() []string
 	GetCreatesFilesList() []string

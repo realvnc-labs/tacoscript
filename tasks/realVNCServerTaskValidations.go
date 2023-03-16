@@ -2,7 +2,7 @@ package tasks
 
 import (
 	"errors"
-	"runtime"
+	"os/user"
 	"strconv"
 	"strings"
 
@@ -12,43 +12,49 @@ import (
 	"golang.org/x/text/language"
 )
 
+const (
+	DefaultServiceServerModeConfigFile = `/root/.vnc/config.d/vncserver-x11`
+	// the user's home dir will be prepended to the values below
+	DefaultUserServerModeConfigFile    = `/.vnc/config.d/vncserver-x11`
+	DefaultVirtualServerModeConfigFile = `/.vnc/config.d/vncserver-x11-virtual`
+)
+
 var (
 	AllowableEncryptionValues        = []any{"AlwaysOn", "PreferOn", "AlwaysMaximum", "PreferOff", "AlwaysOff"}
 	AllowableAuthenticationValues    = []any{"VncAuth", "SystemAuth", "InteractiveSystemAuth", "SingleSignOn", "Certificate", "Radius", "None"}
 	AllowableFeaturePermissionsChars = "!-svkpctrhwdqf"
 	AllowableLogTargets              = []any{"stderr", "file", "EventLog", "syslog"}
-	AllowableServerModes             = []any{ServiceServerMode, UserServerMode}
+	AllowableServerModes             = []any{ServiceServerMode, UserServerMode, VirtualServerMode}
 	AllowableLogLevels               = []any{0, 10, 30, 100}
 
 	ErrInvalidNameFieldMsg          = "invalid task name"
 	ErrConfigFileMustBeSpecifiedMsg = "the config_file param must be specified when updating a realvnc server config on linux or mac"
 
-	ErrInvalidEncryptionValueMsg     = "invalid Encryption value"
-	ErrInvalidAuthenticationValueMsg = "invalid Authentication value"
-	ErrEmptyAuthenticationValueMsg   = "authentication value cannot be empty"
-	ErrInvalidPermisssionsMsg        = "invalid Permissions value"
-	ErrInvalidLogsValueMsg           = "invalid Log value"
-	ErrInvalidCaptureMethodValueMsg  = "invalid CaptureMethod value"
-	ErrUnknownServerModeMsg          = "unknown server mode"
+	ErrInvalidEncryptionValueMsg                = "invalid encryption value"
+	ErrInvalidAuthenticationValueMsg            = "invalid authentication value"
+	ErrEmptyAuthenticationValueMsg              = "authentication value cannot be empty"
+	ErrInvalidPermisssionsMsg                   = "invalid permissions value"
+	ErrInvalidLogsValueMsg                      = "invalid log value"
+	ErrInvalidCaptureMethodValueMsg             = "invalid captureMethod value"
+	ErrUnknownServerModeMsg                     = "unknown server mode"
+	ErrServerModeCannotBeVirtualWhenNotLinuxMsg = "server mode cannot be virtual when not running Linux"
 )
 
-func (t *RealVNCServerTask) Validate() error {
+func (t *RealVNCServerTask) Validate(goos string) error {
 	errs := &utils.Errors{}
 
 	err := ValidateRequired(t.Path, t.Path+"."+NameField)
 	errs.Add(err)
 
-	if runtime.GOOS != "windows" {
-		err = t.ValidateConfigFileField()
-		if err != nil {
-			errs.Add(err)
-			return errs.ToError()
-		}
-	}
-
-	err = t.ValidateServerModeField()
+	err = t.ValidateServerModeField(goos)
 	if err != nil {
 		errs.Add(err)
+	}
+
+	err = t.ValidateConfigFileField(goos)
+	if err != nil {
+		errs.Add(err)
+		return errs.ToError()
 	}
 
 	if t.shouldValidate(EncryptionField) {
@@ -100,8 +106,24 @@ func (t *RealVNCServerTask) shouldValidate(fieldKey string) (should bool) {
 	return t.tracker.HasNewValue(fieldKey) && !t.tracker.ShouldClear(fieldKey)
 }
 
-func (t *RealVNCServerTask) ValidateConfigFileField() error {
-	if runtime.GOOS != "windows" {
+func (t *RealVNCServerTask) ValidateConfigFileField(goos string) error {
+	if goos != "windows" && t.ConfigFile == "" {
+		switch t.ServerMode {
+		case ServiceServerMode:
+			t.ConfigFile = DefaultServiceServerModeConfigFile
+		case UserServerMode:
+			homeDir, err := getUserHomeDir()
+			if err != nil {
+				return err
+			}
+			t.ConfigFile = homeDir + DefaultUserServerModeConfigFile
+		case VirtualServerMode:
+			homeDir, err := getUserHomeDir()
+			if err != nil {
+				return err
+			}
+			t.ConfigFile = homeDir + DefaultVirtualServerModeConfigFile
+		}
 		err := validation.Validate(t.ConfigFile,
 			validation.Required.Error(ErrConfigFileMustBeSpecifiedMsg),
 		)
@@ -112,10 +134,23 @@ func (t *RealVNCServerTask) ValidateConfigFileField() error {
 	return nil
 }
 
-func (t *RealVNCServerTask) ValidateServerModeField() error {
+func getUserHomeDir() (homeDir string, err error) {
+	usr, err := user.Current()
+	if err != nil {
+		return "", err
+	}
+	homeDir = usr.HomeDir
+	return homeDir, nil
+}
+
+func (t *RealVNCServerTask) ValidateServerModeField(goos string) error {
 	if t.ServerMode == "" {
 		t.ServerMode = ServiceServerMode
 		return nil
+	}
+
+	if goos != "linux" && t.ServerMode == VirtualServerMode {
+		return errors.New(ErrServerModeCannotBeVirtualWhenNotLinuxMsg)
 	}
 
 	caser := cases.Title(language.AmericanEnglish)
@@ -123,6 +158,11 @@ func (t *RealVNCServerTask) ValidateServerModeField() error {
 	err := validation.Validate(serverMode,
 		validation.In(AllowableServerModes...).Error(ErrUnknownServerModeMsg),
 	)
+
+	if serverMode == VirtualServerMode {
+		t.UseVNCLicenseReload = true
+	}
+
 	t.ServerMode = serverMode
 	if err != nil {
 		return err
