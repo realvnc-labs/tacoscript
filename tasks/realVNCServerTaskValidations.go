@@ -23,12 +23,12 @@ var (
 	ErrInvalidNameFieldMsg          = "invalid task name"
 	ErrConfigFileMustBeSpecifiedMsg = "the config_file param must be specified when updating a realvnc server config on linux or mac"
 
-	ErrInvalidEncryptionValueMsg     = "invalid Encryption value. Please see the RealVNC documentation for allowable values"
-	ErrInvalidAuthenticationValueMsg = "invalid Authentication value. Please see the RealVNC documentation for allowable values"
-	ErrEmptyAuthenticationValueMsg   = "authentication value cannot be empty. Please see the RealVNC documentation for more information"
-	ErrInvalidPermisssionsMsg        = "invalid Permissions value. Please see the RealVNC documentation for more information"
-	ErrInvalidLogsValueMsg           = "invalid Log value. Please see the RealVNC documentation for more information"
-	ErrInvalidCaptureMethodValueMsg  = "invalid CaptureMethod value. Please see the RealVNC documentation for more information"
+	ErrInvalidEncryptionValueMsg     = "invalid Encryption value"
+	ErrInvalidAuthenticationValueMsg = "invalid Authentication value"
+	ErrEmptyAuthenticationValueMsg   = "authentication value cannot be empty"
+	ErrInvalidPermisssionsMsg        = "invalid Permissions value"
+	ErrInvalidLogsValueMsg           = "invalid Log value"
+	ErrInvalidCaptureMethodValueMsg  = "invalid CaptureMethod value"
 	ErrUnknownServerModeMsg          = "unknown server mode"
 )
 
