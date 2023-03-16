@@ -1,5 +1,5 @@
 ---
-title: 'Real VNC Server'
+title: 'RealVNC Server'
 weight: 5
 slug: realvncserver
 ---
