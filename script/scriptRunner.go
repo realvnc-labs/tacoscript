@@ -65,7 +65,7 @@ func (r Runner) Run(ctx context.Context, scripts tasks.Scripts, globalAbortOnErr
 			}
 
 			if pkgTask, ok := task.(*tasks.PkgTask); ok {
-				name = pkgTask.NamedTask.Name
+				name = pkgTask.Named.Name
 				comment = res.Comment
 				if res.Err == nil && !pkgTask.Updated {
 					comment = "Package not updated " + res.SkipReason
@@ -93,6 +93,13 @@ func (r Runner) Run(ctx context.Context, scripts tasks.Scripts, globalAbortOnErr
 				comment = res.Comment
 				if res.Err == nil && !replaceTask.Updated {
 					comment = "File not changed " + res.SkipReason
+				}
+			}
+
+			if realVNCServerTask, ok := task.(*tasks.RealVNCServerTask); ok {
+				comment = res.Comment
+				if res.Err == nil && !realVNCServerTask.Updated {
+					comment = "Config not changed " + res.SkipReason
 				}
 			}
 
@@ -152,7 +159,7 @@ func handleCmdRunResults(
 	summary *scriptSummary,
 	res *tasks.ExecutionResult,
 	changeMap map[string]interface{}) (name string, comment string, abort bool) {
-	name = strings.Join(cmdRunTask.GetNames(), "; ")
+	name = strings.Join(cmdRunTask.Named.GetNames(), "; ")
 
 	if !res.IsSkipped {
 		comment = `Command "` + name + `" run`

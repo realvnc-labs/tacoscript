@@ -20,6 +20,9 @@ type Task interface {
 	GetCreatesFilesList() []string
 	GetOnlyIfCmds() []string
 	GetUnlessCmds() []string
+
+	GetTracker() (tracker *FieldStatusTracker)
+	IsChangeField(inputKey string) (excluded bool)
 }
 
 type ExecutionResult struct {

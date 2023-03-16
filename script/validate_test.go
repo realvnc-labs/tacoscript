@@ -49,6 +49,14 @@ func (rtm *RequirementsTaskMock) GetCreatesFilesList() []string {
 	return rtm.Creates
 }
 
+func (rtm *RequirementsTaskMock) GetTracker() (tracker *tasks.FieldStatusTracker) {
+	return nil
+}
+
+func (rtm *RequirementsTaskMock) IsChangeField(inputKey string) (excluded bool) {
+	return false
+}
+
 type errorExpectation struct {
 	messagePrefix  string
 	availableParts []string

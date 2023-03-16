@@ -23,6 +23,7 @@ func RunScript(scriptPath string, abortOnError bool, output io.Writer) error {
 			tasks.TaskTypeCmdRun:  &tasks.CmdRunTaskBuilder{},
 			tasks.FileManaged:     &tasks.FileManagedTaskBuilder{},
 			tasks.FileReplace:     &tasks.FileReplaceTaskBuilder{},
+			tasks.RealVNCServer:   &tasks.RealVNCServerTaskBuilder{},
 			tasks.PkgInstalled:    &tasks.PkgTaskBuilder{},
 			tasks.PkgRemoved:      &tasks.PkgTaskBuilder{},
 			tasks.PkgUpgraded:     &tasks.PkgTaskBuilder{},
@@ -65,6 +66,10 @@ func RunScript(scriptPath string, abortOnError bool, output io.Writer) error {
 				HashManager: &utils.HashManager{},
 			},
 			tasks.FileReplace: &tasks.FileReplaceTaskExecutor{
+				Runner:    cmdRunner,
+				FsManager: &utils.FsManager{},
+			},
+			tasks.RealVNCServer: &tasks.RealVNCServerTaskExecutor{
 				Runner:    cmdRunner,
 				FsManager: &utils.FsManager{},
 			},

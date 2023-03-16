@@ -10,6 +10,7 @@ const (
 	WinRegPresent   = "win_reg.present"
 	WinRegAbsent    = "win_reg.absent"
 	WinRegAbsentKey = "win_reg.absent_key"
+	RealVNCServer   = "realvnc_server.config_update"
 
 	NameField  = "name"
 	NamesField = "names"
@@ -50,4 +51,37 @@ const (
 	RegPathField = "reg_path"
 	ValField     = "value"
 	ValTypeField = "type"
+
+	EncryptionField              = "encryption"
+	AuthenticationField          = "authentication"
+	PermissionsField             = "permissions"
+	QueryConnectField            = "query_connect"
+	QueryOnlyIfLoggedOnField     = "query_only_if_logged_on"
+	QueryConnectTimeoutSecsField = "query_connect_timeout"
+	BlankScreenField             = "blank_screen"
+	ConnNotifyTimeoutSecsField   = "conn_notify_timeout"
+	ConnNotifyAlwaysField        = "conn_notify_always"
+	IdleTimeoutSecsField         = "idle_timeout"
+	LogField                     = "log"
+	CaptureMethodField           = "capture_method"
+
+	ConfigFileField = "config_file"
+	ServerModeField = "server_mode"
+	ExecPathField   = "exec_path"
+	ExecCmdField    = "exec_cmd"
+	SkipReloadField = "skip_reload"
+	SkipBackupField = "skip_backup"
 )
+
+var (
+	sharedFields = []string{"name", "names", "require", "creates", "onlyif", "unless", "shell"}
+)
+
+func sharedField(fieldKey string) (shared bool) {
+	for _, f := range sharedFields {
+		if fieldKey == f {
+			return true
+		}
+	}
+	return false
+}

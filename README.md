@@ -1,5 +1,7 @@
 <!-- markdownlint-disable -->
+
 ## Overview
+
 <!-- markdownlint-restore -->
 
 ![Logo](https://raw.githubusercontent.com/cloudradar-monitoring/tacoscript/master/logo.svg)
@@ -20,7 +22,7 @@ Before each run, Tacoscript compares the desired outcome with the current state.
 
 ## Program execution
 
-Prepare a  script in the yaml format , e.g. `tascoscript.yaml`, then execute it.
+Prepare a script in the yaml format , e.g. `tascoscript.yaml`, then execute it.
 
 ```shell
 tacoscript tascoscript.yaml
@@ -44,10 +46,10 @@ Here is the minimal possible `tacoscript.yaml` for Unix:
 ```yaml
 # unique id of the task, can be any string
 create-file:
-    #task type (function) to be executed
-    cmd.run:
-        #Paramter, command to run
-        - name: touch /tmp/somefile.txt
+  #task type (function) to be executed
+  cmd.run:
+    #Paramter, command to run
+    - name: touch /tmp/somefile.txt
 ```
 
 On Windows, the file can be:
@@ -60,6 +62,7 @@ create-file:
 ```
 
 We can read the script as:
+
 > Inside a script, we have a task with the id `create-file`. It consists of the function `cmd.run` which executes
 > `touch /tmp/somefile.txt` or its PowerShell equivalent. The desired result of this script execution would be an empty
 > file at `/tmp/somefile.txt`.
@@ -74,15 +77,20 @@ You can add as many tasks as you want. The tacoscript binary will execute tasks 
 Each script contains a collection of tasks. Each task has a unique id, and a function that identifies the kind of
 operation the task can do. Tasks get a list of parameters under it as input data. In the example above, the function
 `cmd.run` receives the parameter `-name` with value `/tmp/somefile.txt` and interprets it as a command which should be
-executed.  
+executed.
 
 ### Supported functions aka task types
 
 - `cmd.run` Run shell commands and scripts [Read more](https://tacoscript.io/functions/commands/)
 - `file.managed` copy, manipulate, download and manage files [Read More](https://tacoscript.io/functions/file/)
+- `file.replace` remove packages via package manager [Read More](https://tacoscript.io/functions/file/#filereplace)
 - `pkg.installed` install packages via package manager [Read More](https://tacoscript.io/functions/packages/#pkginstalled)
 - `pkg.uptodate` update packages via package manager [Read More](https://tacoscript.io/functions/packages/#pkguptodate)
 - `pkg.removed` remove packages via package manager [Read More](https://tacoscript.io/functions/packages/#pkgremoved)
+- `win_reg.present` remove packages via package manager [Read More](https://tacoscript.io/functions/registry/#win_regpresent)
+- `win_reg.absent` remove packages via package manager [Read More](https://tacoscript.io/functions/registry/#win_regabsent)
+- `win_reg.absent_key` remove packages via package manager [Read More](https://tacoscript.io/functions/registry/#win_regabsent_key)
+- `realvnc_server.config_update` remove packages via package manager [Read More](https://tacoscript.io/functions/realvncserver/)
 
 [Read full documentation]
 
@@ -95,7 +103,7 @@ See [Templates rendering](https://tacoscript.io/get-started/template-engine/)
 - to use shell pipes, redirects or glob expands, please specify a `shell` parameter
 - `user` parameter will require sudo rights for tacoscript, in Windows this parameter is ignored
 - if you use cmd.run tasks in Windows, you'd better specify the shell parameter as `cmd.exe`, otherwise you will get errors like:
-    `exec: "xxx": executable file not found in %PATH%`
+  `exec: "xxx": executable file not found in %PATH%`
 - the order of the scripts is not guaranteed. If you don't use the [require](https://tacoscript.io/get-started/dependencies/)
   values, the scripts will be executed in any order.
 

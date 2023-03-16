@@ -41,7 +41,7 @@ func TestPkgTaskBuilder(t *testing.T) {
 				ActionType:    ActionInstall,
 				TypeName:      PkgInstalled,
 				Path:          "vim",
-				NamedTask:     NamedTask{Name: "vim"},
+				Named:         NamedTask{Name: "vim"},
 				Shell:         "cmd.exe",
 				Version:       "1.0.1",
 				ShouldRefresh: true,
@@ -72,7 +72,7 @@ func TestPkgTaskBuilder(t *testing.T) {
 				ActionType:    ActionUpdate,
 				TypeName:      PkgUpgraded,
 				Path:          "git",
-				NamedTask:     NamedTask{Name: "git"},
+				Named:         NamedTask{Name: "git"},
 				Version:       "2.0.2",
 				ShouldRefresh: false,
 			},
@@ -92,7 +92,7 @@ func TestPkgTaskBuilder(t *testing.T) {
 				ActionType: ActionUninstall,
 				TypeName:   PkgRemoved,
 				Path:       "nano",
-				NamedTask: NamedTask{Names: []string{
+				Named: NamedTask{Names: []string{
 					"nano",
 					"git",
 				}},
@@ -134,8 +134,8 @@ func TestPkgTaskBuilder(t *testing.T) {
 func assertPkgTaskEquals(t *testing.T, expectedTask, actualTask *PkgTask) {
 	assert.Equal(t, expectedTask.TypeName, actualTask.TypeName)
 	assert.Equal(t, expectedTask.Path, actualTask.Path)
-	assert.Equal(t, expectedTask.Name, actualTask.Name)
-	assert.Equal(t, expectedTask.Names, actualTask.Names)
+	assert.Equal(t, expectedTask.Named.Name, actualTask.Named.Name)
+	assert.Equal(t, expectedTask.Named.Names, actualTask.Named.Names)
 	assert.Equal(t, expectedTask.Require, actualTask.Require)
 	assert.Equal(t, expectedTask.Creates, actualTask.Creates)
 	assert.Equal(t, expectedTask.OnlyIf, actualTask.OnlyIf)

@@ -164,12 +164,12 @@ func (pm PackageTaskManager) getPackageDiff(
 }
 
 func (pm PackageTaskManager) getAffectedPackagesStr(t *tasks.PkgTask) string {
-	packages := make([]string, 0, len(t.Names)+1)
-	if t.Name != "" {
-		packages = append(packages, t.Name)
+	packages := make([]string, 0, len(t.Named.Names)+1)
+	if t.Named.Name != "" {
+		packages = append(packages, t.Named.Name)
 	}
 
-	for _, pkg := range t.Names {
+	for _, pkg := range t.Named.Names {
 		if pkg != "" {
 			packages = append(packages, pkg)
 		}

@@ -81,7 +81,6 @@ linters:
     - nakedret
     - noctx
     - nolintlint
-    - rowserrcheck
     - exportloopref
     - staticcheck
     - stylecheck

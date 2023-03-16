@@ -1,0 +1,6 @@
+#This is a comment
+Desktop=Build machine
+Encryption=BadValue
+Authentication=SystemAuth
+RsaPrivateKeyFile=$HOME/secure/vnc
+Permissions=admin:f,vncusers:d,guests:v

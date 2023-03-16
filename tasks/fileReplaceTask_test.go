@@ -68,17 +68,19 @@ func TestFileReplaceTaskValidation(t *testing.T) {
 		tc := testCase
 		t.Run(tc.Name, func(t *testing.T) {
 			err := tc.Task.Validate()
-			if tc.ExpectedErrorStr == "" {
-				assert.NoError(t, err)
-				// if we've a valid task then check the default for max_file_size
-				if strings.Contains(tc.Name, "valid task") {
-					assert.Equal(t, defaultMaxFileSize, tc.Task.MaxFileSize)
-					fileSize, err := conv.ConvertToFileSize(defaultMaxFileSize)
-					require.NoError(t, err)
-					assert.Equal(t, fileSize, tc.Task.maxFileSizeCalculated)
-				}
-			} else {
+
+			if tc.ExpectedErrorStr != "" {
 				assert.ErrorContains(t, err, tc.ExpectedErrorStr)
+				return
+			}
+
+			assert.NoError(t, err)
+			// if we've a valid task then check the default for max_file_size
+			if strings.Contains(tc.Name, "valid task") {
+				assert.Equal(t, defaultMaxFileSize, tc.Task.MaxFileSize)
+				fileSize, err := conv.ConvertToFileSize(defaultMaxFileSize)
+				require.NoError(t, err)
+				assert.Equal(t, fileSize, tc.Task.maxFileSizeCalculated)
 			}
 		})
 	}
@@ -223,17 +225,17 @@ func TestShouldMakeBackupOfOriginalFileWhenBackupExtensionSet(t *testing.T) {
 func TestShouldNotMakeBackupOfOriginalFileWhenBackupExtensionNotSet(t *testing.T) {
 	ctx := context.Background()
 
-	testFilename := getTestFilename()
+	testConfigFilename := getTestFilename()
 
-	WriteTestFile(t, testFilename, simpleTestFileContents)
-	defer os.Remove(testFilename)
+	WriteTestFile(t, testConfigFilename, simpleTestFileContents)
+	defer os.Remove(testConfigFilename)
 
 	executor := &FileReplaceTaskExecutor{
 		FsManager: &utils.FsManager{},
 	}
 	task := &FileReplaceTask{
 		Path:    "replace-1",
-		Name:    testFilename,
+		Name:    testConfigFilename,
 		Pattern: "a test",
 		Repl:    "not a test",
 		// BackupExtension: "bak",
@@ -246,7 +248,7 @@ func TestShouldNotMakeBackupOfOriginalFileWhenBackupExtensionNotSet(t *testing.T
 	require.NoError(t, res.Err)
 	require.True(t, task.Updated)
 
-	assert.NoFileExists(t, testFilename+".bak")
+	assert.NoFileExists(t, utils.GetBackupFilename(testConfigFilename, "bak"))
 }
 
 func TestShouldReplaceAllMatchingItems(t *testing.T) {

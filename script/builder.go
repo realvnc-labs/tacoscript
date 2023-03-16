@@ -7,11 +7,10 @@ import (
 	"os"
 	"text/template"
 
-	"github.com/cloudradar-monitoring/tacoscript/utils"
+	"gopkg.in/yaml.v2"
 
 	"github.com/cloudradar-monitoring/tacoscript/tasks"
-
-	"gopkg.in/yaml.v2"
+	"github.com/cloudradar-monitoring/tacoscript/utils"
 )
 
 type FileDataProvider struct {
@@ -72,14 +71,19 @@ func (p Builder) BuildScripts() (tasks.Scripts, error) {
 		if steps, ok := rawTask.Value.(yaml.MapSlice); ok {
 			for _, step := range steps {
 				taskTypeID := step.Key.(string)
-
+				taskParams := step.Value
 				index++
-				task, e := p.TaskBuilder.Build(taskTypeID, fmt.Sprintf("%s.%s[%d]", scriptID, taskTypeID, index), step.Value)
-				if e != nil {
-					return tasks.Scripts{}, e
+
+				task, err := p.TaskBuilder.Build(taskTypeID, fmt.Sprintf("%s.%s[%d]", scriptID, taskTypeID, index), taskParams)
+				if err != nil {
+					return tasks.Scripts{}, err
 				}
 
-				errs.Add(task.Validate())
+				err = task.Validate()
+				if err != nil {
+					errs.Add(err)
+				}
+
 				script.Tasks = append(script.Tasks, task)
 			}
 		} else {

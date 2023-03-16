@@ -29,58 +29,6 @@ const (
 
 var ErrUnknownWinRegAction = errors.New("unknown action")
 
-var winRegTaskParamsFnMap = taskParamsFnMap{
-	NameField: func(task Task, path string, val interface{}) error {
-		t := task.(*WinRegTask)
-		t.Name = fmt.Sprint(val)
-		return nil
-	},
-	RequireField: func(task Task, path string, val interface{}) error {
-		var err error
-		t := task.(*WinRegTask)
-		t.Require, err = parseRequireField(val, path)
-		return err
-	},
-	CreatesField: func(task Task, path string, val interface{}) error {
-		var err error
-		t := task.(*WinRegTask)
-		t.Creates, err = parseCreatesField(val, path)
-		return err
-	},
-	OnlyIfField: func(task Task, path string, val interface{}) error {
-		var err error
-		t := task.(*WinRegTask)
-		t.OnlyIf, err = parseOnlyIfField(val, path)
-		return err
-	},
-	UnlessField: func(task Task, path string, val interface{}) error {
-		var err error
-		t := task.(*WinRegTask)
-		t.Unless, err = parseUnlessField(val, path)
-		return err
-	},
-	RegPathField: func(task Task, path string, val interface{}) error {
-		t := task.(*WinRegTask)
-		t.RegPath = fmt.Sprint(val)
-		return nil
-	},
-	ValField: func(task Task, path string, val interface{}) error {
-		t := task.(*WinRegTask)
-		t.Val = fmt.Sprint(val)
-		return nil
-	},
-	ValTypeField: func(task Task, path string, val interface{}) error {
-		t := task.(*WinRegTask)
-		t.ValType = fmt.Sprint(val)
-		return nil
-	},
-	ShellField: func(task Task, path string, val interface{}) error {
-		t := task.(*WinRegTask)
-		t.Shell = fmt.Sprint(val)
-		return nil
-	},
-}
-
 func (wrtb WinRegTaskBuilder) Build(typeName, path string, params interface{}) (Task, error) {
 	task := &WinRegTask{
 		TypeName: typeName,
@@ -96,7 +44,7 @@ func (wrtb WinRegTaskBuilder) Build(typeName, path string, params interface{}) (
 		task.ActionType = ActionWinRegAbsentKey
 	}
 
-	errs := Build(typeName, path, params, task, winRegTaskParamsFnMap)
+	errs := Build(typeName, path, params, task, nil)
 
 	return task, errs.ToError()
 }
@@ -106,17 +54,19 @@ type WinRegTask struct {
 	TypeName   string
 	Path       string
 
-	Name    string
-	RegPath string
-	Val     string
-	ValType string
+	Name    string `taco:"name"`
+	RegPath string `taco:"reg_path"`
+	Val     string `taco:"value"`
+	ValType string `taco:"type"`
 
-	Require []string
-	Creates []string
-	OnlyIf  []string
-	Unless  []string
+	Require []string `taco:"require"`
+	Creates []string `taco:"creates"`
+	OnlyIf  []string `taco:"onlyif"`
+	Unless  []string `taco:"unless"`
 
-	Shell string
+	Shell string `taco:"shell"`
+
+	tracker *FieldStatusTracker
 
 	Updated bool
 }
@@ -188,6 +138,17 @@ func (wrt *WinRegTask) GetUnlessCmds() []string {
 
 func (wrt *WinRegTask) GetCreatesFilesList() []string {
 	return wrt.Creates
+}
+
+func (wrt *WinRegTask) GetTracker() (tracker *FieldStatusTracker) {
+	if wrt.tracker == nil {
+		wrt.tracker = newFieldStatusTracker()
+	}
+	return wrt.tracker
+}
+
+func (wrt *WinRegTask) IsChangeField(inputKey string) (excluded bool) {
+	return false
 }
 
 type WinRegTaskExecutor struct {

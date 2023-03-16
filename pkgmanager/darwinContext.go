@@ -19,7 +19,7 @@ func BuildManagementCmdsProviders() ([]ManagementCmdsProvider, error) {
 type OsPackageManagerCmdProvider struct{}
 
 func (ecb OsPackageManagerCmdProvider) GetManagementCmds(t *tasks.PkgTask) (*ManagementCmds, error) {
-	rawCmds := t.GetNames()
+	rawCmds := t.Named.GetNames()
 	rawInstallCmds := make([]string, 0, len(rawCmds))
 	if t.Version != "" {
 		for _, rawCmd := range rawCmds {

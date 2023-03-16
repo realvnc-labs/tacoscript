@@ -19,15 +19,18 @@ import (
 type CmdRunTask struct {
 	TypeName string
 	Path     string
-	NamedTask
-	WorkingDir string
-	User       string
-	Shell      string
-	Envs       conv.KeyValues
-	Creates    []string
-	Require    []string
-	OnlyIf     []string
-	Unless     []string
+	Named    NamedTask
+	Envs     conv.KeyValues
+
+	WorkingDir string   `taco:"cwd"`
+	User       string   `taco:"user"`
+	Shell      string   `taco:"shell"`
+	Creates    []string `taco:"creates"`
+	Require    []string `taco:"require"`
+	OnlyIf     []string `taco:"onlyif"`
+	Unless     []string `taco:"unless"`
+
+	tracker *FieldStatusTracker
 
 	// aborts task execution if one task fails
 	AbortOnError bool
@@ -36,71 +39,32 @@ type CmdRunTask struct {
 type CmdRunTaskBuilder struct {
 }
 
-var cmdRunTaskParamsFnMap = taskParamsFnMap{
-	NameField: func(task Task, path string, val interface{}) error {
-		t := task.(*CmdRunTask)
-		t.Name = fmt.Sprint(val)
-		return nil
+var cmdRunTaskParamsFnMap = taskFieldsParserConfig{
+	NameField: {
+		parseFn: func(task Task, path string, val interface{}) error {
+			t := task.(*CmdRunTask)
+			t.Named.Name = fmt.Sprint(val)
+			return nil
+		},
+		fieldName: "Name",
 	},
-	CwdField: func(task Task, path string, val interface{}) error {
-		t := task.(*CmdRunTask)
-		t.WorkingDir = fmt.Sprint(val)
-		return nil
+	NamesField: {
+		parseFn: func(task Task, path string, val interface{}) error {
+			var err error
+			t := task.(*CmdRunTask)
+			t.Named.Names, err = conv.ConvertToValues(val)
+			return err
+		},
+		fieldName: "Names",
 	},
-	UserField: func(task Task, path string, val interface{}) error {
-		t := task.(*CmdRunTask)
-		t.User = fmt.Sprint(val)
-		return nil
-	},
-	EnvField: func(task Task, path string, val interface{}) error {
-		var err error
-		t := task.(*CmdRunTask)
-		t.Envs, err = conv.ConvertToKeyValues(val, path)
-		return err
-	},
-	NamesField: func(task Task, path string, val interface{}) error {
-		var err error
-		t := task.(*CmdRunTask)
-		t.Names, err = conv.ConvertToValues(val, path)
-		return err
-	},
-	AbortOnErrorField: func(task Task, path string, val interface{}) error {
-		t := task.(*CmdRunTask)
-		t.AbortOnError = conv.ConvertToBool(val)
-		return nil
-	},
-
-	CreatesField: func(task Task, path string, val interface{}) error {
-		var err error
-		t := task.(*CmdRunTask)
-		t.Creates, err = parseCreatesField(val, path)
-		return err
-	},
-	OnlyIfField: func(task Task, path string, val interface{}) error {
-		var err error
-		t := task.(*CmdRunTask)
-		t.OnlyIf, err = parseOnlyIfField(val, path)
-		return err
-	},
-	UnlessField: func(task Task, path string, val interface{}) error {
-		var err error
-		t := task.(*CmdRunTask)
-		t.Unless, err = parseUnlessField(val, path)
-		return err
-	},
-
-	RequireField: func(task Task, path string, val interface{}) error {
-		var err error
-		t := task.(*CmdRunTask)
-		t.Require, err = parseRequireField(val, path)
-		return err
-	},
-
-	ShellField: func(task Task, path string, val interface{}) error {
-		valStr := fmt.Sprint(val)
-		t := task.(*CmdRunTask)
-		t.Shell = valStr
-		return nil
+	EnvField: {
+		parseFn: func(task Task, path string, val interface{}) error {
+			var err error
+			t := task.(*CmdRunTask)
+			t.Envs, err = conv.ConvertToKeyValues(val, path)
+			return err
+		},
+		fieldName: "Env",
 	},
 }
 
@@ -125,8 +89,8 @@ func (crt *CmdRunTask) GetRequirements() []string {
 
 func (crt *CmdRunTask) Validate() error {
 	errs := &utils.Errors{}
-	err1 := ValidateRequired(crt.Name, crt.Path+"."+NameField)
-	err2 := ValidateRequiredMany(crt.Names, crt.Path+"."+NamesField)
+	err1 := ValidateRequired(crt.Named.Name, crt.Path+"."+NameField)
+	err2 := ValidateRequiredMany(crt.Named.Names, crt.Path+"."+NamesField)
 
 	if err1 != nil && err2 != nil {
 		errs.Add(err1)
@@ -157,6 +121,17 @@ func (crt *CmdRunTask) GetCreatesFilesList() []string {
 	return crt.Creates
 }
 
+func (crt *CmdRunTask) GetTracker() (tracker *FieldStatusTracker) {
+	if crt.tracker == nil {
+		crt.tracker = newFieldStatusTracker()
+	}
+	return crt.tracker
+}
+
+func (crt *CmdRunTask) IsChangeField(inputKey string) (excluded bool) {
+	return false
+}
+
 type CmdRunTaskExecutor struct {
 	Runner    tacoexec.Runner
 	FsManager FsManager
@@ -169,7 +144,7 @@ func (crte *CmdRunTaskExecutor) Execute(ctx context.Context, task Task) Executio
 		execRes.Err = fmt.Errorf("cannot convert task '%v' to CmdRunTask", task)
 		return execRes
 	}
-	execRes.Name = strings.Join(cmdRunTask.GetNames(), "; ")
+	execRes.Name = strings.Join(cmdRunTask.Named.GetNames(), "; ")
 
 	var stdoutBuf, stderrBuf bytes.Buffer
 	execCtx := &tacoexec.Context{
@@ -180,7 +155,7 @@ func (crte *CmdRunTaskExecutor) Execute(ctx context.Context, task Task) Executio
 		User:         cmdRunTask.User,
 		Path:         cmdRunTask.Path,
 		Envs:         cmdRunTask.Envs,
-		Cmds:         cmdRunTask.GetNames(),
+		Cmds:         cmdRunTask.Named.GetNames(),
 		Shell:        cmdRunTask.Shell,
 	}
 
@@ -205,7 +180,7 @@ func (crte *CmdRunTaskExecutor) Execute(ctx context.Context, task Task) Executio
 	if err != nil {
 		execRes.Err = err
 	}
-	logrus.Debugf("execution of %s has finished, took: %v", cmdRunTask.Name, execRes.Duration)
+	logrus.Debugf("execution of %s has finished, took: %v", cmdRunTask.Named.Name, execRes.Duration)
 
 	execRes.StdErr = stderrBuf.String()
 	execRes.StdOut = stdoutBuf.String()

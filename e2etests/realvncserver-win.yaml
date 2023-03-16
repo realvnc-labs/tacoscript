@@ -1,0 +1,75 @@
+Run:
+  add-config-param:
+    realvnc_server.config_update:
+      - blank_screen: true
+      - server_mode: User 
+      - skip_reload: true
+  update-config-params-due-to-onlyif:
+    realvnc_server.config_update:
+      - encryption: AlwaysOn
+      - onlyif:
+          - if (-not (Test-Path HKCU:\Software\RealVNC)) { throw "missing"}
+      - server_mode: User
+      - shell: powershell.exe
+      - skip_reload: true
+  do-not-update-config-params-due-to-onlyif:
+    realvnc_server.config_update:
+      - encryption: PreferOn
+      - onlyif:
+          - if (-not (Test-Path HKCU:\Software\RealVNC_Missing)) { throw 'missing' }
+      - server_mode: User 
+      - shell: powershell.exe
+      - skip_reload: true
+  update-config-params-due-to-missing-reg-key:
+    realvnc_server.config_update:
+      - encryption: PreferOn
+      - unless:
+          - if (-not ((Test-Path HKCU:\Software\RealVNC_Missing)) { throw 'not found' }
+      - server_mode: User 
+      - shell: powershell.exe
+      - skip_reload: true
+
+On:
+  - windows
+
+Expect:
+  PreExec: |
+    if (Test-Path HKCU:\Software\RealVNC) { throw 'existing reg key' }
+    # Remove-Item -Path HKCU:\Software\RealVNC -Recurse
+  Summary:
+    Succeeded: 4
+    Changes: 3
+    TotalTasksRun: 4
+  TaskResults:
+    - ID: add-config-param
+      CommentContains:
+        - "Config updated"
+      ChangesContains:
+        - "1 config value change(s) applied"
+      HasChanges: true
+    - ID: update-config-params-due-to-onlyif
+      CommentContains:
+        - "Config updated"
+      ChangesContains:
+        - "1 config value change(s) applied"
+      HasChanges: true
+    - ID: do-not-update-config-params-due-to-onlyif
+      CommentContains:
+        - "Config not changed only if condition was false"
+      HasChanges: false
+    - ID: update-config-params-due-to-missing-reg-key
+      CommentContains:
+        - "Config updated"
+      ChangesContains:
+        - "1 config value change(s) applied"
+      HasChanges: true
+
+  PostExec: |
+    $ErrorActionPreference = "Stop"
+    if (-not (Test-Path HKCU:\Software\RealVNC\vncserver)) {
+      Write-Error "base reg key not set"
+    }
+    if ((Get-Item -Path HKCU:\Software\RealVNC\vncserver).GetValue('Encryption') -eq $null) {
+      Write-Error "reg value not set"
+    }
+    Remove-Item -Path HKCU:\Software\RealVNC -Recurse

@@ -1,15 +1,19 @@
 ---
-title: "Conditionals"
+title: 'Conditionals'
 weight: 2
 slug: conditionals
 ---
+
 {{< toc >}}
+
+_Where a conditional will run a command (e.g. to check the outcome of an `onlyif` statement)
+Tacoscript will use the `shell` parameter to determine the shell to run the command with._
 
 ## `creates`
 
 {{< parameter required=0 type=string|array >}}
 
-*`creates` parameter can have both string and array type.*
+_`creates` parameter can have both string and array type._
 
 ```yaml
 backup-data:
@@ -23,10 +27,10 @@ backup-data:
 or
 
 ```yaml
-    backup-data:
-      cmd.run:
-        - name: echo 123
-        - creates: file1.txt
+backup-data:
+  cmd.run:
+    - name: echo 123
+    - creates: file1.txt
 ```
 
 The `creates` parameter identifies the files which should be missing if you want to run the current task. In other words
@@ -38,11 +42,11 @@ the file is locked by another process:
 ```yaml
 backup-data:
   cmd.run:
-  - names:
-    - touch serviceALock.txt
-    - tar cvf somedata.txt.tar somedata.txt
-    - rm serviceALock.txt
-  - creates: serviceALock.txt
+    - names:
+        - touch serviceALock.txt
+        - tar cvf somedata.txt.tar somedata.txt
+        - rm serviceALock.txt
+    - creates: serviceALock.txt
 ```
 
 In this situation we expect that the script is running periodically, so at some point the lock will be removed, and the
@@ -75,7 +79,7 @@ or
 publish-kafka-message:
   cmd.run:
     - name: kafka-console-producer.sh --broker-list localhost:9092 --topic my_topic --new-producer < messages.txt
-    - onlyif: 
+    - onlyif:
         - service kafka status
         - service zookeeper status
         - test -e messages.txt

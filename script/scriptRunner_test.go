@@ -46,6 +46,14 @@ func (tm *TaskMock) GetCreatesFilesList() []string {
 	return tm.Creates
 }
 
+func (tm *TaskMock) GetTracker() (tracker *tasks.FieldStatusTracker) {
+	return nil
+}
+
+func (tm *TaskMock) IsChangeField(inputKey string) (excluded bool) {
+	return false
+}
+
 type ExecutorMock struct {
 	ExecResult tasks.ExecutionResult
 	InputTasks []tasks.Task
