@@ -30,7 +30,7 @@ type CmdRunTask struct {
 	OnlyIf     []string `taco:"onlyif"`
 	Unless     []string `taco:"unless"`
 
-	tracker *FieldStatusTracker
+	mapper FieldNameMapper
 
 	// aborts task execution if one task fails
 	AbortOnError bool
@@ -121,15 +121,11 @@ func (crt *CmdRunTask) GetCreatesFilesList() []string {
 	return crt.Creates
 }
 
-func (crt *CmdRunTask) GetTracker() (tracker *FieldStatusTracker) {
-	if crt.tracker == nil {
-		crt.tracker = newFieldStatusTracker()
+func (crt *CmdRunTask) GetMapper() (mapper FieldNameMapper) {
+	if crt.mapper == nil {
+		crt.mapper = newFieldNameMapper()
 	}
-	return crt.tracker
-}
-
-func (crt *CmdRunTask) IsChangeField(inputKey string) (excluded bool) {
-	return false
+	return crt.mapper
 }
 
 type CmdRunTaskExecutor struct {

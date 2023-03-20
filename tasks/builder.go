@@ -54,33 +54,40 @@ func Build(
 	logrus.Debugf("Parsing task %s, %s", typeName, path)
 	errs = &utils.Errors{}
 
-	tracker := outputTask.GetTracker()
+	mapper := outputTask.GetMapper()
+	mapper.BuildFieldMap(outputTask)
 
-	tracker.BuildFieldMap(outputTask)
+	var tracker FieldStatusTracker
+	taskWithTracker, hasTracker := outputTask.(TaskWithTracker)
+	if hasTracker {
+		tracker = taskWithTracker.GetTracker()
+	}
 
 	outputTaskValues := reflect.Indirect(reflect.ValueOf(outputTask))
 
-	for _, inputTtem := range inputFields.([]interface{}) {
-		row := inputTtem.(yaml.MapSlice)[0]
+	for _, inputItem := range inputFields.([]interface{}) {
+		row := inputItem.(yaml.MapSlice)[0]
 
 		inputKey := row.Key.(string)
 		inputVal := row.Value
 
-		fieldStatus, found := tracker.GetFieldStatus(inputKey)
+		fieldName := mapper.GetFieldName(inputKey)
 
-		if found {
-			// when unsetting a field then no need to parse value etc. just mark to clear and then
-			// continue to the next field.
-			if inputVal == UnsetKeyword && !sharedField(inputKey) && outputTask.IsChangeField(inputKey) {
-				err := tracker.SetClear(inputKey)
-				if err != nil {
-					errs.Add(errWithField(err, inputKey))
+		if fieldName != "" {
+			if hasTracker {
+				tracker.SetFieldStatus(fieldName, FieldStatus{})
+
+				// when unsetting a field then no need to parse value etc. just mark to clear and then
+				// continue to the next field.
+				if inputVal == UnsetKeyword && !sharedField(inputKey) && taskWithTracker.IsChangeField(fieldName) {
+					err := tracker.SetClear(fieldName)
+					if err != nil {
+						errs.Add(errWithField(err, inputKey))
+					}
+					continue
 				}
-				continue
 			}
 
-			// if exists in the tracker then we can use reflection to parse the value
-			fieldName := fieldStatus.Name
 			outputFieldVal := outputTaskValues.FieldByName(fieldName)
 
 			// if empty field then we didn't find the field matching the name
@@ -89,17 +96,20 @@ func Build(
 				continue
 			}
 
+			// if exists in the struct then we can use reflection to parse the value
 			err := updateField(outputFieldVal, inputVal)
 			if err != nil {
 				errs.Add(errWithField(err, inputKey))
 				continue
 			}
 
-			if !sharedField(inputKey) && outputTask.IsChangeField(inputKey) {
-				err = tracker.SetHasNewValue(inputKey)
-				if err != nil {
-					errs.Add(errWithField(err, inputKey))
-					continue
+			if hasTracker {
+				if !sharedField(inputKey) && taskWithTracker.IsChangeField(fieldName) {
+					err = tracker.SetHasNewValue(fieldName)
+					if err != nil {
+						errs.Add(errWithField(err, inputKey))
+						continue
+					}
 				}
 			}
 

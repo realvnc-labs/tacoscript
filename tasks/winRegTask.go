@@ -66,7 +66,7 @@ type WinRegTask struct {
 
 	Shell string `taco:"shell"`
 
-	tracker *FieldStatusTracker
+	mapper FieldNameMapper
 
 	Updated bool
 }
@@ -140,15 +140,11 @@ func (wrt *WinRegTask) GetCreatesFilesList() []string {
 	return wrt.Creates
 }
 
-func (wrt *WinRegTask) GetTracker() (tracker *FieldStatusTracker) {
-	if wrt.tracker == nil {
-		wrt.tracker = newFieldStatusTracker()
+func (wrt *WinRegTask) GetMapper() (mapper FieldNameMapper) {
+	if wrt.mapper == nil {
+		wrt.mapper = newFieldNameMapper()
 	}
-	return wrt.tracker
-}
-
-func (wrt *WinRegTask) IsChangeField(inputKey string) (excluded bool) {
-	return false
+	return wrt.mapper
 }
 
 type WinRegTaskExecutor struct {

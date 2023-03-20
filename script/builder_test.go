@@ -90,12 +90,8 @@ func (tm *TaskBuilderTaskMock) GetCreatesFilesList() []string {
 	return tm.Creates
 }
 
-func (tm *TaskBuilderTaskMock) GetTracker() (tracker *tasks.FieldStatusTracker) {
+func (tm *TaskBuilderTaskMock) GetMapper() (mapper tasks.FieldNameMapper) {
 	return nil
-}
-
-func (tm *TaskBuilderTaskMock) IsChangeField(inputKey string) (excluded bool) {
-	return false
 }
 
 type TemplateVariablesProviderMock struct {

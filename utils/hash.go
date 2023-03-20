@@ -76,7 +76,7 @@ func HashSum(hashAlgoName, filePath string) (hashSum string, err error) {
 
 	hashSum = fmt.Sprintf("%x", hashAlgo.Sum(nil))
 
-	return
+	return hashSum, nil
 }
 
 func ParseHashAlgoAndSum(hashStr string) (algoName, sum string, err error) {

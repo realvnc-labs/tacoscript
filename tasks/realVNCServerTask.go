@@ -20,7 +20,8 @@ const (
 )
 
 var (
-	nonUpdateFields = []string{"config_file", "server_mode", "exec_path", "exec_cmd", "skip_reload"}
+	// these fields don't change the realvnc server config. they are only used by the task.
+	RvstNoChangeFields = []string{"ConfigFile", "ServerMode", "ExecPath", "ExecCmd", "SkipReload"}
 )
 
 type RealVNCServerTask struct {
@@ -58,7 +59,8 @@ type RealVNCServerTask struct {
 
 	Shell string `taco:"shell"`
 
-	tracker *FieldStatusTracker
+	mapper  FieldNameMapper
+	tracker FieldStatusTracker
 
 	// was replace file updated?
 	Updated bool
@@ -73,15 +75,30 @@ var (
 )
 
 func (tb RealVNCServerTaskBuilder) Build(typeName, path string, fields interface{}) (t Task, err error) {
+	tracker := newFieldCombinedTracker()
 	task := &RealVNCServerTask{
 		TypeName: typeName,
 		Path:     path,
-		tracker:  newFieldStatusTracker(),
+		mapper:   tracker,
+		tracker:  tracker,
 	}
 
 	errs := Build(typeName, path, fields, task, nil)
 
 	return task, errs.ToError()
+}
+
+func (t *RealVNCServerTask) GetTracker() (tracker FieldStatusTracker) {
+	return t.tracker
+}
+
+func (t *RealVNCServerTask) IsChangeField(fieldName string) (excluded bool) {
+	for _, noChangeField := range RvstNoChangeFields {
+		if fieldName == noChangeField {
+			return false
+		}
+	}
+	return true
 }
 
 func (t *RealVNCServerTask) GetTypeName() string {
@@ -112,20 +129,11 @@ func (t *RealVNCServerTask) GetCreatesFilesList() []string {
 	return t.Creates
 }
 
-func (t *RealVNCServerTask) GetTracker() (tracker *FieldStatusTracker) {
-	if t.tracker == nil {
-		t.tracker = newFieldStatusTracker()
+func (t *RealVNCServerTask) GetMapper() (mapper FieldNameMapper) {
+	if t.mapper == nil {
+		t.mapper = newFieldCombinedTracker()
 	}
-	return t.tracker
-}
-
-func (t *RealVNCServerTask) IsChangeField(inputKey string) (excluded bool) {
-	for _, nonUpdateField := range nonUpdateFields {
-		if inputKey == nonUpdateField {
-			return false
-		}
-	}
-	return true
+	return t.mapper
 }
 
 func (t *RealVNCServerTask) getFieldValueAsString(fieldName string) (val string, err error) {
@@ -220,18 +228,18 @@ func (rvste *RealVNCServerTaskExecutor) Execute(ctx context.Context, task Task) 
 		rvst.Updated = true
 		execRes.Comment = "Config updated"
 		execRes.Changes["count"] = fmt.Sprintf("%d config value change(s) applied", addedCount+updatedCount)
-	}
 
-	if !rvst.SkipReload {
-		if rvste.Reloader == nil {
-			// use the task based config reload
-			err = rvste.ReloadConfig(rvst)
-		} else {
-			// use custom reload
-			err = rvste.Reloader.Reload(rvst)
-		}
-		if err != nil {
-			execRes.Err = err
+		if !rvst.SkipReload {
+			if rvste.Reloader == nil {
+				// use the task based config reload
+				err = rvste.ReloadConfig(rvst)
+			} else {
+				// use custom reload
+				err = rvste.Reloader.Reload(rvst)
+			}
+			if err != nil {
+				execRes.Err = err
+			}
 		}
 	}
 

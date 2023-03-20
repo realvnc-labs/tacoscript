@@ -83,7 +83,7 @@ type PkgTask struct {
 	OnlyIf        []string `taco:"onlyif"`
 	Unless        []string `taco:"unless"`
 
-	tracker *FieldStatusTracker
+	mapper FieldNameMapper
 
 	Updated bool
 }
@@ -134,15 +134,11 @@ func (pt *PkgTask) GetCreatesFilesList() []string {
 	return pt.Creates
 }
 
-func (pt *PkgTask) GetTracker() (tracker *FieldStatusTracker) {
-	if pt.tracker == nil {
-		pt.tracker = newFieldStatusTracker()
+func (pt *PkgTask) GetMapper() (mapper FieldNameMapper) {
+	if pt.mapper == nil {
+		pt.mapper = newFieldNameMapper()
 	}
-	return pt.tracker
-}
-
-func (pt *PkgTask) IsChangeField(inputKey string) (excluded bool) {
-	return false
+	return pt.mapper
 }
 
 type PackageManagerExecutionResult struct {

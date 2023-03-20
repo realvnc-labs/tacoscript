@@ -1,4 +1,7 @@
 Run:
+  no-update-cause-no-fields:
+    realvnc_server.config_update:
+      - config_file: ../realvnc/test/realvncserver-config.conf
   add-config-param:
     realvnc_server.config_update:
       - config_file: ../realvnc/test/realvncserver-config.conf
@@ -34,10 +37,14 @@ Expect:
   PreExec: |
     cp ../realvnc/test/realvncserver-config.conf.orig ../realvnc/test/realvncserver-config.conf
   Summary:
-    Succeeded: 4
+    Succeeded: 5
     Changes: 3
-    TotalTasksRun: 4
+    TotalTasksRun: 5
   TaskResults:
+    - ID: no-update-cause-no-fields
+      CommentContains:
+        - "Config not changed"
+      HasChanges: false
     - ID: add-config-param
       CommentContains:
         - "Config updated"

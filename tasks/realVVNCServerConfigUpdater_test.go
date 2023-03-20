@@ -57,13 +57,21 @@ func TestShouldUpdateSimpleConfigFileParam(t *testing.T) {
 		Reloader: &mockConfigReloader{},
 	}
 
+	tracker := &FieldNameStatusTracker{
+		nameMap: withNameMap("encryption", "Encryption"),
+		statusMap: fieldStatusMap{
+			"Encryption": FieldStatus{
+				HasNewValue: true,
+			},
+		},
+	}
+
 	task := &RealVNCServerTask{
 		Path:       "realvnc-server-1",
 		ConfigFile: "../realvnc/test/realvncserver-config.conf",
-		tracker: &FieldStatusTracker{
-			withNewValue("encryption", "Encryption"),
-		},
 		Encryption: "AlwaysOn",
+		mapper:     tracker,
+		tracker:    tracker,
 	}
 
 	err := task.Validate(runtime.GOOS)
@@ -97,14 +105,22 @@ func TestShouldAddSimpleConfigFileParam(t *testing.T) {
 		Reloader: &mockConfigReloader{},
 	}
 
-	task := &RealVNCServerTask{
-		Path:       "realvnc-server-1",
-		ConfigFile: "../realvnc/test/realvncserver-config.conf",
-		SkipBackup: true,
-		tracker: &FieldStatusTracker{
-			withNewValue("blank_screen", "BlankScreen"),
+	tracker := &FieldNameStatusTracker{
+		nameMap: withNameMap("blank_screen", "BlankScreen"),
+		statusMap: fieldStatusMap{
+			"BlankScreen": FieldStatus{
+				HasNewValue: true,
+			},
 		},
+	}
+
+	task := &RealVNCServerTask{
+		Path:        "realvnc-server-1",
+		ConfigFile:  "../realvnc/test/realvncserver-config.conf",
+		SkipBackup:  true,
 		BlankScreen: true,
+		mapper:      tracker,
+		tracker:     tracker,
 	}
 
 	err := task.Validate(runtime.GOOS)
@@ -137,14 +153,22 @@ func TestShouldAddSimpleConfigWhenNoExistingConfigFileParam(t *testing.T) {
 	newConfigFilename := "../realvnc/test/realvncserver-config-new.conf"
 	defer os.Remove(newConfigFilename)
 
-	task := &RealVNCServerTask{
-		Path:       "realvnc-server-1",
-		ConfigFile: newConfigFilename,
-		SkipBackup: false,
-		tracker: &FieldStatusTracker{
-			withNewValue("blank_screen", "BlankScreen"),
+	tracker := &FieldNameStatusTracker{
+		nameMap: withNameMap("blank_screen", "BlankScreen"),
+		statusMap: fieldStatusMap{
+			"BlankScreen": FieldStatus{
+				HasNewValue: true,
+			},
 		},
+	}
+
+	task := &RealVNCServerTask{
+		Path:        "realvnc-server-1",
+		ConfigFile:  newConfigFilename,
+		SkipBackup:  false,
 		BlankScreen: true,
+		mapper:      tracker,
+		tracker:     tracker,
 	}
 
 	err := task.Validate(runtime.GOOS)
@@ -181,19 +205,22 @@ func TestShouldRemoveSimpleConfigFileParam(t *testing.T) {
 		Reloader: &mockConfigReloader{},
 	}
 
+	tracker := &FieldNameStatusTracker{
+		nameMap: withNameMap("encryption", "Encryption"),
+		statusMap: fieldStatusMap{
+			"Encryption": FieldStatus{
+				HasNewValue: true,
+				Clear:       true,
+			},
+		},
+	}
+
 	task := &RealVNCServerTask{
 		Path:       "realvnc-server-1",
 		ConfigFile: "../realvnc/test/realvncserver-config.conf",
-		tracker: &FieldStatusTracker{
-			fieldStatusMap: fieldStatusMap{
-				"encryption": FieldStatus{
-					Name:        "Encryption",
-					HasNewValue: true,
-					Clear:       true,
-				},
-			},
-		},
 		Encryption: "!UNSET!",
+		mapper:     tracker,
+		tracker:    tracker,
 	}
 
 	err := task.Validate(runtime.GOOS)
@@ -215,14 +242,14 @@ func TestShouldRemoveSimpleConfigFileParam(t *testing.T) {
 func TestShouldMakeReloadCmdLine(t *testing.T) {
 	cases := []struct {
 		name            string
-		task            *RealVNCServerTask
+		task            RealVNCServerTask
 		goos            string
 		expectedCmdLine string
 		expectedParams  []string
 	}{
 		{
 			name: "linux default",
-			task: &RealVNCServerTask{
+			task: RealVNCServerTask{
 				Path:       "MyTask",
 				ServerMode: UserServerMode,
 			},
@@ -232,7 +259,7 @@ func TestShouldMakeReloadCmdLine(t *testing.T) {
 		},
 		{
 			name: "linux user server mode",
-			task: &RealVNCServerTask{
+			task: RealVNCServerTask{
 				Path:       "MyTask",
 				ServerMode: UserServerMode,
 			},
@@ -242,7 +269,7 @@ func TestShouldMakeReloadCmdLine(t *testing.T) {
 		},
 		{
 			name: "linux service server mode",
-			task: &RealVNCServerTask{
+			task: RealVNCServerTask{
 				Path:       "MyTask",
 				ServerMode: ServiceServerMode,
 			},
@@ -252,7 +279,7 @@ func TestShouldMakeReloadCmdLine(t *testing.T) {
 		},
 		{
 			name: "linux virtual server mode",
-			task: &RealVNCServerTask{
+			task: RealVNCServerTask{
 				Path:       "MyTask",
 				ServerMode: VirtualServerMode,
 			},
@@ -263,10 +290,14 @@ func TestShouldMakeReloadCmdLine(t *testing.T) {
 	}
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
-			err := tc.task.Validate(tc.goos)
+			task := tc.task
+
+			initMapperTracker(&task)
+
+			err := task.Validate(tc.goos)
 			require.NoError(t, err)
 
-			cmdLine, params := makeReloadCmdLine(tc.task, tc.goos)
+			cmdLine, params := makeReloadCmdLine(&task, tc.goos)
 			assert.Equal(t, tc.expectedCmdLine, cmdLine)
 			assert.Equal(t, tc.expectedParams, params)
 		})

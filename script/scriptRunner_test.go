@@ -46,7 +46,7 @@ func (tm *TaskMock) GetCreatesFilesList() []string {
 	return tm.Creates
 }
 
-func (tm *TaskMock) GetTracker() (tracker *tasks.FieldStatusTracker) {
+func (tm *TaskMock) GetMapper() (mapper tasks.FieldNameMapper) {
 	return nil
 }
 

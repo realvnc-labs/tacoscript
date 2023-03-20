@@ -10,7 +10,6 @@ import (
 	"io/fs"
 	"os"
 	"os/exec"
-	"path/filepath"
 	"runtime"
 
 	"github.com/sirupsen/logrus"
@@ -31,27 +30,17 @@ const (
 )
 
 func (rvste *RealVNCServerTaskExecutor) applyConfigChanges(rvst *RealVNCServerTask) (addedCount int, updatedCount int, err error) {
-	configValues, tempFile, err := newConfigValuesWithTempOutputFile(rvst)
+	configValues, outputBuffer, err := newConfigValuesWithOutputBuffer(rvst)
 	if err != nil {
 		return 0, 0, err
 	}
-
-	// make sure to close the writer
-	defer func() {
-		closeErr := tempFile.Close()
-		// if we're already returning an err then that's more important than the closeErr
-		if err == nil {
-			// if no existing err and a closeErr then return the closeErr
-			err = closeErr
-		}
-	}()
 
 	addedCount, updatedCount, err = rvste.makeChanges(rvst, configValues)
 	if err != nil {
 		return 0, 0, err
 	}
 
-	err = commitChanges(rvst, tempFile)
+	err = commitChanges(rvst, outputBuffer)
 	if err != nil {
 		return 0, 0, err
 	}
@@ -59,8 +48,8 @@ func (rvste *RealVNCServerTaskExecutor) applyConfigChanges(rvst *RealVNCServerTa
 	return addedCount, updatedCount, nil
 }
 
-func newConfigValuesWithTempOutputFile(rvst *RealVNCServerTask) (
-	configValuesFile *realvnc.ConfigValues, tempFile *os.File, err error) {
+func newConfigValuesWithOutputBuffer(rvst *RealVNCServerTask) (
+	configValuesFile *realvnc.ConfigValues, outputBuffer *bytes.Buffer, err error) {
 	configFilename := rvst.ConfigFile
 	if configFilename == "" {
 		return nil, nil, errors.New(ErrConfigFileMustBeSpecifiedMsg)
@@ -75,16 +64,10 @@ func newConfigValuesWithTempOutputFile(rvst *RealVNCServerTask) (
 		}
 	}
 
-	baseConfigFilename := filepath.Base(rvst.ConfigFile)
-	tempFile, err = os.CreateTemp("", baseConfigFilename)
-	if err != nil {
-		return nil, tempFile, err
-	}
-	logrus.Debugf("created temp config file at %s", tempFile.Name())
+	outputBuffer = &bytes.Buffer{}
+	configValuesFile.SetOutputWriter(outputBuffer)
 
-	configValuesFile.SetOutputWriter(tempFile)
-
-	return configValuesFile, tempFile, nil
+	return configValuesFile, outputBuffer, nil
 }
 
 func (rvste *RealVNCServerTaskExecutor) makeChanges(rvst *RealVNCServerTask, configValues *realvnc.ConfigValues) (
@@ -134,7 +117,7 @@ func (rvste *RealVNCServerTaskExecutor) updateExistingValues(rvst *RealVNCServer
 
 		fieldName := existingConfigValue.Name
 
-		fieldStatus, fieldKey, found := rvst.tracker.GetFieldStatusByName(fieldName)
+		fieldStatus, found := rvst.tracker.GetFieldStatus(fieldName)
 		if err != nil {
 			return 0, fmt.Errorf("error while finding field %s: %v", fieldName, err)
 		}
@@ -173,7 +156,7 @@ func (rvste *RealVNCServerTaskExecutor) updateExistingValues(rvst *RealVNCServer
 			}
 		}
 
-		err = rvst.tracker.SetChangeApplied(fieldKey)
+		err = rvst.tracker.SetChangeApplied(fieldName)
 		if err != nil {
 			return 0, fmt.Errorf("failed to update change status %s: %v", fieldName, err)
 		}
@@ -190,13 +173,11 @@ func (rvste *RealVNCServerTaskExecutor) addNewValues(rvst *RealVNCServerTask, co
 
 	logrus.Debugf("checking for new config values")
 
-	err = rvst.tracker.WithNewValues(func(fk string, fs FieldStatus) (err error) {
+	err = rvst.tracker.WithNewValues(func(fieldName string, fs FieldStatus) (err error) {
 		// ignore fields where the change has been applied already (aka updating/cleared fields)
 		if fs.ChangeApplied {
-			return
+			return nil
 		}
-
-		fieldName := fs.Name
 
 		// get the current field value as a string
 		val, err := rvst.getFieldValueAsString(fieldName)
@@ -212,7 +193,7 @@ func (rvste *RealVNCServerTaskExecutor) addNewValues(rvst *RealVNCServerTask, co
 
 		err = configValues.WriteValue(newValue)
 		if err != nil {
-			return fmt.Errorf("failed to added config value %s: %v", fk, err)
+			return fmt.Errorf("failed to added config value %s: %v", fieldName, err)
 		}
 
 		addedCount++
@@ -241,9 +222,8 @@ func (t *RealVNCServerTask) getChangeValue(fieldName string) (changeValue realvn
 	return changeValue, nil
 }
 
-func commitChanges(rvst *RealVNCServerTask, tempFile *os.File) (err error) {
+func commitChanges(rvst *RealVNCServerTask, outputBuffer *bytes.Buffer) (err error) {
 	configFilename := rvst.ConfigFile
-	tempFilename := tempFile.Name()
 	existingConfig := true
 
 	info, err := os.Stat(configFilename)
@@ -273,15 +253,15 @@ func commitChanges(rvst *RealVNCServerTask, tempFile *os.File) (err error) {
 		}
 	}
 
-	err = os.Rename(tempFilename, configFilename)
-	if err != nil {
-		return err
-	}
-
 	perms := fs.FileMode(DefaultConfigFilePermissions)
 	if existingConfig {
 		// preserve existing config file permissions
 		perms = info.Mode().Perm()
+	}
+
+	err = os.WriteFile(configFilename, outputBuffer.Bytes(), perms)
+	if err != nil {
+		return err
 	}
 
 	err = os.Chmod(configFilename, perms)

@@ -47,11 +47,14 @@ func TestShouldSetSimpleConfigRegistryParam(t *testing.T) {
 		Reloader: &mockConfigReloader{},
 	}
 
+	tracker := newTrackerWithSingleFieldStatus("encryption", "Encryption")
+
 	task := &RealVNCServerTask{
 		Path:       "realvnc-server-1",
 		ServerMode: "User",
 		Encryption: "AlwaysOn",
-		tracker:    newTrackerWithSingleFieldStatus("encryption", "Encryption"),
+
+		tracker: tracker,
 	}
 
 	err := task.Validate(runtime.GOOS)
@@ -81,11 +84,14 @@ func TestShouldUpdateSimpleConfigRegistryParam(t *testing.T) {
 		Reloader: &mockConfigReloader{},
 	}
 
+	tracker := newTrackerWithSingleFieldStatus("encryption", "Encryption")
+
 	setupTask := &RealVNCServerTask{
 		Path:       "realvnc-server-1",
 		ServerMode: "User",
 		Encryption: "AlwaysOn",
-		tracker:    newTrackerWithSingleFieldStatus("encryption", "Encryption"),
+		mapper:     tracker,
+		tracker:    tracker,
 	}
 
 	err := setupTask.Validate(runtime.GOOS)
@@ -99,7 +105,8 @@ func TestShouldUpdateSimpleConfigRegistryParam(t *testing.T) {
 		Path:       "realvnc-server-2",
 		ServerMode: "User",
 		Encryption: "PreferOn",
-		tracker:    newTrackerWithSingleFieldStatus("encryption", "Encryption"),
+		mapper:     tracker,
+		tracker:    tracker,
 	}
 
 	err = task.Validate(runtime.GOOS)
@@ -133,10 +140,12 @@ func TestShouldClearSimpleConfigRegistryParam(t *testing.T) {
 		Path:        "realvnc-server-1",
 		ServerMode:  "User",
 		BlankScreen: true,
-		tracker: &FieldStatusTracker{
-			fieldStatusMap: fieldStatusMap{
+		tracker: &FieldNameStatusTracker{
+			nameMap: fieldNameMap{
+				"blank_screen": "BlankScreen",
+			},
+			statusMap: fieldStatusMap{
 				"blank_screen": FieldStatus{
-					Name:        "BlankScreen",
 					HasNewValue: true,
 					Clear:       false,
 				},
@@ -155,10 +164,12 @@ func TestShouldClearSimpleConfigRegistryParam(t *testing.T) {
 		Path:        "realvnc-server-1",
 		ServerMode:  "User",
 		BlankScreen: false,
-		tracker: &FieldStatusTracker{
-			fieldStatusMap: fieldStatusMap{
+		tracker: &FieldNameStatusTracker{
+			nameMap: fieldNameMap{
+				"blank_screen": "BlankScreen",
+			},
+			statusMap: fieldStatusMap{
 				"blank_screen": FieldStatus{
-					Name:        "BlankScreen",
 					HasNewValue: true,
 					Clear:       true,
 				},

@@ -188,7 +188,7 @@ func (pm PackageTaskManager) installPackages(
 
 	err = pm.run(ctx, t, res, mngtCmds.InstallCmds...)
 
-	return
+	return err
 }
 
 func (pm PackageTaskManager) uninstallPackages(
@@ -201,7 +201,7 @@ func (pm PackageTaskManager) uninstallPackages(
 
 	err = pm.run(ctx, t, res, mngtCmds.UninstallCmds...)
 
-	return
+	return err
 }
 
 func (pm PackageTaskManager) updatePackages(
@@ -214,7 +214,7 @@ func (pm PackageTaskManager) updatePackages(
 
 	err = pm.run(ctx, t, res, mngtCmds.UpgradeCmds...)
 
-	return
+	return err
 }
 
 func (pm PackageTaskManager) updatePkgManagerIfNeeded(

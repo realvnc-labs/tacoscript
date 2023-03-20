@@ -12,6 +12,23 @@ type Script struct {
 	Tasks []Task
 }
 
+type FieldNameMapper interface {
+	BuildFieldMap(t Task)
+	GetFieldName(fk string) (fieldName string)
+	SetFieldName(fk string, fieldName string)
+}
+
+type FieldStatusTracker interface {
+	GetFieldStatus(fieldName string) (status FieldStatus, found bool)
+	SetFieldStatus(fieldName string, status FieldStatus)
+	SetHasNewValue(fieldName string) (err error)
+	HasNewValue(fieldName string) (hasNew bool)
+	SetClear(fieldName string) (err error)
+	ShouldClear(fieldKey string) (should bool)
+	SetChangeApplied(fieldName string) (err error)
+	WithNewValues(applyFn func(fieldName string, fs FieldStatus) (err error)) (err error)
+}
+
 type Task interface {
 	GetTypeName() string
 	Validate(goos string) error
@@ -21,8 +38,12 @@ type Task interface {
 	GetOnlyIfCmds() []string
 	GetUnlessCmds() []string
 
-	GetTracker() (tracker *FieldStatusTracker)
-	IsChangeField(inputKey string) (excluded bool)
+	GetMapper() (mapper FieldNameMapper)
+}
+
+type TaskWithTracker interface {
+	GetTracker() (tracker FieldStatusTracker)
+	IsChangeField(fieldName string) (excluded bool)
 }
 
 type ExecutionResult struct {

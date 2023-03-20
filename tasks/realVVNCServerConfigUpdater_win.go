@@ -9,6 +9,8 @@ import (
 	"os/exec"
 	"strings"
 
+	"github.com/sirupsen/logrus"
+
 	tacoexec "github.com/cloudradar-monitoring/tacoscript/exec"
 	"github.com/cloudradar-monitoring/tacoscript/winreg"
 )
@@ -19,15 +21,14 @@ const (
 )
 
 var (
-	HKLMBaseKey = `HKLM:\Software\RealVNC\vncserver`
+	HKLMBaseKey = `HKLM:\SOFTWARE\RealVNC\vncserver`
 	HKCUBaseKey = `HKCU:\Software\RealVNC\vncserver`
 )
 
 func (rvste *RealVNCServerTaskExecutor) applyConfigChanges(rvst *RealVNCServerTask) (addedCount int, updatedCount int, err error) {
 	baseKey := getBaseKeyForServerMode(rvst.ServerMode)
 
-	err = rvst.tracker.WithNewValues(func(fk string, fs FieldStatus) (err error) {
-		fieldName := fs.Name
+	err = rvst.tracker.WithNewValues(func(fieldName string, fs FieldStatus) (err error) {
 		regPath := fieldName
 		regValue, err := rvst.getFieldValueAsString(fieldName)
 		if err != nil {
@@ -38,6 +39,7 @@ func (rvste *RealVNCServerTaskExecutor) applyConfigChanges(rvst *RealVNCServerTa
 		desc := ""
 
 		if fs.Clear {
+			logrus.Debugf(`removing key %s\%s`, baseKey, regPath)
 			updated, desc, err = winreg.RemoveValue(baseKey, regPath)
 			if err != nil {
 				return err
@@ -46,6 +48,7 @@ func (rvste *RealVNCServerTaskExecutor) applyConfigChanges(rvst *RealVNCServerTa
 				updatedCount++
 			}
 		} else {
+			logrus.Debugf(`setting key %s\%s to %s`, baseKey, regPath, regValue)
 			updated, desc, err = winreg.SetValue(baseKey, regPath, regValue, winreg.REG_SZ)
 			if err != nil {
 				return err
@@ -58,7 +61,7 @@ func (rvste *RealVNCServerTaskExecutor) applyConfigChanges(rvst *RealVNCServerTa
 		}
 
 		if updated {
-			err := rvst.tracker.SetChangeApplied(fk)
+			err := rvst.tracker.SetChangeApplied(fieldName)
 			if err != nil {
 				return err
 			}

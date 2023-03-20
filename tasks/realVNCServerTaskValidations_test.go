@@ -9,19 +9,25 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func withNewValue(fieldKey string, fieldName string) (change map[string]FieldStatus) {
-	return map[string]FieldStatus{
-		fieldKey: {
-			Name:        fieldName,
-			HasNewValue: true,
+func withNameMap(fieldKey string, fieldName string) (change fieldNameMap) {
+	return fieldNameMap{
+		fieldKey: fieldName,
+	}
+}
+
+func newTrackerWithSingleFieldStatus(fieldKey string, fieldName string) (tracker *FieldNameStatusTracker) {
+	return &FieldNameStatusTracker{
+		nameMap: withNameMap(fieldKey, fieldName),
+		statusMap: fieldStatusMap{
+			fieldName: FieldStatus{HasNewValue: true},
 		},
 	}
 }
 
-func newTrackerWithSingleFieldStatus(fieldKey string, fieldName string) (tracker *FieldStatusTracker) {
-	return &FieldStatusTracker{
-		withNewValue(fieldKey, fieldName),
-	}
+func initMapperTracker(task *RealVNCServerTask) {
+	tracker := newTrackerWithSingleFieldStatus("encryption", "Encryption")
+	task.mapper = tracker
+	task.tracker = tracker
 }
 
 func TestRealVNCNameFieldValidations(t *testing.T) {
@@ -51,6 +57,8 @@ func TestRealVNCNameFieldValidations(t *testing.T) {
 		tc := testCase
 		t.Run(tc.name, func(t *testing.T) {
 			task := tc.task
+
+			initMapperTracker(&task)
 
 			err := task.Validate(runtime.GOOS)
 
@@ -145,6 +153,8 @@ func TestRealVNCConfigFileFieldValidations(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			task := tc.task
 
+			initMapperTracker(&task)
+
 			goos := runtime.GOOS
 			if tc.goos != "any" {
 				goos = tc.goos
@@ -166,13 +176,13 @@ func TestRealVNCConfigFileFieldValidations(t *testing.T) {
 func TestShouldSetUseVNCLicenseReloadWhenVirtualServiceMode(t *testing.T) {
 	cases := []struct {
 		name                  string
-		task                  *RealVNCServerTask
+		task                  RealVNCServerTask
 		goos                  string
 		expectedLicenseReload bool
 	}{
 		{
 			name: "virtual mode license reload linux",
-			task: &RealVNCServerTask{
+			task: RealVNCServerTask{
 				Path:       "MyTask",
 				ServerMode: VirtualServerMode,
 			},
@@ -181,7 +191,7 @@ func TestShouldSetUseVNCLicenseReloadWhenVirtualServiceMode(t *testing.T) {
 		},
 		{
 			name: "no license reload darwin",
-			task: &RealVNCServerTask{
+			task: RealVNCServerTask{
 				Path: "MyTask",
 			},
 			goos:                  "darwin",
@@ -189,7 +199,7 @@ func TestShouldSetUseVNCLicenseReloadWhenVirtualServiceMode(t *testing.T) {
 		},
 		{
 			name: "no license reload windows",
-			task: &RealVNCServerTask{
+			task: RealVNCServerTask{
 				Path: "MyTask",
 			},
 			goos:                  "windows",
@@ -198,17 +208,23 @@ func TestShouldSetUseVNCLicenseReloadWhenVirtualServiceMode(t *testing.T) {
 	}
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
-			err := tc.task.Validate("linux")
+			task := tc.task
+
+			initMapperTracker(&task)
+
+			err := task.Validate("linux")
 			require.NoError(t, err)
-			assert.Equal(t, tc.expectedLicenseReload, tc.task.UseVNCLicenseReload)
+			assert.Equal(t, tc.expectedLicenseReload, task.UseVNCLicenseReload)
 		})
 	}
 }
 
 func TestShouldNotSetUseVNCLicenseReloadWhenNotVirtualServiceMode(t *testing.T) {
-	task := &RealVNCServerTask{
+	task := RealVNCServerTask{
 		Path: "MyTask",
 	}
+
+	initMapperTracker(&task)
 
 	err := task.Validate(runtime.GOOS)
 	require.NoError(t, err)
@@ -250,7 +266,6 @@ func TestRealVNCServerEncryptionFieldValidations(t *testing.T) {
 				Path:       "MyTask",
 				ConfigFile: "/config/file/name/here",
 				Encryption: "AlwaysOn",
-				tracker:    newTrackerWithSingleFieldStatus("encryption", "Encryption"),
 			},
 		},
 		{
@@ -259,7 +274,15 @@ func TestRealVNCServerEncryptionFieldValidations(t *testing.T) {
 				Path:       "MyTask",
 				ConfigFile: "/config/file/name/here",
 				Encryption: "randomvalue",
-				tracker:    newTrackerWithSingleFieldStatus("encryption", "Encryption"),
+			},
+			expectedError: ErrInvalidEncryptionValueMsg,
+		},
+		{
+			name: "invalid encryption value",
+			task: RealVNCServerTask{
+				Path:       "MyTask",
+				ConfigFile: "/config/file/name/here",
+				Encryption: "AlwaysOn   # this comment is an error",
 			},
 			expectedError: ErrInvalidEncryptionValueMsg,
 		},
@@ -269,6 +292,8 @@ func TestRealVNCServerEncryptionFieldValidations(t *testing.T) {
 		tc := testCase
 		t.Run(tc.name, func(t *testing.T) {
 			task := tc.task
+
+			initMapperTracker(&task)
 
 			err := task.Validate(runtime.GOOS)
 
@@ -283,6 +308,8 @@ func TestRealVNCServerEncryptionFieldValidations(t *testing.T) {
 }
 
 func TestRealVNCServerAuthenticationFieldValidations(t *testing.T) {
+	tracker := newTrackerWithSingleFieldStatus("authentication", "Authentication")
+
 	testCases := []struct {
 		name          string
 		task          RealVNCServerTask
@@ -294,7 +321,8 @@ func TestRealVNCServerAuthenticationFieldValidations(t *testing.T) {
 				Path:           "MyTask",
 				ConfigFile:     "/config/file/name/here",
 				Authentication: "invalidValue",
-				tracker:        newTrackerWithSingleFieldStatus("authentication", "Authentication"),
+				mapper:         tracker,
+				tracker:        tracker,
 			},
 			expectedError: ErrInvalidAuthenticationValueMsg,
 		},
@@ -304,7 +332,8 @@ func TestRealVNCServerAuthenticationFieldValidations(t *testing.T) {
 				Path:           "MyTask",
 				ConfigFile:     "/config/file/name/here",
 				Authentication: "SingleSignOn+Radius,SystemAuth+Radius",
-				tracker:        newTrackerWithSingleFieldStatus("authentication", "Authentication"),
+				mapper:         tracker,
+				tracker:        tracker,
 			},
 		},
 		{
@@ -313,7 +342,8 @@ func TestRealVNCServerAuthenticationFieldValidations(t *testing.T) {
 				Path:           "MyTask",
 				ConfigFile:     "/config/file/name/here",
 				Authentication: "SingleSignOn   +Radius   ,  SystemAuth+  Radius",
-				tracker:        newTrackerWithSingleFieldStatus("authentication", "Authentication"),
+				mapper:         tracker,
+				tracker:        tracker,
 			},
 		},
 		{
@@ -322,7 +352,8 @@ func TestRealVNCServerAuthenticationFieldValidations(t *testing.T) {
 				Path:           "MyTask",
 				ConfigFile:     "/config/file/name/here",
 				Authentication: "SingleSignOn+Radius,",
-				tracker:        newTrackerWithSingleFieldStatus("authentication", "Authentication"),
+				mapper:         tracker,
+				tracker:        tracker,
 			},
 			expectedError: ErrInvalidAuthenticationValueMsg,
 		},
@@ -332,7 +363,19 @@ func TestRealVNCServerAuthenticationFieldValidations(t *testing.T) {
 				Path:           "MyTask",
 				ConfigFile:     "/config/file/name/here",
 				Authentication: "SingleSignOn+",
-				tracker:        newTrackerWithSingleFieldStatus("authentication", "Authentication"),
+				mapper:         tracker,
+				tracker:        tracker,
+			},
+			expectedError: ErrInvalidAuthenticationValueMsg,
+		},
+		{
+			name: "contains illegal comment",
+			task: RealVNCServerTask{
+				Path:           "MyTask",
+				ConfigFile:     "/config/file/name/here",
+				Authentication: "SingleSignOn    # not allowed comment",
+				mapper:         tracker,
+				tracker:        tracker,
 			},
 			expectedError: ErrInvalidAuthenticationValueMsg,
 		},
@@ -356,6 +399,8 @@ func TestRealVNCServerAuthenticationFieldValidations(t *testing.T) {
 }
 
 func TestRealVNCServerPermissionsFieldValidations(t *testing.T) {
+	tracker := newTrackerWithSingleFieldStatus("permissions", "Permissions")
+
 	testCases := []struct {
 		name          string
 		task          RealVNCServerTask
@@ -367,7 +412,8 @@ func TestRealVNCServerPermissionsFieldValidations(t *testing.T) {
 				Path:        "MyTask",
 				ConfigFile:  "/config/file/name/here",
 				Permissions: "invalidValue",
-				tracker:     newTrackerWithSingleFieldStatus("permissions", "Permissions"),
+				mapper:      tracker,
+				tracker:     tracker,
 			},
 			expectedError: ErrInvalidPermisssionsMsg,
 		},
@@ -377,7 +423,8 @@ func TestRealVNCServerPermissionsFieldValidations(t *testing.T) {
 				Path:        "MyTask",
 				ConfigFile:  "/config/file/name/here",
 				Permissions: "superuser:f,%vncusers:d,johndoe:v,janedoe:skp-t!r",
-				tracker:     newTrackerWithSingleFieldStatus("permissions", "Permissions"),
+				mapper:      tracker,
+				tracker:     tracker,
 			},
 		},
 		{
@@ -386,7 +433,8 @@ func TestRealVNCServerPermissionsFieldValidations(t *testing.T) {
 				Path:        "MyTask",
 				ConfigFile:  "/config/file/name/here",
 				Permissions: "superuser:,%vncusers:d,johndoe:v,janedoe:skp-t!r",
-				tracker:     newTrackerWithSingleFieldStatus("permissions", "Permissions"),
+				mapper:      tracker,
+				tracker:     tracker,
 			},
 		},
 		{
@@ -395,7 +443,8 @@ func TestRealVNCServerPermissionsFieldValidations(t *testing.T) {
 				Path:        "MyTask",
 				ConfigFile:  "/config/file/name/here",
 				Permissions: "superuser :f, %vncusers :d , johndoe:v, janedoe:skp-t!r",
-				tracker:     newTrackerWithSingleFieldStatus("permissions", "Permissions"),
+				mapper:      tracker,
+				tracker:     tracker,
 			},
 		},
 		{
@@ -404,7 +453,8 @@ func TestRealVNCServerPermissionsFieldValidations(t *testing.T) {
 				Path:        "MyTask",
 				ConfigFile:  "/config/file/name/here",
 				Permissions: "superuser :f, ",
-				tracker:     newTrackerWithSingleFieldStatus("permissions", "Permissions"),
+				mapper:      tracker,
+				tracker:     tracker,
 			},
 			expectedError: ErrInvalidPermisssionsMsg,
 		},
@@ -414,7 +464,8 @@ func TestRealVNCServerPermissionsFieldValidations(t *testing.T) {
 				Path:        "MyTask",
 				ConfigFile:  "/config/file/name/here",
 				Permissions: "superuser :fx, ",
-				tracker:     newTrackerWithSingleFieldStatus("permissions", "Permissions"),
+				mapper:      tracker,
+				tracker:     tracker,
 			},
 			expectedError: ErrInvalidPermisssionsMsg,
 		},
@@ -424,7 +475,8 @@ func TestRealVNCServerPermissionsFieldValidations(t *testing.T) {
 				Path:        "MyTask",
 				ConfigFile:  "/config/file/name/here",
 				Permissions: "superuser :f x",
-				tracker:     newTrackerWithSingleFieldStatus("permissions", "Permissions"),
+				mapper:      tracker,
+				tracker:     tracker,
 			},
 			expectedError: ErrInvalidPermisssionsMsg,
 		},
@@ -448,6 +500,8 @@ func TestRealVNCServerPermissionsFieldValidations(t *testing.T) {
 }
 
 func TestRealVNCServerLogsFieldValidations(t *testing.T) {
+	tracker := newTrackerWithSingleFieldStatus("log", "Log")
+
 	testCases := []struct {
 		name          string
 		task          RealVNCServerTask
@@ -459,7 +513,8 @@ func TestRealVNCServerLogsFieldValidations(t *testing.T) {
 				Path:       "MyTask",
 				ConfigFile: "/config/file/name/here",
 				Log:        "invalidValue",
-				tracker:    newTrackerWithSingleFieldStatus("log", "Log"),
+				mapper:     tracker,
+				tracker:    tracker,
 			},
 			expectedError: ErrInvalidLogsValueMsg,
 		},
@@ -469,7 +524,8 @@ func TestRealVNCServerLogsFieldValidations(t *testing.T) {
 				Path:       "MyTask",
 				ConfigFile: "/config/file/name/here",
 				Log:        "*:file:10,Connections:file:100",
-				tracker:    newTrackerWithSingleFieldStatus("log", "Log"),
+				mapper:     tracker,
+				tracker:    tracker,
 			},
 		},
 		{
@@ -478,7 +534,8 @@ func TestRealVNCServerLogsFieldValidations(t *testing.T) {
 				Path:       "MyTask",
 				ConfigFile: "/config/file/name/here",
 				Log:        ":file:10,Connections:file:100",
-				tracker:    newTrackerWithSingleFieldStatus("log", "Log"),
+				mapper:     tracker,
+				tracker:    tracker,
 			},
 			expectedError: ErrInvalidLogsValueMsg,
 		},
@@ -488,7 +545,8 @@ func TestRealVNCServerLogsFieldValidations(t *testing.T) {
 				Path:       "MyTask",
 				ConfigFile: "/config/file/name/here",
 				Log:        "*::10,Connections:file:100",
-				tracker:    newTrackerWithSingleFieldStatus("log", "Log"),
+				mapper:     tracker,
+				tracker:    tracker,
 			},
 			expectedError: ErrInvalidLogsValueMsg,
 		},
@@ -498,7 +556,8 @@ func TestRealVNCServerLogsFieldValidations(t *testing.T) {
 				Path:       "MyTask",
 				ConfigFile: "/config/file/name/here",
 				Log:        "*:stderr:,Connections:file:100",
-				tracker:    newTrackerWithSingleFieldStatus("log", "Log"),
+				mapper:     tracker,
+				tracker:    tracker,
 			},
 			expectedError: ErrInvalidLogsValueMsg,
 		},
@@ -508,7 +567,8 @@ func TestRealVNCServerLogsFieldValidations(t *testing.T) {
 				Path:       "MyTask",
 				ConfigFile: "/config/file/name/here",
 				Log:        "*:stderr:10,",
-				tracker:    newTrackerWithSingleFieldStatus("log", "Log"),
+				mapper:     tracker,
+				tracker:    tracker,
 			},
 			expectedError: ErrInvalidLogsValueMsg,
 		},
@@ -518,7 +578,8 @@ func TestRealVNCServerLogsFieldValidations(t *testing.T) {
 				Path:       "MyTask",
 				ConfigFile: "/config/file/name/here",
 				Log:        ",*:stderr:10",
-				tracker:    newTrackerWithSingleFieldStatus("log", "Log"),
+				mapper:     tracker,
+				tracker:    tracker,
 			},
 			expectedError: ErrInvalidLogsValueMsg,
 		},
@@ -528,7 +589,8 @@ func TestRealVNCServerLogsFieldValidations(t *testing.T) {
 				Path:       "MyTask",
 				ConfigFile: "/config/file/name/here",
 				Log:        "*:stderr:11",
-				tracker:    newTrackerWithSingleFieldStatus("log", "Log"),
+				mapper:     tracker,
+				tracker:    tracker,
 			},
 			expectedError: ErrInvalidLogsValueMsg,
 		},
@@ -538,7 +600,8 @@ func TestRealVNCServerLogsFieldValidations(t *testing.T) {
 				Path:       "MyTask",
 				ConfigFile: "/config/file/name/here",
 				Log:        "*:stderr:1000",
-				tracker:    newTrackerWithSingleFieldStatus("log", "Log"),
+				mapper:     tracker,
+				tracker:    tracker,
 			},
 			expectedError: ErrInvalidLogsValueMsg,
 		},
@@ -548,7 +611,8 @@ func TestRealVNCServerLogsFieldValidations(t *testing.T) {
 				Path:       "MyTask",
 				ConfigFile: "/config/file/name/here",
 				Log:        "*:stderr:-100",
-				tracker:    newTrackerWithSingleFieldStatus("log", "Log"),
+				mapper:     tracker,
+				tracker:    tracker,
 			},
 			expectedError: ErrInvalidLogsValueMsg,
 		},
@@ -572,6 +636,8 @@ func TestRealVNCServerLogsFieldValidations(t *testing.T) {
 }
 
 func TestRealVNCServerCaptureMethodFieldValidations(t *testing.T) {
+	tracker := newTrackerWithSingleFieldStatus("capture_method", "CaptureMethod")
+
 	testCases := []struct {
 		name          string
 		task          RealVNCServerTask
@@ -583,7 +649,8 @@ func TestRealVNCServerCaptureMethodFieldValidations(t *testing.T) {
 				Path:          "MyTask",
 				ConfigFile:    "/config/file/name/here",
 				CaptureMethod: 1,
-				tracker:       newTrackerWithSingleFieldStatus("capture_method", "CaptureMethod"),
+				mapper:        tracker,
+				tracker:       tracker,
 			},
 		},
 		{
@@ -592,7 +659,8 @@ func TestRealVNCServerCaptureMethodFieldValidations(t *testing.T) {
 				Path:          "MyTask",
 				ConfigFile:    "/config/file/name/here",
 				CaptureMethod: -1,
-				tracker:       newTrackerWithSingleFieldStatus("capture_method", "CaptureMethod"),
+				mapper:        tracker,
+				tracker:       tracker,
 			},
 			expectedError: ErrInvalidCaptureMethodValueMsg,
 		},
@@ -602,7 +670,8 @@ func TestRealVNCServerCaptureMethodFieldValidations(t *testing.T) {
 				Path:          "MyTask",
 				ConfigFile:    "/config/file/name/here",
 				CaptureMethod: 100,
-				tracker:       newTrackerWithSingleFieldStatus("capture_method", "CaptureMethod"),
+				mapper:        tracker,
+				tracker:       tracker,
 			},
 			expectedError: ErrInvalidCaptureMethodValueMsg,
 		},
@@ -626,11 +695,12 @@ func TestRealVNCServerCaptureMethodFieldValidations(t *testing.T) {
 }
 
 func TestShouldSetDefaultBackupExtension(t *testing.T) {
+	tracker := newFieldCombinedTracker()
 	task := &RealVNCServerTask{
-		Path:        "MyTask",
-		ConfigFile:  "/config/file/name/here",
-		Permissions: "superuser :fx, ",
-		tracker:     newFieldStatusTracker(),
+		Path:       "MyTask",
+		ConfigFile: "/config/file/name/here",
+		mapper:     tracker,
+		tracker:    tracker,
 	}
 
 	err := task.Validate(runtime.GOOS)
@@ -640,11 +710,13 @@ func TestShouldSetDefaultBackupExtension(t *testing.T) {
 }
 
 func TestShouldSetBackupExtension(t *testing.T) {
+	tracker := newFieldCombinedTracker()
 	task := &RealVNCServerTask{
 		Path:       "MyTask",
 		ConfigFile: "/config/file/name/here",
-		tracker:    newFieldStatusTracker(),
 		Backup:     "orig",
+		mapper:     tracker,
+		tracker:    tracker,
 	}
 
 	err := task.Validate(runtime.GOOS)

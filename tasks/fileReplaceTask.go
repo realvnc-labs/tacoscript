@@ -42,7 +42,7 @@ type FileReplaceTask struct {
 	Unless            []string `taco:"unless"`
 	Shell             string   `taco:"shell"`
 
-	tracker *FieldStatusTracker
+	mapper FieldNameMapper
 
 	// values created during task build
 	maxFileSizeCalculated uint64
@@ -94,15 +94,11 @@ func (t *FileReplaceTask) GetCreatesFilesList() []string {
 	return t.Creates
 }
 
-func (t *FileReplaceTask) GetTracker() (tracker *FieldStatusTracker) {
-	if t.tracker == nil {
-		t.tracker = newFieldStatusTracker()
+func (t *FileReplaceTask) GetMapper() (mapper FieldNameMapper) {
+	if t.mapper == nil {
+		t.mapper = newFieldNameMapper()
 	}
-	return t.tracker
-}
-
-func (t *FileReplaceTask) IsChangeField(inputKey string) (excluded bool) {
-	return false
+	return t.mapper
 }
 
 func (t *FileReplaceTask) Validate(goos string) error {

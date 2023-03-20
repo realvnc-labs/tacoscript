@@ -6,10 +6,11 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/cloudradar-monitoring/tacoscript/utils"
 	validation "github.com/go-ozzo/ozzo-validation"
 	"golang.org/x/text/cases"
 	"golang.org/x/text/language"
+
+	"github.com/cloudradar-monitoring/tacoscript/utils"
 )
 
 const (
@@ -100,10 +101,8 @@ func (t *RealVNCServerTask) Validate(goos string) error {
 }
 
 func (t *RealVNCServerTask) shouldValidate(fieldKey string) (should bool) {
-	if t.tracker == nil {
-		return false
-	}
-	return t.tracker.HasNewValue(fieldKey) && !t.tracker.ShouldClear(fieldKey)
+	fieldName := t.mapper.GetFieldName(fieldKey)
+	return t.tracker.HasNewValue(fieldName) && !t.tracker.ShouldClear(fieldName)
 }
 
 func (t *RealVNCServerTask) ValidateConfigFileField(goos string) error {

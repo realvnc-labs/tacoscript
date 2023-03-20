@@ -23,7 +23,7 @@ func StartHTTPServer(isHTTPS bool) (u *url.URL, srv *httptest.Server, err error)
 
 	u, err = url.Parse(srv.URL)
 
-	return
+	return u, srv, err
 }
 
 func StartFTPServer(ctx context.Context, port int, waitForStarting time.Duration) (*url.URL, *server.Server, error) {

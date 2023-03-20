@@ -29,13 +29,21 @@ func TestShouldPerformSimpleConfigParamUpdate(t *testing.T) {
 		Reloader: &mockConfigReloader{},
 	}
 
-	task := &RealVNCServerTask{
-		Path: "realvnc-server-1",
-		tracker: &FieldStatusTracker{
-			fieldStatusMap: withNewValue("encryption", "Encryption"),
+	tracker := &FieldNameStatusTracker{
+		nameMap: withNameMap("encryption", "Encryption"),
+		statusMap: fieldStatusMap{
+			"Encryption": FieldStatus{
+				HasNewValue: true,
+			},
 		},
+	}
+
+	task := &RealVNCServerTask{
+		Path:       "realvnc-server-1",
 		Encryption: "AlwaysOn",
 		ServerMode: "User",
+		mapper:     tracker,
+		tracker:    tracker,
 	}
 
 	if runtime.GOOS != "windows" {
