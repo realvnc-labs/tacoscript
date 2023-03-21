@@ -54,6 +54,7 @@ func TestShouldSetSimpleConfigRegistryParam(t *testing.T) {
 		ServerMode: "User",
 		Encryption: "AlwaysOn",
 
+		mapper:  tracker,
 		tracker: tracker,
 	}
 
@@ -90,8 +91,9 @@ func TestShouldUpdateSimpleConfigRegistryParam(t *testing.T) {
 		Path:       "realvnc-server-1",
 		ServerMode: "User",
 		Encryption: "AlwaysOn",
-		mapper:     tracker,
-		tracker:    tracker,
+
+		mapper:  tracker,
+		tracker: tracker,
 	}
 
 	err := setupTask.Validate(runtime.GOOS)
@@ -105,8 +107,9 @@ func TestShouldUpdateSimpleConfigRegistryParam(t *testing.T) {
 		Path:       "realvnc-server-2",
 		ServerMode: "User",
 		Encryption: "PreferOn",
-		mapper:     tracker,
-		tracker:    tracker,
+
+		mapper:  tracker,
+		tracker: tracker,
 	}
 
 	err = task.Validate(runtime.GOOS)
@@ -136,21 +139,25 @@ func TestShouldClearSimpleConfigRegistryParam(t *testing.T) {
 		Reloader: &mockConfigReloader{},
 	}
 
+	tracker := &FieldNameStatusTracker{
+		nameMap: fieldNameMap{
+			"blank_screen": "BlankScreen",
+		},
+		statusMap: fieldStatusMap{
+			"BlankScreen": FieldStatus{
+				HasNewValue: true,
+				Clear:       false,
+			},
+		},
+	}
+
 	setupTask := &RealVNCServerTask{
 		Path:        "realvnc-server-1",
 		ServerMode:  "User",
 		BlankScreen: true,
-		tracker: &FieldNameStatusTracker{
-			nameMap: fieldNameMap{
-				"blank_screen": "BlankScreen",
-			},
-			statusMap: fieldStatusMap{
-				"blank_screen": FieldStatus{
-					HasNewValue: true,
-					Clear:       false,
-				},
-			},
-		},
+
+		mapper:  tracker,
+		tracker: tracker,
 	}
 
 	err := setupTask.Validate(runtime.GOOS)
@@ -160,21 +167,25 @@ func TestShouldClearSimpleConfigRegistryParam(t *testing.T) {
 	require.NoError(t, res.Err)
 	require.True(t, setupTask.Updated)
 
+	tracker = &FieldNameStatusTracker{
+		nameMap: fieldNameMap{
+			"blank_screen": "BlankScreen",
+		},
+		statusMap: fieldStatusMap{
+			"BlankScreen": FieldStatus{
+				HasNewValue: true,
+				Clear:       true,
+			},
+		},
+	}
+
 	clearTask := &RealVNCServerTask{
 		Path:        "realvnc-server-1",
 		ServerMode:  "User",
 		BlankScreen: false,
-		tracker: &FieldNameStatusTracker{
-			nameMap: fieldNameMap{
-				"blank_screen": "BlankScreen",
-			},
-			statusMap: fieldStatusMap{
-				"blank_screen": FieldStatus{
-					HasNewValue: true,
-					Clear:       true,
-				},
-			},
-		},
+
+		mapper:  tracker,
+		tracker: tracker,
 	}
 
 	err = clearTask.Validate(runtime.GOOS)
