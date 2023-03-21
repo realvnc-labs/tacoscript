@@ -154,6 +154,10 @@ func (rvste *RealVNCServerTaskExecutor) updateExistingValues(rvst *RealVNCServer
 			if err != nil {
 				return 0, fmt.Errorf("failed to write config value %s at line %d: %v", fieldName, lineNum, err)
 			}
+
+			logrus.Debugf(`updated %s with %s`, changeValue.Name, changeValue.Value)
+		} else {
+			logrus.Debugf(`removed %s`, fieldName)
 		}
 
 		err = rvst.tracker.SetChangeApplied(fieldName)
@@ -195,6 +199,8 @@ func (rvste *RealVNCServerTaskExecutor) addNewValues(rvst *RealVNCServerTask, co
 		if err != nil {
 			return fmt.Errorf("failed to added config value %s: %v", fieldName, err)
 		}
+
+		logrus.Debugf(`added %s with %s`, newValue.Name, newValue.Value)
 
 		addedCount++
 		return nil
