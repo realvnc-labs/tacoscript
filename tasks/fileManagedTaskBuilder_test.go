@@ -4,7 +4,7 @@ import (
 	"net/url"
 	"testing"
 
-	"github.com/cloudradar-monitoring/tacoscript/utils"
+	"github.com/realvnc-labs/tacoscript/utils"
 	"gopkg.in/yaml.v2"
 
 	"github.com/stretchr/testify/assert"

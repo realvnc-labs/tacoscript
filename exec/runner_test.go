@@ -7,7 +7,7 @@ import (
 	"runtime"
 	"testing"
 
-	"github.com/cloudradar-monitoring/tacoscript/conv"
+	"github.com/realvnc-labs/tacoscript/conv"
 
 	"github.com/stretchr/testify/assert"
 )

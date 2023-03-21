@@ -5,7 +5,7 @@ import (
 	"os"
 	"testing"
 
-	"github.com/cloudradar-monitoring/tacoscript/tasks"
+	"github.com/realvnc-labs/tacoscript/tasks"
 	"github.com/stretchr/testify/assert"
 )
 

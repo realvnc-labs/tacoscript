@@ -12,15 +12,15 @@ import (
 	"testing"
 	"time"
 
-	"github.com/cloudradar-monitoring/tacoscript/applog"
+	"github.com/realvnc-labs/tacoscript/applog"
 
 	log "github.com/sirupsen/logrus"
 
-	appExec "github.com/cloudradar-monitoring/tacoscript/exec"
+	appExec "github.com/realvnc-labs/tacoscript/exec"
 
-	"github.com/cloudradar-monitoring/tacoscript/apptest"
+	"github.com/realvnc-labs/tacoscript/apptest"
 
-	"github.com/cloudradar-monitoring/tacoscript/utils"
+	"github.com/realvnc-labs/tacoscript/utils"
 
 	"github.com/stretchr/testify/assert"
 )

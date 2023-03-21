@@ -1,7 +1,7 @@
 package main
 
 import (
-	"github.com/cloudradar-monitoring/tacoscript/cmd"
+	"github.com/realvnc-labs/tacoscript/cmd"
 	"github.com/sirupsen/logrus"
 )
 

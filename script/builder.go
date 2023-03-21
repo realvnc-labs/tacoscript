@@ -7,9 +7,9 @@ import (
 	"os"
 	"text/template"
 
-	"github.com/cloudradar-monitoring/tacoscript/utils"
+	"github.com/realvnc-labs/tacoscript/utils"
 
-	"github.com/cloudradar-monitoring/tacoscript/tasks"
+	"github.com/realvnc-labs/tacoscript/tasks"
 
 	"gopkg.in/yaml.v2"
 )

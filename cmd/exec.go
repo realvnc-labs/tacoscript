@@ -3,7 +3,7 @@ package cmd
 import (
 	"os"
 
-	"github.com/cloudradar-monitoring/tacoscript/script"
+	"github.com/realvnc-labs/tacoscript/script"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 )

@@ -1,7 +1,7 @@
 package script
 
 import (
-	"github.com/cloudradar-monitoring/tacoscript/tasks"
+	"github.com/realvnc-labs/tacoscript/tasks"
 )
 
 type positionedRequirement struct {
