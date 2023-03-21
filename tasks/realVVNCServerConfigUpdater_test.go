@@ -141,7 +141,7 @@ func TestShouldAddSimpleConfigFileParam(t *testing.T) {
 	require.ErrorContains(t, err, "no such file")
 }
 
-func TestShouldAddSimpleConfigWhenNoExistingConfigFileParam(t *testing.T) {
+func TestShouldAddSimpleConfigWhenNoExistingConfigFile(t *testing.T) {
 	ctx := context.Background()
 
 	executor := &RealVNCServerTaskExecutor{
@@ -154,9 +154,9 @@ func TestShouldAddSimpleConfigWhenNoExistingConfigFileParam(t *testing.T) {
 	defer os.Remove(newConfigFilename)
 
 	tracker := &FieldNameStatusTracker{
-		nameMap: withNameMap("blank_screen", "BlankScreen"),
+		nameMap: withNameMap("idle_timeout", "IdleTimeout"),
 		statusMap: fieldStatusMap{
-			"BlankScreen": FieldStatus{
+			"IdleTimeout": FieldStatus{
 				HasNewValue: true,
 			},
 		},
@@ -165,8 +165,8 @@ func TestShouldAddSimpleConfigWhenNoExistingConfigFileParam(t *testing.T) {
 	task := &RealVNCServerTask{
 		Path:        "realvnc-server-1",
 		ConfigFile:  newConfigFilename,
+		IdleTimeout: 3600,
 		SkipBackup:  false,
-		BlankScreen: true,
 		mapper:      tracker,
 		tracker:     tracker,
 	}
@@ -183,7 +183,7 @@ func TestShouldAddSimpleConfigWhenNoExistingConfigFileParam(t *testing.T) {
 
 	contents, err := os.ReadFile(task.ConfigFile)
 	require.NoError(t, err)
-	assert.Contains(t, string(contents), "BlankScreen=true")
+	assert.Contains(t, string(contents), "IdleTimeout=3600")
 
 	info, err := os.Stat(task.ConfigFile)
 	require.NoError(t, err)

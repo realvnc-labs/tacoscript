@@ -28,18 +28,18 @@ type RealVNCServerTask struct {
 	TypeName string // TaskType
 	Path     string // TaskName
 
-	Encryption              string `taco:"encryption"`
-	Authentication          string `taco:"authentication"`
-	Permissions             string `taco:"permissions"` // multiple key:value pairs delimited by commas
-	QueryConnect            bool   `taco:"query_connect"`
-	QueryOnlyIfLoggedOn     bool   `taco:"query_only_if_logged_on"`
-	QueryConnectTimeoutSecs int    `taco:"query_connect_timeout"`
-	BlankScreen             bool   `taco:"blank_screen"`
-	ConnNotifyTimeoutSecs   int    `taco:"conn_notify_timeout"`
-	ConnNotifyAlways        bool   `taco:"conn_notify_always"`
-	IdleTimeoutSecs         int    `taco:"idle_timeout"`
-	Log                     string `taco:"log"`
-	CaptureMethod           int    `taco:"capture_method"`
+	Encryption          string `taco:"encryption"`
+	Authentication      string `taco:"authentication"`
+	Permissions         string `taco:"permissions"` // multiple key:value pairs delimited by commas
+	QueryConnect        bool   `taco:"query_connect"`
+	QueryOnlyIfLoggedOn bool   `taco:"query_only_if_logged_on"`
+	QueryConnectTimeout int    `taco:"query_connect_timeout"` // seconds
+	BlankScreen         bool   `taco:"blank_screen"`
+	ConnNotifyTimeout   int    `taco:"conn_notify_timeout"` // seconds
+	ConnNotifyAlways    bool   `taco:"conn_notify_always"`
+	IdleTimeout         int    `taco:"idle_timeout"` // seconds
+	Log                 string `taco:"log"`
+	CaptureMethod       int    `taco:"capture_method"`
 
 	ConfigFile          string `taco:"config_file"` // config file path for non-windows
 	ServerMode          string `taco:"server_mode"` // server mode for windows (registry keys)

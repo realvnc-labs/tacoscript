@@ -59,22 +59,22 @@ func TestRealVNCServerTaskBuilder(t *testing.T) {
 				TypeName: "realVNCServerType",
 				Path:     "realVNCServerPath",
 
-				Encryption:              "AlwaysOn",
-				Authentication:          "SingleSignOn+Radius,SystemAuth+Radius",
-				Permissions:             "superuser:f,%vncusers:d,johndoe:v,janedoe:skp-t!r",
-				QueryConnect:            true,
-				QueryOnlyIfLoggedOn:     false,
-				QueryConnectTimeoutSecs: 60,
-				BlankScreen:             true,
-				ConnNotifyTimeoutSecs:   30,
-				ConnNotifyAlways:        true,
-				IdleTimeoutSecs:         30,
-				Log:                     "*:file:10,Connections:file:100",
-				CaptureMethod:           1,
-				ConfigFile:              "/tmp/config_file.conf",
-				ServerMode:              "Service",
-				Creates:                 []string{"/tmp/creates-file.txt"},
-				OnlyIf:                  []string{"/tmp/onlyif-file.txt"},
+				Encryption:          "AlwaysOn",
+				Authentication:      "SingleSignOn+Radius,SystemAuth+Radius",
+				Permissions:         "superuser:f,%vncusers:d,johndoe:v,janedoe:skp-t!r",
+				QueryConnect:        true,
+				QueryOnlyIfLoggedOn: false,
+				QueryConnectTimeout: 60,
+				BlankScreen:         true,
+				ConnNotifyTimeout:   30,
+				ConnNotifyAlways:    true,
+				IdleTimeout:         30,
+				Log:                 "*:file:10,Connections:file:100",
+				CaptureMethod:       1,
+				ConfigFile:          "/tmp/config_file.conf",
+				ServerMode:          "Service",
+				Creates:             []string{"/tmp/creates-file.txt"},
+				OnlyIf:              []string{"/tmp/onlyif-file.txt"},
 				Unless: []string{
 					"OnlyIf one",
 					"OnlyIf two",
@@ -161,22 +161,22 @@ func TestRealVNCServerTaskBuilderWithUnsets(t *testing.T) {
 				TypeName: "realVNCServerType",
 				Path:     "realVNCServerPath",
 
-				Encryption:              "",
-				Authentication:          "SingleSignOn+Radius,SystemAuth+Radius",
-				Permissions:             "superuser:f,%vncusers:d,johndoe:v,janedoe:skp-t!r",
-				QueryConnect:            true,
-				QueryOnlyIfLoggedOn:     false,
-				QueryConnectTimeoutSecs: 60,
-				BlankScreen:             false,
-				ConnNotifyTimeoutSecs:   0,
-				ConnNotifyAlways:        true,
-				IdleTimeoutSecs:         30,
-				Log:                     "*:file:10,Connections:file:100",
-				CaptureMethod:           1,
-				ConfigFile:              "/tmp/config_file.conf",
-				ServerMode:              "Service",
-				Creates:                 []string{"/tmp/creates-file.txt"},
-				OnlyIf:                  []string{"/tmp/onlyif-file.txt"},
+				Encryption:          "",
+				Authentication:      "SingleSignOn+Radius,SystemAuth+Radius",
+				Permissions:         "superuser:f,%vncusers:d,johndoe:v,janedoe:skp-t!r",
+				QueryConnect:        true,
+				QueryOnlyIfLoggedOn: false,
+				QueryConnectTimeout: 60,
+				BlankScreen:         false,
+				ConnNotifyTimeout:   0,
+				ConnNotifyAlways:    true,
+				IdleTimeout:         30,
+				Log:                 "*:file:10,Connections:file:100",
+				CaptureMethod:       1,
+				ConfigFile:          "/tmp/config_file.conf",
+				ServerMode:          "Service",
+				Creates:             []string{"/tmp/creates-file.txt"},
+				OnlyIf:              []string{"/tmp/onlyif-file.txt"},
 				Unless: []string{
 					"OnlyIf one",
 					"OnlyIf two",
@@ -221,11 +221,11 @@ func assertRealVNCServerTaskEquals(t *testing.T, expectedTask, actualTask *RealV
 	assert.Equal(t, expectedTask.Permissions, actualTask.Permissions)
 	assert.Equal(t, expectedTask.QueryConnect, actualTask.QueryConnect)
 	assert.Equal(t, expectedTask.QueryOnlyIfLoggedOn, actualTask.QueryOnlyIfLoggedOn)
-	assert.Equal(t, expectedTask.QueryConnectTimeoutSecs, actualTask.QueryConnectTimeoutSecs)
+	assert.Equal(t, expectedTask.QueryConnectTimeout, actualTask.QueryConnectTimeout)
 	assert.Equal(t, expectedTask.BlankScreen, actualTask.BlankScreen)
-	assert.Equal(t, expectedTask.ConnNotifyTimeoutSecs, actualTask.ConnNotifyTimeoutSecs)
+	assert.Equal(t, expectedTask.ConnNotifyTimeout, actualTask.ConnNotifyTimeout)
 	assert.Equal(t, expectedTask.ConnNotifyAlways, actualTask.ConnNotifyAlways)
-	assert.Equal(t, expectedTask.IdleTimeoutSecs, actualTask.IdleTimeoutSecs)
+	assert.Equal(t, expectedTask.IdleTimeout, actualTask.IdleTimeout)
 	assert.Equal(t, expectedTask.Log, actualTask.Log)
 	assert.Equal(t, expectedTask.CaptureMethod, actualTask.CaptureMethod)
 	assert.Equal(t, expectedTask.ConfigFile, actualTask.ConfigFile)
