@@ -42,8 +42,6 @@ type FileReplaceTask struct {
 	Unless            []string `taco:"unless"`
 	Shell             string   `taco:"shell"`
 
-	mapper FieldNameMapper
-
 	// values created during task build
 	maxFileSizeCalculated uint64
 	patternCompiled       *regexp.Regexp
@@ -92,13 +90,6 @@ func (t *FileReplaceTask) GetUnlessCmds() []string {
 
 func (t *FileReplaceTask) GetCreatesFilesList() []string {
 	return t.Creates
-}
-
-func (t *FileReplaceTask) GetMapper() (mapper FieldNameMapper) {
-	if t.mapper == nil {
-		t.mapper = newFieldNameMapper()
-	}
-	return t.mapper
 }
 
 func (t *FileReplaceTask) Validate(goos string) error {

@@ -90,10 +90,6 @@ func (tm *TaskBuilderTaskMock) GetCreatesFilesList() []string {
 	return tm.Creates
 }
 
-func (tm *TaskBuilderTaskMock) GetMapper() (mapper tasks.FieldNameMapper) {
-	return nil
-}
-
 type TemplateVariablesProviderMock struct {
 	Variables              utils.TemplateVarsMap
 	TemplateVariablesError error

@@ -46,10 +46,6 @@ func (tm *TaskMock) GetCreatesFilesList() []string {
 	return tm.Creates
 }
 
-func (tm *TaskMock) GetMapper() (mapper tasks.FieldNameMapper) {
-	return nil
-}
-
 func (tm *TaskMock) IsChangeField(inputKey string) (excluded bool) {
 	return false
 }

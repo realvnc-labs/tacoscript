@@ -83,8 +83,6 @@ type PkgTask struct {
 	OnlyIf        []string `taco:"onlyif"`
 	Unless        []string `taco:"unless"`
 
-	mapper FieldNameMapper
-
 	Updated bool
 }
 
@@ -132,13 +130,6 @@ func (pt *PkgTask) GetUnlessCmds() []string {
 
 func (pt *PkgTask) GetCreatesFilesList() []string {
 	return pt.Creates
-}
-
-func (pt *PkgTask) GetMapper() (mapper FieldNameMapper) {
-	if pt.mapper == nil {
-		pt.mapper = newFieldNameMapper()
-	}
-	return pt.mapper
 }
 
 type PackageManagerExecutionResult struct {

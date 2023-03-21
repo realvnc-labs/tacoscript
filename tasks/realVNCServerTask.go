@@ -72,6 +72,9 @@ type RealVNCServerTaskBuilder struct {
 var (
 	ErrFieldNotFound         = errors.New("task field not found")
 	ErrFieldTypeNotSupported = errors.New("task field type not supported")
+
+	// make sure we support the field tracker interface
+	_ TaskWithFieldTracker = new(RealVNCServerTask)
 )
 
 func (tb RealVNCServerTaskBuilder) Build(typeName, path string, fields interface{}) (t Task, err error) {
@@ -88,8 +91,12 @@ func (tb RealVNCServerTaskBuilder) Build(typeName, path string, fields interface
 	return task, errs.ToError()
 }
 
-func (t *RealVNCServerTask) GetTracker() (tracker FieldStatusTracker) {
-	return t.tracker
+func (t *RealVNCServerTask) SetMapper(mapper FieldNameMapper) {
+	t.mapper = mapper
+}
+
+func (t *RealVNCServerTask) SetTracker(tracker FieldStatusTracker) {
+	t.tracker = tracker
 }
 
 func (t *RealVNCServerTask) IsChangeField(fieldName string) (excluded bool) {
@@ -127,13 +134,6 @@ func (t *RealVNCServerTask) GetUnlessCmds() []string {
 
 func (t *RealVNCServerTask) GetCreatesFilesList() []string {
 	return t.Creates
-}
-
-func (t *RealVNCServerTask) GetMapper() (mapper FieldNameMapper) {
-	if t.mapper == nil {
-		t.mapper = newFieldCombinedTracker()
-	}
-	return t.mapper
 }
 
 func (t *RealVNCServerTask) getFieldValueAsString(fieldName string) (val string, err error) {

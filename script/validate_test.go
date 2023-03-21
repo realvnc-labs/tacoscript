@@ -49,10 +49,6 @@ func (rtm *RequirementsTaskMock) GetCreatesFilesList() []string {
 	return rtm.Creates
 }
 
-func (rtm *RequirementsTaskMock) GetMapper() (mapper tasks.FieldNameMapper) {
-	return nil
-}
-
 type errorExpectation struct {
 	messagePrefix  string
 	availableParts []string

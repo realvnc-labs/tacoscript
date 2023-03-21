@@ -66,8 +66,6 @@ type WinRegTask struct {
 
 	Shell string `taco:"shell"`
 
-	mapper FieldNameMapper
-
 	Updated bool
 }
 
@@ -138,13 +136,6 @@ func (wrt *WinRegTask) GetUnlessCmds() []string {
 
 func (wrt *WinRegTask) GetCreatesFilesList() []string {
 	return wrt.Creates
-}
-
-func (wrt *WinRegTask) GetMapper() (mapper FieldNameMapper) {
-	if wrt.mapper == nil {
-		wrt.mapper = newFieldNameMapper()
-	}
-	return wrt.mapper
 }
 
 type WinRegTaskExecutor struct {

@@ -26,7 +26,6 @@ type TestTaskWithCombinedNameMapperAndChangeTracker struct {
 }
 
 var (
-	// these fields don't change the realvnc server config. they are only used by the task.
 	TestNoChangeFields = []string{"Field3"}
 )
 
@@ -104,7 +103,7 @@ func TestShouldBuildFieldMapForTask(t *testing.T) {
 
 func TestShouldSetGetFieldStatus(t *testing.T) {
 	tracker := newFieldCombinedTracker()
-	task := &RealVNCServerTask{
+	task := &TestTaskWithCombinedNameMapperAndChangeTracker{
 		tracker: tracker,
 	}
 
@@ -118,7 +117,7 @@ func TestShouldSetGetFieldStatus(t *testing.T) {
 
 func TestShouldFailGetFieldStatus(t *testing.T) {
 	tracker := newFieldCombinedTracker()
-	task := &RealVNCServerTask{
+	task := &TestTaskWithCombinedNameMapperAndChangeTracker{
 		tracker: tracker,
 	}
 
@@ -128,7 +127,7 @@ func TestShouldFailGetFieldStatus(t *testing.T) {
 
 func TestShouldHandleHasNewValue(t *testing.T) {
 	tracker := newFieldCombinedTracker()
-	task := &RealVNCServerTask{
+	task := &TestTaskWithCombinedNameMapperAndChangeTracker{
 		tracker: tracker,
 	}
 
@@ -143,7 +142,7 @@ func TestShouldHandleHasNewValue(t *testing.T) {
 
 func TestShouldHandleClearChange(t *testing.T) {
 	tracker := newFieldCombinedTracker()
-	task := &RealVNCServerTask{
+	task := &TestTaskWithCombinedNameMapperAndChangeTracker{
 		tracker: tracker,
 	}
 
@@ -162,16 +161,31 @@ func TestShouldHandleClearChange(t *testing.T) {
 
 func TestShouldSetChangeApplied(t *testing.T) {
 	tracker := newFieldCombinedTracker()
-	task := &RealVNCServerTask{
+	task := &TestTaskWithCombinedNameMapperAndChangeTracker{
 		tracker: tracker,
 	}
 
-	task.tracker.SetFieldStatus("Field3", FieldStatus{HasNewValue: false, ChangeApplied: false, Clear: false})
+	task.tracker.SetFieldStatus("Field2", FieldStatus{HasNewValue: false, ChangeApplied: false, Clear: false})
 
-	err := task.tracker.SetChangeApplied("Field3")
+	err := task.tracker.SetChangeApplied("Field2")
 	require.NoError(t, err)
 
-	status, found := task.tracker.GetFieldStatus("Field3")
+	status, found := task.tracker.GetFieldStatus("Field2")
 	assert.True(t, found)
 	assert.True(t, status.ChangeApplied)
+}
+
+func TestShouldKnowIfFieldIsNotChangeField(t *testing.T) {
+	tracker := newFieldCombinedTracker()
+	task := &TestTaskWithCombinedNameMapperAndChangeTracker{
+		tracker: tracker,
+	}
+
+	task.tracker.SetFieldStatus("Field2", FieldStatus{HasNewValue: false, ChangeApplied: false, Clear: false})
+	task.tracker.SetFieldStatus("Field3", FieldStatus{HasNewValue: false, ChangeApplied: false, Clear: false})
+
+	isChangeField := task.IsChangeField("Field2")
+	assert.True(t, isChangeField)
+	isChangeField = task.IsChangeField("Field3")
+	assert.False(t, isChangeField)
 }

@@ -54,14 +54,25 @@ func Build(
 	logrus.Debugf("Parsing task %s, %s", typeName, path)
 	errs = &utils.Errors{}
 
-	mapper := outputTask.GetMapper()
-	mapper.BuildFieldMap(outputTask)
-
+	var mapper FieldNameMapper
 	var tracker FieldStatusTracker
-	taskWithTracker, hasTracker := outputTask.(TaskWithTracker)
+
+	taskWithTracker, hasTracker := outputTask.(TaskWithFieldTracker)
+
 	if hasTracker {
-		tracker = taskWithTracker.GetTracker()
+		// if TrackWithFieldTracker then the task is using the field name mapper and the status tracker
+		// so we need to initialize those.
+		combinedFieldTracker := newFieldCombinedTracker()
+		tracker = combinedFieldTracker
+		mapper = combinedFieldTracker
+		taskWithTracker.SetMapper(combinedFieldTracker)
+		taskWithTracker.SetTracker(combinedFieldTracker)
+	} else {
+		// if just a regular task then we only need a local mapper for the reflection based value parsing
+		mapper = newFieldNameMapper()
 	}
+
+	mapper.BuildFieldMap(outputTask)
 
 	outputTaskValues := reflect.Indirect(reflect.ValueOf(outputTask))
 

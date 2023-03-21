@@ -7,12 +7,6 @@ import (
 
 type fieldNameMap map[string]string
 
-type FieldStatus struct {
-	HasNewValue   bool
-	ChangeApplied bool
-	Clear         bool
-}
-
 type fieldStatusMap map[string]FieldStatus
 
 type FieldNameStatusTracker struct {

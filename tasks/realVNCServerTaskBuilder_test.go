@@ -119,6 +119,7 @@ func TestRealVNCServerTaskBuilder(t *testing.T) {
 
 func TestRealVNCServerTaskBuilderWithUnsets(t *testing.T) {
 	testCases := []struct {
+		name          string
 		typeName      string
 		path          string
 		values        []interface{}
@@ -126,66 +127,7 @@ func TestRealVNCServerTaskBuilderWithUnsets(t *testing.T) {
 		expectedError string
 	}{
 		{
-			typeName: "realVNCServerType",
-			path:     "realVNCServerPath",
-			values: []interface{}{
-				yaml.MapSlice{yaml.MapItem{Key: EncryptionField, Value: "AlwaysOn"}},
-				yaml.MapSlice{yaml.MapItem{Key: AuthenticationField, Value: "SingleSignOn+Radius,SystemAuth+Radius"}},
-				yaml.MapSlice{yaml.MapItem{Key: PermissionsField, Value: "superuser:f,%vncusers:d,johndoe:v,janedoe:skp-t!r"}},
-				yaml.MapSlice{yaml.MapItem{Key: QueryConnectField, Value: "true"}},
-				yaml.MapSlice{yaml.MapItem{Key: QueryOnlyIfLoggedOnField, Value: "false"}},
-				yaml.MapSlice{yaml.MapItem{Key: QueryConnectTimeoutSecsField, Value: "60"}},
-				yaml.MapSlice{yaml.MapItem{Key: BlankScreenField, Value: "true"}},
-				yaml.MapSlice{yaml.MapItem{Key: ConnNotifyTimeoutSecsField, Value: "30"}},
-				yaml.MapSlice{yaml.MapItem{Key: ConnNotifyAlwaysField, Value: "true"}},
-				yaml.MapSlice{yaml.MapItem{Key: IdleTimeoutSecsField, Value: "30"}},
-				yaml.MapSlice{yaml.MapItem{Key: LogField, Value: "*:file:10,Connections:file:100"}},
-				yaml.MapSlice{yaml.MapItem{Key: CaptureMethodField, Value: "1"}},
-				yaml.MapSlice{yaml.MapItem{Key: ConfigFileField, Value: "/tmp/config_file.conf"}},
-				yaml.MapSlice{yaml.MapItem{Key: ServerModeField, Value: "service"}},
-
-				yaml.MapSlice{yaml.MapItem{Key: CreatesField, Value: "/tmp/creates-file.txt"}},
-				yaml.MapSlice{yaml.MapItem{Key: OnlyIfField, Value: "/tmp/onlyif-file.txt"}},
-				yaml.MapSlice{yaml.MapItem{Key: UnlessField, Value: []interface{}{
-					"OnlyIf one",
-					"OnlyIf two",
-					"OnlyIf three",
-				}}},
-				yaml.MapSlice{yaml.MapItem{Key: RequireField, Value: "/tmp/required-file.txt"}},
-
-				yaml.MapSlice{yaml.MapItem{Key: ShellField, Value: "someshell"}},
-			},
-			expectedTask: &RealVNCServerTask{
-				TypeName: "realVNCServerType",
-				Path:     "realVNCServerPath",
-
-				Encryption:              "AlwaysOn",
-				Authentication:          "SingleSignOn+Radius,SystemAuth+Radius",
-				Permissions:             "superuser:f,%vncusers:d,johndoe:v,janedoe:skp-t!r",
-				QueryConnect:            true,
-				QueryOnlyIfLoggedOn:     false,
-				QueryConnectTimeoutSecs: 60,
-				BlankScreen:             true,
-				ConnNotifyTimeoutSecs:   30,
-				ConnNotifyAlways:        true,
-				IdleTimeoutSecs:         30,
-				Log:                     "*:file:10,Connections:file:100",
-				CaptureMethod:           1,
-				ConfigFile:              "/tmp/config_file.conf",
-				ServerMode:              "Service",
-				Creates:                 []string{"/tmp/creates-file.txt"},
-				OnlyIf:                  []string{"/tmp/onlyif-file.txt"},
-				Unless: []string{
-					"OnlyIf one",
-					"OnlyIf two",
-					"OnlyIf three",
-				},
-				Require: []string{"/tmp/required-file.txt"},
-
-				Shell: "someshell",
-			},
-		},
-		{
+			name:     "with unsets",
 			typeName: "realVNCServerType",
 			path:     "realVNCServerPath",
 			values: []interface{}{
@@ -249,7 +191,7 @@ func TestRealVNCServerTaskBuilderWithUnsets(t *testing.T) {
 
 	for _, testCase := range testCases {
 		tc := testCase
-		t.Run(tc.typeName, func(t *testing.T) {
+		t.Run(tc.name, func(t *testing.T) {
 			taskBuilder := RealVNCServerTaskBuilder{}
 			task, err := taskBuilder.Build(
 				tc.typeName,

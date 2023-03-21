@@ -97,8 +97,6 @@ type FileManagedTask struct {
 
 	Shell string `taco:"shell"`
 
-	mapper FieldNameMapper
-
 	// was managed file updated?
 	Updated bool
 }
@@ -157,13 +155,6 @@ func (t *FileManagedTask) GetUnlessCmds() []string {
 
 func (t *FileManagedTask) GetCreatesFilesList() []string {
 	return t.Creates
-}
-
-func (t *FileManagedTask) GetMapper() (mapper FieldNameMapper) {
-	if t.mapper == nil {
-		t.mapper = newFieldNameMapper()
-	}
-	return t.mapper
 }
 
 type HashManager interface {
