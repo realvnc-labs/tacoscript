@@ -98,6 +98,7 @@ func (rvste *RealVNCServerTaskExecutor) updateExistingValues(rvst *RealVNCServer
 	logrus.Debugf("checking for config values to update")
 
 	for configValues.Scan() {
+		updated := false
 		inputLine := configValues.Text()
 		lineNum++
 
@@ -155,8 +156,12 @@ func (rvste *RealVNCServerTaskExecutor) updateExistingValues(rvst *RealVNCServer
 				return 0, fmt.Errorf("failed to write config value %s at line %d: %v", fieldName, lineNum, err)
 			}
 
-			logrus.Debugf(`updated %s with %s`, changeValue.Name, changeValue.Value)
+			if existingConfigValue.Value != changeValue.Value {
+				updated = true
+				logrus.Debugf(`updated %s with %s`, changeValue.Name, changeValue.Value)
+			}
 		} else {
+			updated = true
 			logrus.Debugf(`removed %s`, fieldName)
 		}
 
@@ -165,7 +170,9 @@ func (rvste *RealVNCServerTaskExecutor) updateExistingValues(rvst *RealVNCServer
 			return 0, fmt.Errorf("failed to update change status %s: %v", fieldName, err)
 		}
 
-		updatedCount++
+		if updated {
+			updatedCount++
+		}
 	}
 
 	return updatedCount, nil
@@ -179,7 +186,7 @@ func (rvste *RealVNCServerTaskExecutor) addNewValues(rvst *RealVNCServerTask, co
 
 	err = rvst.tracker.WithNewValues(func(fieldName string, fs FieldStatus) (err error) {
 		// ignore fields where the change has been applied already (aka updating/cleared fields)
-		if fs.ChangeApplied {
+		if fs.ChangeApplied || fs.Clear {
 			return nil
 		}
 

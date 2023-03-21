@@ -35,36 +35,34 @@ func (rvste *RealVNCServerTaskExecutor) applyConfigChanges(rvst *RealVNCServerTa
 			return err
 		}
 
-		updated := false
 		desc := ""
 
 		if fs.Clear {
-			logrus.Debugf(`removing key %s\%s`, baseKey, regPath)
-			updated, desc, err = winreg.RemoveValue(baseKey, regPath)
+			_, desc, err = winreg.RemoveValue(baseKey, regPath)
 			if err != nil {
 				return err
 			}
 			if strings.Contains(desc, "removed") {
 				updatedCount++
+				logrus.Debugf(`removed key %s\%s`, baseKey, regPath)
 			}
 		} else {
-			logrus.Debugf(`setting key %s\%s to %s`, baseKey, regPath, regValue)
-			updated, desc, err = winreg.SetValue(baseKey, regPath, regValue, winreg.REG_SZ)
+			_, desc, err = winreg.SetValue(baseKey, regPath, regValue, winreg.REG_SZ)
 			if err != nil {
 				return err
 			}
 			if strings.Contains(desc, "added") {
 				addedCount++
+				logrus.Debugf(`added key %s\%s with %s`, baseKey, regPath, regValue)
 			} else if strings.Contains(desc, "updated") {
 				updatedCount++
+				logrus.Debugf(`updated key %s\%s with %s`, baseKey, regPath, regValue)
 			}
 		}
 
-		if updated {
-			err := rvst.tracker.SetChangeApplied(fieldName)
-			if err != nil {
-				return err
-			}
+		err = rvst.tracker.SetChangeApplied(fieldName)
+		if err != nil {
+			return err
 		}
 
 		return nil
