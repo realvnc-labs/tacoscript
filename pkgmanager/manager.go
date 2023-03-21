@@ -6,11 +6,11 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/cloudradar-monitoring/tacoscript/utils"
+	"github.com/realvnc-labs/tacoscript/utils"
 
-	"github.com/cloudradar-monitoring/tacoscript/conv"
-	"github.com/cloudradar-monitoring/tacoscript/exec"
-	"github.com/cloudradar-monitoring/tacoscript/tasks"
+	"github.com/realvnc-labs/tacoscript/conv"
+	"github.com/realvnc-labs/tacoscript/exec"
+	"github.com/realvnc-labs/tacoscript/tasks"
 	"github.com/sirupsen/logrus"
 )
 

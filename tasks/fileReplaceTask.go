@@ -8,9 +8,9 @@ import (
 	"regexp"
 	"time"
 
-	"github.com/cloudradar-monitoring/tacoscript/conv"
-	tacoexec "github.com/cloudradar-monitoring/tacoscript/exec"
-	"github.com/cloudradar-monitoring/tacoscript/utils"
+	"github.com/realvnc-labs/tacoscript/conv"
+	tacoexec "github.com/realvnc-labs/tacoscript/exec"
+	"github.com/realvnc-labs/tacoscript/utils"
 	"github.com/sirupsen/logrus"
 )
 

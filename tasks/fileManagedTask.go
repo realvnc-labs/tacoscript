@@ -9,11 +9,11 @@ import (
 	"os"
 	"time"
 
-	"github.com/cloudradar-monitoring/tacoscript/conv"
+	"github.com/realvnc-labs/tacoscript/conv"
 
-	tacoexec "github.com/cloudradar-monitoring/tacoscript/exec"
+	tacoexec "github.com/realvnc-labs/tacoscript/exec"
 
-	"github.com/cloudradar-monitoring/tacoscript/utils"
+	"github.com/realvnc-labs/tacoscript/utils"
 
 	"github.com/sirupsen/logrus"
 )

@@ -10,7 +10,7 @@ import (
 
 	"github.com/sirupsen/logrus"
 
-	tacoexec "github.com/cloudradar-monitoring/tacoscript/exec"
+	tacoexec "github.com/realvnc-labs/tacoscript/exec"
 )
 
 const (

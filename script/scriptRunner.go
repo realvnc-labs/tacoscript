@@ -10,8 +10,8 @@ import (
 	"github.com/sirupsen/logrus"
 	"gopkg.in/yaml.v2"
 
-	"github.com/cloudradar-monitoring/tacoscript/exec"
-	"github.com/cloudradar-monitoring/tacoscript/tasks"
+	"github.com/realvnc-labs/tacoscript/exec"
+	"github.com/realvnc-labs/tacoscript/tasks"
 )
 
 type Runner struct {

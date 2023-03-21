@@ -4,7 +4,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/cloudradar-monitoring/tacoscript/conv"
+	"github.com/realvnc-labs/tacoscript/conv"
 	"gopkg.in/yaml.v2"
 
 	"github.com/stretchr/testify/assert"

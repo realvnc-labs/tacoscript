@@ -11,8 +11,8 @@ import (
 
 	"github.com/sirupsen/logrus"
 
-	tacoexec "github.com/cloudradar-monitoring/tacoscript/exec"
-	"github.com/cloudradar-monitoring/tacoscript/winreg"
+	tacoexec "github.com/realvnc-labs/tacoscript/exec"
+	"github.com/realvnc-labs/tacoscript/winreg"
 )
 
 const (

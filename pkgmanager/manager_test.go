@@ -8,8 +8,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/cloudradar-monitoring/tacoscript/exec"
-	"github.com/cloudradar-monitoring/tacoscript/tasks"
+	"github.com/realvnc-labs/tacoscript/exec"
+	"github.com/realvnc-labs/tacoscript/tasks"
 	"github.com/stretchr/testify/assert"
 )
 

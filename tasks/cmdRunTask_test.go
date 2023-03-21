@@ -10,10 +10,10 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
-	"github.com/cloudradar-monitoring/tacoscript/apptest"
-	"github.com/cloudradar-monitoring/tacoscript/conv"
+	"github.com/realvnc-labs/tacoscript/apptest"
+	"github.com/realvnc-labs/tacoscript/conv"
 
-	appExec "github.com/cloudradar-monitoring/tacoscript/exec"
+	appExec "github.com/realvnc-labs/tacoscript/exec"
 )
 
 func TestTaskExecution(t *testing.T) {

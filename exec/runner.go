@@ -7,7 +7,7 @@ import (
 	"runtime"
 	"strings"
 
-	io2 "github.com/cloudradar-monitoring/tacoscript/io"
+	io2 "github.com/realvnc-labs/tacoscript/io"
 	"github.com/sirupsen/logrus"
 )
 

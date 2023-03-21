@@ -4,7 +4,7 @@
 
 <!-- markdownlint-restore -->
 
-![Logo](https://raw.githubusercontent.com/cloudradar-monitoring/tacoscript/master/logo.svg)
+![Logo](https://raw.githubusercontent.com/realvnc-labs/tacoscript/master/logo.svg)
 
 Tacoscript is a command line tool for the automation of tasks, the management of the operating system and applications.  
 It can be installed as a single dependency-free binary. It doesn't require any scripting languages. Any Unix/Linux and

@@ -7,7 +7,7 @@ linters-settings:
     lines: 150
     statements: 150
   gci:
-    local-prefixes: github.com/cloudradar-monitoring/tacoscript
+    local-prefixes: github.com/realvnc-labs/tacoscript
   goconst:
     min-len: 2
     min-occurrences: 6

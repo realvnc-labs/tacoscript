@@ -8,8 +8,8 @@ import (
 	"github.com/sirupsen/logrus"
 	"gopkg.in/yaml.v2"
 
-	"github.com/cloudradar-monitoring/tacoscript/conv"
-	"github.com/cloudradar-monitoring/tacoscript/utils"
+	"github.com/realvnc-labs/tacoscript/conv"
+	"github.com/realvnc-labs/tacoscript/utils"
 )
 
 const (

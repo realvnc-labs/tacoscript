@@ -8,10 +8,10 @@ import (
 	"runtime"
 	"time"
 
-	tacoexec "github.com/cloudradar-monitoring/tacoscript/exec"
-	"github.com/cloudradar-monitoring/tacoscript/winreg"
+	tacoexec "github.com/realvnc-labs/tacoscript/exec"
+	"github.com/realvnc-labs/tacoscript/winreg"
 
-	"github.com/cloudradar-monitoring/tacoscript/utils"
+	"github.com/realvnc-labs/tacoscript/utils"
 
 	"github.com/sirupsen/logrus"
 )

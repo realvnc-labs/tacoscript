@@ -1,8 +1,9 @@
 ---
-title: "Installation"
+title: 'Installation'
 weight: 0
 slug: quick-start
 ---
+
 {{< toc >}}
 
 {{< hint type=note title="Tacoscript and RPort">}}
@@ -11,7 +12,7 @@ installer script installs it by default. On Windows check the existence of the `
 on Linux and macOS check `/usr/local/bin/tacpscript`.
 {{< /hint >}}
 
-Jump to [our release page](https://github.com/cloudradar-monitoring/tacoscript/releases/tag/latest) and download a binary
+Jump to [our release page](https://github.com/realvnc-labs/tacoscript/releases/tag/latest) and download a binary
 for your host OS. Don't forget to download a corresponding md5 file as well and compare the checksums.
 
 ## On macOS
@@ -54,7 +55,7 @@ $ENV:PATH="$ENV:PATH;$($dest)\bin"
 ## Compile from sources
 
 ```shell
-git clone https://github.com/cloudradar-monitoring/tacoscript.git
+git clone https://github.com/realvnc-labs/tacoscript.git
 cd tacoscript
 go build -o tacoscript main.go
 ./tacoscript --help

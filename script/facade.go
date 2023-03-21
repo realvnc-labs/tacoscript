@@ -4,11 +4,11 @@ import (
 	"context"
 	"io"
 
-	"github.com/cloudradar-monitoring/tacoscript/exec"
-	"github.com/cloudradar-monitoring/tacoscript/pkgmanager"
-	"github.com/cloudradar-monitoring/tacoscript/utils"
+	"github.com/realvnc-labs/tacoscript/exec"
+	"github.com/realvnc-labs/tacoscript/pkgmanager"
+	"github.com/realvnc-labs/tacoscript/utils"
 
-	"github.com/cloudradar-monitoring/tacoscript/tasks"
+	"github.com/realvnc-labs/tacoscript/tasks"
 )
 
 // RunScript main entry point for the script execution

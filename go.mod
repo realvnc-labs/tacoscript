@@ -1,4 +1,4 @@
-module github.com/cloudradar-monitoring/tacoscript
+module github.com/realvnc-labs/tacoscript
 
 go 1.19
 

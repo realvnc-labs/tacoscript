@@ -8,7 +8,7 @@ import (
 	"runtime"
 	"testing"
 
-	appExec "github.com/cloudradar-monitoring/tacoscript/exec"
+	appExec "github.com/realvnc-labs/tacoscript/exec"
 	"github.com/stretchr/testify/assert"
 )
 

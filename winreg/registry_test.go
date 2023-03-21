@@ -13,7 +13,7 @@ import (
 	"github.com/stretchr/testify/require"
 	"golang.org/x/sys/windows/registry"
 
-	"github.com/cloudradar-monitoring/tacoscript/winreg"
+	"github.com/realvnc-labs/tacoscript/winreg"
 )
 
 const baseTestKey = `HKLM:\Software\TestTacoScript`

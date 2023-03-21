@@ -3,8 +3,8 @@ package script
 import (
 	"testing"
 
-	"github.com/cloudradar-monitoring/tacoscript/tasks"
 	"github.com/magiconair/properties/assert"
+	"github.com/realvnc-labs/tacoscript/tasks"
 )
 
 func TestSort(t *testing.T) {

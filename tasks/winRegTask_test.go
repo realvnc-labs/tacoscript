@@ -9,7 +9,7 @@ import (
 	"runtime"
 	"testing"
 
-	"github.com/cloudradar-monitoring/tacoscript/winreg"
+	"github.com/realvnc-labs/tacoscript/winreg"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
