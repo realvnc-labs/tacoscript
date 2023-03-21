@@ -27,6 +27,7 @@ update-my-realvnc-server:
   realvnc_server.config_update:
     - encryption: AlwaysOn
     - blank_screen: true
+    - idle_timeout: '!UNSET!'
 ```
 
 We can interpret this script as:
@@ -35,6 +36,9 @@ We can interpret this script as:
    update the `BlankScreen` parameter to `true`. If the is a current setting then it will be replaced
    with the new value. If the setting is not currently set then it will added (either to the end of the
    configuration file for Linux/Mac or as a new registry setting for Windows).
+
+2. Remove the `idle_timeout` parameter from the configuration. The RealVNC server will then apply the
+   default value. Note that quotes must be used.
 
 {{< heading-supported-parameters >}}
 
