@@ -35,7 +35,7 @@ func NewFieldCombinedTracker() (tr *FieldNameStatusTracker) {
 	}
 }
 
-func (tr *FieldNameStatusTracker) BuildFieldMap(t Task) {
+func (tr *FieldNameStatusTracker) BuildFieldMap(t CoreTask) {
 	rTaskType := reflect.TypeOf(t)
 	rTaskFields := rTaskType.Elem()
 

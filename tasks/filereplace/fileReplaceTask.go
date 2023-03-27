@@ -125,7 +125,7 @@ type FileReplaceTaskExecutor struct {
 	Runner    tacoexec.Runner
 }
 
-func (frte *FileReplaceTaskExecutor) Execute(ctx context.Context, task tasks.Task) executionresult.ExecutionResult {
+func (frte *FileReplaceTaskExecutor) Execute(ctx context.Context, task tasks.CoreTask) executionresult.ExecutionResult {
 	logrus.Debugf("will trigger '%s' task", task.GetPath())
 	execRes := executionresult.ExecutionResult{
 		Changes: make(map[string]string),

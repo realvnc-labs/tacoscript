@@ -67,7 +67,7 @@ func (p Builder) BuildScripts() (tasks.Scripts, error) {
 		scriptID := rawTask.Key.(string)
 		script := tasks.Script{
 			ID:    scriptID,
-			Tasks: []tasks.Task{},
+			Tasks: []tasks.CoreTask{},
 		}
 		index := 0
 		if steps, ok := rawTask.Value.(yaml.MapSlice); ok {

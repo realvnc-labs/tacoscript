@@ -88,7 +88,7 @@ type CmdRunTaskExecutor struct {
 	FsManager tasks.FsManager
 }
 
-func (crte *CmdRunTaskExecutor) Execute(ctx context.Context, task tasks.Task) executionresult.ExecutionResult {
+func (crte *CmdRunTaskExecutor) Execute(ctx context.Context, task tasks.CoreTask) executionresult.ExecutionResult {
 	execRes := executionresult.ExecutionResult{}
 	cmdRunTask, ok := task.(*CmdRunTask)
 	if !ok {

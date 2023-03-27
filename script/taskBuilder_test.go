@@ -46,7 +46,7 @@ maintain-my-file:
 `,
 			expectedScript: tasks.Script{
 				ID: "maintain-my-file",
-				Tasks: []tasks.Task{
+				Tasks: []tasks.CoreTask{
 					&filemanaged.FileManagedTask{
 						TypeName: filemanaged.TaskTypeFileManaged,
 						Path:     "maintain-my-file.file.managed[1]",
@@ -94,7 +94,7 @@ maintain-another-file:
 `,
 			expectedScript: tasks.Script{
 				ID: "maintain-another-file",
-				Tasks: []tasks.Task{
+				Tasks: []tasks.CoreTask{
 					&filemanaged.FileManagedTask{
 						TypeName: filemanaged.TaskTypeFileManaged,
 						Path:     "maintain-another-file.file.managed[1]",

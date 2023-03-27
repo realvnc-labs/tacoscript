@@ -9,7 +9,7 @@ import (
 type WinRegTaskBuilder struct {
 }
 
-func (wrtb WinRegTaskBuilder) Build(typeName, path string, params interface{}) (tasks.Task, error) {
+func (wrtb WinRegTaskBuilder) Build(typeName, path string, params interface{}) (tasks.CoreTask, error) {
 	task := &winreg.WinRegTask{
 		TypeName: typeName,
 		Path:     path,

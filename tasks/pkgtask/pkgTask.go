@@ -109,7 +109,7 @@ type PkgTaskExecutor struct {
 	FsManager      *utils.FsManager
 }
 
-func (pte *PkgTaskExecutor) Execute(ctx context.Context, task tasks.Task) executionresult.ExecutionResult {
+func (pte *PkgTaskExecutor) Execute(ctx context.Context, task tasks.CoreTask) executionresult.ExecutionResult {
 	logrus.Debugf("will trigger '%s' task", task.GetPath())
 	execRes := executionresult.ExecutionResult{}
 

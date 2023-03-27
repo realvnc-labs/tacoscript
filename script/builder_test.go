@@ -28,7 +28,7 @@ type TaskBuilderMock struct {
 	TaskRequirements    []string
 }
 
-func (bm *TaskBuilderMock) Build(typeName, path string, ctx interface{}) (tasks.Task, error) {
+func (bm *TaskBuilderMock) Build(typeName, path string, ctx interface{}) (tasks.CoreTask, error) {
 	t := &TaskBuilderTaskMock{
 		TypeName:        typeName,
 		Path:            path,
@@ -118,7 +118,7 @@ func TestBuilder(t *testing.T) {
 			ExpectedScripts: tasks.Scripts{
 				tasks.Script{
 					ID: "cwd",
-					Tasks: []tasks.Task{
+					Tasks: []tasks.CoreTask{
 						&TaskBuilderTaskMock{
 							TypeName: "cmd.run",
 							Path:     "cwd.cmd.run[1]",
@@ -171,7 +171,7 @@ func TestBuilder(t *testing.T) {
 			ExpectedScripts: tasks.Scripts{
 				tasks.Script{
 					ID: "cwd",
-					Tasks: []tasks.Task{
+					Tasks: []tasks.CoreTask{
 						&TaskBuilderTaskMock{
 							TypeName: "cmd.run",
 							Path:     "cwd.cmd.run[1]",
@@ -203,7 +203,7 @@ func TestBuilder(t *testing.T) {
 			ExpectedScripts: tasks.Scripts{
 				tasks.Script{
 					ID: "manyCreates",
-					Tasks: []tasks.Task{
+					Tasks: []tasks.CoreTask{
 						&TaskBuilderTaskMock{
 							TypeName: "cmd.run",
 							Path:     "manyCreates.cmd.run[1]",
@@ -237,7 +237,7 @@ func TestBuilder(t *testing.T) {
 			ExpectedScripts: tasks.Scripts{
 				tasks.Script{
 					ID: "template",
-					Tasks: []tasks.Task{
+					Tasks: []tasks.CoreTask{
 						&TaskBuilderTaskMock{
 							TypeName: "cmd.run",
 							Path:     "template.cmd.run[1]",
@@ -261,7 +261,7 @@ func TestBuilder(t *testing.T) {
 			ExpectedScripts: tasks.Scripts{
 				tasks.Script{
 					ID: "template",
-					Tasks: []tasks.Task{
+					Tasks: []tasks.CoreTask{
 						&TaskBuilderTaskMock{
 							TypeName: "cmd.run",
 							Path:     "template.cmd.run[1]",

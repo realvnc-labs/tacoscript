@@ -8,7 +8,7 @@ import (
 	tacoexec "github.com/realvnc-labs/tacoscript/exec"
 )
 
-func CheckConditionals(ctx *tacoexec.Context, fsManager FsManager, runner tacoexec.Runner, task Task) (
+func CheckConditionals(ctx *tacoexec.Context, fsManager FsManager, runner tacoexec.Runner, task CoreTask) (
 	skipExecutionReason string, err error) {
 	defer func() {
 		if skipExecutionReason != "" {
@@ -50,7 +50,7 @@ func CheckConditionals(ctx *tacoexec.Context, fsManager FsManager, runner tacoex
 	return "", nil
 }
 
-func checkMissingFileCondition(fsManager FsManager, task Task) (isExists bool, filename string, err error) {
+func checkMissingFileCondition(fsManager FsManager, task CoreTask) (isExists bool, filename string, err error) {
 	createsFilesList := task.GetCreatesFilesList()
 
 	if len(createsFilesList) == 0 {
@@ -83,7 +83,7 @@ func runCommands(ctx *tacoexec.Context, runner tacoexec.Runner, cmds []string) (
 	return runner.Run(&newCtx)
 }
 
-func checkUnless(ctx *tacoexec.Context, runner tacoexec.Runner, task Task) (isExpectationSuccess bool, err error) {
+func checkUnless(ctx *tacoexec.Context, runner tacoexec.Runner, task CoreTask) (isExpectationSuccess bool, err error) {
 	cmds := task.GetUnlessCmds()
 	if len(cmds) == 0 {
 		return true, nil
@@ -104,7 +104,7 @@ func checkUnless(ctx *tacoexec.Context, runner tacoexec.Runner, task Task) (isEx
 	return false, nil
 }
 
-func checkOnlyIfs(ctx *tacoexec.Context, runner tacoexec.Runner, task Task) (isSuccess bool, err error) {
+func checkOnlyIfs(ctx *tacoexec.Context, runner tacoexec.Runner, task CoreTask) (isSuccess bool, err error) {
 	cmds := task.GetOnlyIfCmds()
 	if len(cmds) == 0 {
 		return true, nil

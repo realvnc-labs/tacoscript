@@ -126,7 +126,7 @@ type WinRegTaskExecutor struct {
 	FsManager *utils.FsManager
 }
 
-func (wrte *WinRegTaskExecutor) Execute(ctx context.Context, task tasks.Task) executionresult.ExecutionResult {
+func (wrte *WinRegTaskExecutor) Execute(ctx context.Context, task tasks.CoreTask) executionresult.ExecutionResult {
 	execRes := executionresult.ExecutionResult{
 		Name:    task.GetTypeName(),
 		Comment: "registry not updated",

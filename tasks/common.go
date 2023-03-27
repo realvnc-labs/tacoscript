@@ -4,11 +4,11 @@ type Scripts []Script
 
 type Script struct {
 	ID    string
-	Tasks []Task
+	Tasks []CoreTask
 }
 
 type FieldNameMapper interface {
-	BuildFieldMap(t Task)
+	BuildFieldMap(t CoreTask)
 	GetFieldName(fk string) (fieldName string)
 	SetFieldName(fk string, fieldName string)
 }
@@ -30,7 +30,7 @@ type FieldStatusTracker interface {
 	WithNewValues(applyFn func(fieldName string, fs FieldStatus) (err error)) (err error)
 }
 
-type Task interface {
+type CoreTask interface {
 	GetTypeName() string
 	Validate(goos string) error
 	GetPath() string

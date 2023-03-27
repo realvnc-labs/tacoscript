@@ -19,7 +19,7 @@ const (
 )
 
 type Builder interface {
-	Build(typeName, path string, params interface{}) (tasks.Task, error)
+	Build(typeName, path string, params interface{}) (tasks.CoreTask, error)
 }
 
 type BuildRouter struct {
@@ -32,7 +32,7 @@ func NewBuilderRouter(builders map[string]Builder) BuildRouter {
 	}
 }
 
-func (br BuildRouter) Build(typeName, path string, params interface{}) (tasks.Task, error) {
+func (br BuildRouter) Build(typeName, path string, params interface{}) (tasks.CoreTask, error) {
 	builder, ok := br.Builders[typeName]
 	if !ok {
 		return nil, fmt.Errorf("no builders registered for task type '%s'", typeName)
@@ -42,7 +42,7 @@ func (br BuildRouter) Build(typeName, path string, params interface{}) (tasks.Ta
 }
 
 func Build(
-	typeName, path string, inputFields interface{}, outputTask tasks.Task, taskFields parser.TaskFieldsParserConfig) (
+	typeName, path string, inputFields interface{}, outputTask tasks.CoreTask, taskFields parser.TaskFieldsParserConfig) (
 	errs *utils.Errors) {
 	logrus.Debugf("Parsing task %s, %s", typeName, path)
 	errs = &utils.Errors{}

@@ -53,10 +53,10 @@ func (tm *TaskMock) IsChangeField(inputKey string) (excluded bool) {
 
 type ExecutorMock struct {
 	ExecResult executionresult.ExecutionResult
-	InputTasks []tasks.Task
+	InputTasks []tasks.CoreTask
 }
 
-func (em *ExecutorMock) Execute(ctx context.Context, task tasks.Task) executionresult.ExecutionResult {
+func (em *ExecutorMock) Execute(ctx context.Context, task tasks.CoreTask) executionresult.ExecutionResult {
 	em.InputTasks = append(em.InputTasks, task)
 	return em.ExecResult
 }
@@ -74,7 +74,7 @@ func TestScriptRunner(t *testing.T) {
 			Scripts: tasks.Scripts{
 				tasks.Script{
 					ID:    "script1",
-					Tasks: []tasks.Task{&TaskMock{ID: "123"}},
+					Tasks: []tasks.CoreTask{&TaskMock{ID: "123"}},
 				},
 			},
 			ExecutorMock: &ExecutorMock{
@@ -89,11 +89,11 @@ func TestScriptRunner(t *testing.T) {
 			Scripts: tasks.Scripts{
 				tasks.Script{
 					ID:    "script5",
-					Tasks: []tasks.Task{&TaskMock{ID: "task8"}, &TaskMock{ID: "task9"}},
+					Tasks: []tasks.CoreTask{&TaskMock{ID: "task8"}, &TaskMock{ID: "task9"}},
 				},
 				tasks.Script{
 					ID:    "script6",
-					Tasks: []tasks.Task{&TaskMock{ID: "task12"}, &TaskMock{ID: "task13"}},
+					Tasks: []tasks.CoreTask{&TaskMock{ID: "task12"}, &TaskMock{ID: "task13"}},
 				},
 			},
 			ExecutorMock: &ExecutorMock{
@@ -107,7 +107,7 @@ func TestScriptRunner(t *testing.T) {
 			Scripts: tasks.Scripts{
 				tasks.Script{
 					ID:    "script7",
-					Tasks: []tasks.Task{&TaskMock{ID: "task10"}},
+					Tasks: []tasks.CoreTask{&TaskMock{ID: "task10"}},
 				},
 			},
 			ExecutorMock: &ExecutorMock{
@@ -120,11 +120,11 @@ func TestScriptRunner(t *testing.T) {
 			Scripts: tasks.Scripts{
 				tasks.Script{
 					ID:    "script8",
-					Tasks: []tasks.Task{&TaskMock{ID: "task11", Requirements: []string{"script9"}}},
+					Tasks: []tasks.CoreTask{&TaskMock{ID: "task11", Requirements: []string{"script9"}}},
 				},
 				tasks.Script{
 					ID:    "script9",
-					Tasks: []tasks.Task{&TaskMock{ID: "task12"}},
+					Tasks: []tasks.CoreTask{&TaskMock{ID: "task12"}},
 				},
 			},
 			ExecutorMock: &ExecutorMock{

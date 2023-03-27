@@ -9,7 +9,7 @@ import (
 type FileReplaceTaskBuilder struct {
 }
 
-func (frtb FileReplaceTaskBuilder) Build(typeName, path string, params interface{}) (t tasks.Task, err error) {
+func (frtb FileReplaceTaskBuilder) Build(typeName, path string, params interface{}) (t tasks.CoreTask, err error) {
 	task := &filereplace.FileReplaceTask{
 		TypeName: typeName,
 		Path:     path,

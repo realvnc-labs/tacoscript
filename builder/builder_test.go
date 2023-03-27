@@ -14,11 +14,11 @@ type BuilderMock struct {
 	TypeName     string
 	Path         string
 	Context      interface{}
-	TaskToReturn tasks.Task
+	TaskToReturn tasks.CoreTask
 	ErrToReturn  error
 }
 
-func (bm *BuilderMock) Build(typeName, path string, ctx interface{}) (tasks.Task, error) {
+func (bm *BuilderMock) Build(typeName, path string, ctx interface{}) (tasks.CoreTask, error) {
 	bm.TypeName = typeName
 	bm.Path = path
 	bm.Context = ctx

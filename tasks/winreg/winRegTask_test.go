@@ -121,7 +121,7 @@ func TestWinRegTaskValidation(t *testing.T) {
 	for _, testCase := range testCases {
 		tc := testCase
 		t.Run(tc.Name, func(t *testing.T) {
-			err := tc.Task.Validate(runtime.GOOS)
+			err := tc.CoreTask.Validate(runtime.GOOS)
 			if tc.ExpectedErr == "" {
 				assert.NoError(t, err)
 			} else {

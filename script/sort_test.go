@@ -16,7 +16,7 @@ func TestSort(t *testing.T) {
 			scriptsInInput: tasks.Scripts{
 				tasks.Script{
 					ID: "script 7",
-					Tasks: []tasks.Task{
+					Tasks: []tasks.CoreTask{
 						&RequirementsTaskMock{
 							RequirementsToGive: []string{"script 5"},
 						},
@@ -30,19 +30,19 @@ func TestSort(t *testing.T) {
 				},
 				tasks.Script{
 					ID:    "script 5",
-					Tasks: []tasks.Task{},
+					Tasks: []tasks.CoreTask{},
 				},
 				tasks.Script{
 					ID:    "script 6",
-					Tasks: []tasks.Task{},
+					Tasks: []tasks.CoreTask{},
 				},
 				tasks.Script{
 					ID:    "script 4",
-					Tasks: []tasks.Task{},
+					Tasks: []tasks.CoreTask{},
 				},
 				tasks.Script{
 					ID: "script 8",
-					Tasks: []tasks.Task{
+					Tasks: []tasks.CoreTask{
 						&RequirementsTaskMock{
 							RequirementsToGive: []string{"script 1"},
 						},
@@ -50,11 +50,11 @@ func TestSort(t *testing.T) {
 				},
 				tasks.Script{
 					ID:    "script 1",
-					Tasks: []tasks.Task{},
+					Tasks: []tasks.CoreTask{},
 				},
 				tasks.Script{
 					ID:    "script 9",
-					Tasks: []tasks.Task{},
+					Tasks: []tasks.CoreTask{},
 				},
 			},
 			expectedScriptIDs: []string{"script 5", "script 6", "script 1", "script 7", "script 4", "script 8", "script 9"},
@@ -63,7 +63,7 @@ func TestSort(t *testing.T) {
 			scriptsInInput: tasks.Scripts{
 				tasks.Script{
 					ID: "script 1",
-					Tasks: []tasks.Task{
+					Tasks: []tasks.CoreTask{
 						&RequirementsTaskMock{
 							RequirementsToGive: []string{"script 2", "script 3"},
 						},
@@ -71,11 +71,11 @@ func TestSort(t *testing.T) {
 				},
 				tasks.Script{
 					ID:    "script 2",
-					Tasks: []tasks.Task{},
+					Tasks: []tasks.CoreTask{},
 				},
 				tasks.Script{
 					ID:    "script 3",
-					Tasks: []tasks.Task{},
+					Tasks: []tasks.CoreTask{},
 				},
 			},
 			expectedScriptIDs: []string{"script 2", "script 3", "script 1"},
@@ -84,7 +84,7 @@ func TestSort(t *testing.T) {
 			scriptsInInput: tasks.Scripts{
 				tasks.Script{
 					ID: "script 12",
-					Tasks: []tasks.Task{
+					Tasks: []tasks.CoreTask{
 						&RequirementsTaskMock{
 							RequirementsToGive: []string{"script 10"},
 						},
@@ -98,7 +98,7 @@ func TestSort(t *testing.T) {
 				},
 				tasks.Script{
 					ID: "script 10",
-					Tasks: []tasks.Task{
+					Tasks: []tasks.CoreTask{
 						&RequirementsTaskMock{
 							RequirementsToGive: []string{"script 11"},
 						},
@@ -106,7 +106,7 @@ func TestSort(t *testing.T) {
 				},
 				tasks.Script{
 					ID:    "script 11",
-					Tasks: []tasks.Task{},
+					Tasks: []tasks.CoreTask{},
 				},
 			},
 			expectedScriptIDs: []string{"script 11", "script 10", "script 12"},

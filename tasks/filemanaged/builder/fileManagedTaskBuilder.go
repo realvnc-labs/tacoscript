@@ -17,7 +17,7 @@ type FileManagedTaskBuilder struct {
 
 var FileManagedTaskParamsFnMap = parser.TaskFieldsParserConfig{
 	tasks.ModeField: parser.TaskField{
-		ParseFn: func(task tasks.Task, path string, val interface{}) error {
+		ParseFn: func(task tasks.CoreTask, path string, val interface{}) error {
 			var err error
 			t := task.(*filemanaged.FileManagedTask)
 			t.Mode, err = conv.ConvertToFileMode(val)
@@ -26,7 +26,7 @@ var FileManagedTaskParamsFnMap = parser.TaskFieldsParserConfig{
 		FieldName: "Mode",
 	},
 	tasks.SourceField: parser.TaskField{
-		ParseFn: func(task tasks.Task, path string, val interface{}) error {
+		ParseFn: func(task tasks.CoreTask, path string, val interface{}) error {
 			t := task.(*filemanaged.FileManagedTask)
 			t.Source = utils.ParseLocation(fmt.Sprint(val))
 			return nil
@@ -34,7 +34,7 @@ var FileManagedTaskParamsFnMap = parser.TaskFieldsParserConfig{
 		FieldName: "Source",
 	},
 	tasks.ContentsField: parser.TaskField{
-		ParseFn: func(task tasks.Task, path string, val interface{}) error {
+		ParseFn: func(task tasks.CoreTask, path string, val interface{}) error {
 			t := task.(*filemanaged.FileManagedTask)
 			t.Contents = parseContentsField(val)
 			return nil
@@ -43,7 +43,7 @@ var FileManagedTaskParamsFnMap = parser.TaskFieldsParserConfig{
 	},
 }
 
-func (fmtb FileManagedTaskBuilder) Build(typeName, path string, params interface{}) (tasks.Task, error) {
+func (fmtb FileManagedTaskBuilder) Build(typeName, path string, params interface{}) (tasks.CoreTask, error) {
 	task := &filemanaged.FileManagedTask{
 		TypeName: typeName,
 		Path:     path,

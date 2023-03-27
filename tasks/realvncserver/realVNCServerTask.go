@@ -166,7 +166,7 @@ type RealVNCServerTaskExecutor struct {
 	Reloader ConfigReloader
 }
 
-func (rvste *RealVNCServerTaskExecutor) Execute(ctx context.Context, task tasks.Task) executionresult.ExecutionResult {
+func (rvste *RealVNCServerTaskExecutor) Execute(ctx context.Context, task tasks.CoreTask) executionresult.ExecutionResult {
 	start := time.Now()
 
 	logrus.Debugf("will trigger '%s' task", task.GetPath())

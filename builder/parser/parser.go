@@ -2,7 +2,7 @@ package parser
 
 import "github.com/realvnc-labs/tacoscript/tasks"
 
-type TaskFieldParseFn func(t tasks.Task, path string, val interface{}) error
+type TaskFieldParseFn func(t tasks.CoreTask, path string, val interface{}) error
 
 type TaskField struct {
 	ParseFn   TaskFieldParseFn

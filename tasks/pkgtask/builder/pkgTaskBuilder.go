@@ -15,7 +15,7 @@ type PkgTaskBuilder struct {
 
 var pkgTaskParamsFnMap = parser.TaskFieldsParserConfig{
 	tasks.NameField: parser.TaskField{
-		ParseFn: func(task tasks.Task, path string, val interface{}) error {
+		ParseFn: func(task tasks.CoreTask, path string, val interface{}) error {
 			t := task.(*pkgtask.PkgTask)
 			t.Named.Name = fmt.Sprint(val)
 			return nil
@@ -23,7 +23,7 @@ var pkgTaskParamsFnMap = parser.TaskFieldsParserConfig{
 		FieldName: "Name",
 	},
 	tasks.NamesField: parser.TaskField{
-		ParseFn: func(task tasks.Task, path string, val interface{}) error {
+		ParseFn: func(task tasks.CoreTask, path string, val interface{}) error {
 			var names []string
 			var err error
 			t := task.(*pkgtask.PkgTask)
@@ -35,7 +35,7 @@ var pkgTaskParamsFnMap = parser.TaskFieldsParserConfig{
 	},
 }
 
-func (fmtb PkgTaskBuilder) Build(typeName, path string, params interface{}) (tasks.Task, error) {
+func (fmtb PkgTaskBuilder) Build(typeName, path string, params interface{}) (tasks.CoreTask, error) {
 	task := &pkgtask.PkgTask{
 		TypeName: typeName,
 		Path:     path,
