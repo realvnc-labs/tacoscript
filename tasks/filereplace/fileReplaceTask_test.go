@@ -18,12 +18,12 @@ import (
 func TestFileReplaceTaskValidation(t *testing.T) {
 	testCases := []struct {
 		Name             string
-		Task             FrTask
+		InputTask        FrTask
 		ExpectedErrorStr string
 	}{
 		{
 			Name: "missing_name",
-			Task: FrTask{
+			InputTask: FrTask{
 				Path:    "somepath",
 				Pattern: "search for this text",
 			},
@@ -31,14 +31,14 @@ func TestFileReplaceTaskValidation(t *testing.T) {
 		},
 		{
 			Name: "valid task",
-			Task: FrTask{
+			InputTask: FrTask{
 				Name:    "some p",
 				Pattern: "search for this text",
 			},
 		},
 		{
 			Name: "bad pattern",
-			Task: FrTask{
+			InputTask: FrTask{
 				Name:    "some p",
 				Pattern: "*.txt",
 			},
@@ -46,7 +46,7 @@ func TestFileReplaceTaskValidation(t *testing.T) {
 		},
 		{
 			Name: "invalid file size units",
-			Task: FrTask{
+			InputTask: FrTask{
 				Name:        "some p",
 				Pattern:     "search for this text",
 				MaxFileSize: "100c",
@@ -55,7 +55,7 @@ func TestFileReplaceTaskValidation(t *testing.T) {
 		},
 		{
 			Name: "append and prepend",
-			Task: FrTask{
+			InputTask: FrTask{
 				Name:              "some p",
 				Pattern:           "search for this text",
 				AppendIfNotFound:  true,
@@ -68,7 +68,7 @@ func TestFileReplaceTaskValidation(t *testing.T) {
 	for _, testCase := range testCases {
 		tc := testCase
 		t.Run(tc.Name, func(t *testing.T) {
-			err := tc.Task.Validate(runtime.GOOS)
+			err := tc.InputTask.Validate(runtime.GOOS)
 
 			if tc.ExpectedErrorStr != "" {
 				assert.ErrorContains(t, err, tc.ExpectedErrorStr)
@@ -78,10 +78,10 @@ func TestFileReplaceTaskValidation(t *testing.T) {
 			assert.NoError(t, err)
 			// if we've a valid task then check the default for max_file_size
 			if strings.Contains(tc.Name, "valid task") {
-				assert.Equal(t, defaultMaxFileSize, tc.Task.MaxFileSize)
+				assert.Equal(t, defaultMaxFileSize, tc.InputTask.MaxFileSize)
 				fileSize, err := conv.ConvertToFileSize(defaultMaxFileSize)
 				require.NoError(t, err)
-				assert.Equal(t, fileSize, tc.Task.maxFileSizeCalculated)
+				assert.Equal(t, fileSize, tc.InputTask.maxFileSizeCalculated)
 			}
 		})
 	}

@@ -34,11 +34,11 @@ func TestPkgTaskValidation(t *testing.T) {
 	testCases := []struct {
 		Name          string
 		ExpectedError string
-		Task          PTask
+		InputTask     PTask
 	}{
 		{
 			Name: "missing_name_and_names",
-			Task: PTask{
+			InputTask: PTask{
 				Path:       "somepath",
 				ActionType: ActionUpdate,
 			},
@@ -50,7 +50,7 @@ func TestPkgTaskValidation(t *testing.T) {
 		},
 		{
 			Name: "valid_task_name",
-			Task: PTask{
+			InputTask: PTask{
 				Named:      namedtask.NamedTask{Name: "some name"},
 				ActionType: ActionUninstall,
 			},
@@ -58,7 +58,7 @@ func TestPkgTaskValidation(t *testing.T) {
 		},
 		{
 			Name: "valid_task_names",
-			Task: PTask{
+			InputTask: PTask{
 				Named:      namedtask.NamedTask{Names: []string{"some name1", "some name 2"}},
 				ActionType: ActionInstall,
 			},
@@ -66,7 +66,7 @@ func TestPkgTaskValidation(t *testing.T) {
 		},
 		{
 			Name: "invalid_action_name",
-			Task: PTask{
+			InputTask: PTask{
 				TypeName:   "unknown type name",
 				Path:       "somepath",
 				Named:      namedtask.NamedTask{Name: "some name"},
@@ -79,7 +79,7 @@ func TestPkgTaskValidation(t *testing.T) {
 	for _, testCase := range testCases {
 		tc := testCase
 		t.Run(tc.Name, func(t *testing.T) {
-			err := tc.Task.Validate(runtime.GOOS)
+			err := tc.InputTask.Validate(runtime.GOOS)
 			if tc.ExpectedError == "" {
 				assert.NoError(t, err)
 			} else {
@@ -124,7 +124,7 @@ func TestPkgTaskString(t *testing.T) {
 
 func TestPkgTaskExecution(t *testing.T) {
 	testCases := []struct {
-		Task               *PTask
+		InputTask          *PTask
 		ExpectedResult     executionresult.ExecutionResult
 		RunnerMock         *appExec.SystemRunner
 		PackageManagerMock *PackageManagerMock
@@ -133,7 +133,7 @@ func TestPkgTaskExecution(t *testing.T) {
 	}{
 		{
 			Name: "execute one name install",
-			Task: &PTask{
+			InputTask: &PTask{
 				ActionType: ActionInstall,
 				TypeName:   TaskTypePkgInstalled,
 				Path:       "one name path",
@@ -155,7 +155,7 @@ func TestPkgTaskExecution(t *testing.T) {
 		},
 		{
 			Name: "executing one onlyif condition with success",
-			Task: &PTask{
+			InputTask: &PTask{
 				Named:  namedtask.NamedTask{Name: "cmd lala"},
 				OnlyIf: []string{"check before lala"},
 			},
@@ -184,7 +184,7 @@ func TestPkgTaskExecution(t *testing.T) {
 		},
 		{
 			Name: "executing one onlyif condition with skip execution",
-			Task: &PTask{
+			InputTask: &PTask{
 				Named:  namedtask.NamedTask{Name: "cmd with OnlyIf skipped"},
 				OnlyIf: []string{"check OnlyIf error"},
 			},
@@ -202,7 +202,7 @@ func TestPkgTaskExecution(t *testing.T) {
 		},
 		{
 			Name: "executing one unless condition with success",
-			Task: &PTask{
+			InputTask: &PTask{
 				Named:  namedtask.NamedTask{Name: "cmd stop"},
 				Unless: []string{"run unless stop"},
 			},
@@ -221,7 +221,7 @@ func TestPkgTaskExecution(t *testing.T) {
 		},
 		{
 			Name: "executing one unless condition with failure",
-			Task: &PTask{
+			InputTask: &PTask{
 				Named:  namedtask.NamedTask{Name: "cmd with unless failure"},
 				Unless: []string{"check unless failure"},
 			},
@@ -244,7 +244,7 @@ func TestPkgTaskExecution(t *testing.T) {
 				PackageManager: tc.PackageManagerMock,
 			}
 
-			res := executor.Execute(context.Background(), tc.Task)
+			res := executor.Execute(context.Background(), tc.InputTask)
 			assert.EqualValues(tt, tc.ExpectedResult.Err, res.Err)
 			assert.EqualValues(tt, tc.ExpectedResult.IsSkipped, res.IsSkipped)
 			assert.EqualValues(tt, tc.ExpectedResult.StdOut, res.StdOut)
@@ -264,7 +264,7 @@ func TestPkgTaskExecution(t *testing.T) {
 
 			assert.Equal(tt, len(tc.ExpectedCmdStrs), len(cmds))
 			if tc.PackageManagerMock.givenTask != nil {
-				assertPkgTaskEquals(tt, tc.Task, tc.PackageManagerMock.givenTask)
+				assertPkgTaskEquals(tt, tc.InputTask, tc.PackageManagerMock.givenTask)
 			}
 		})
 	}

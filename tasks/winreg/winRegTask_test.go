@@ -18,11 +18,11 @@ func TestWinRegTaskValidation(t *testing.T) {
 	testCases := []struct {
 		Name        string
 		ExpectedErr string
-		Task        WrTask
+		InputTask   WrTask
 	}{
 		{
 			Name: "invalid_action_name",
-			Task: WrTask{
+			InputTask: WrTask{
 				TypeName:   "unknown type name",
 				Path:       "somepath",
 				ActionType: 0,
@@ -31,7 +31,7 @@ func TestWinRegTaskValidation(t *testing.T) {
 		},
 		{
 			Name: "present, missing name",
-			Task: WrTask{
+			InputTask: WrTask{
 				Path:       "winregpath",
 				ActionType: ActionWinRegPresent,
 				// Name:       "fDenyTSConnections",
@@ -43,7 +43,7 @@ func TestWinRegTaskValidation(t *testing.T) {
 		},
 		{
 			Name: "present, missing reg path",
-			Task: WrTask{
+			InputTask: WrTask{
 				Path:       "winregpath",
 				ActionType: ActionWinRegPresent,
 				Name:       "fDenyTSConnections",
@@ -55,7 +55,7 @@ func TestWinRegTaskValidation(t *testing.T) {
 		},
 		{
 			Name: "present, missing value",
-			Task: WrTask{
+			InputTask: WrTask{
 				Path:       "winregpath",
 				ActionType: ActionWinRegPresent,
 				Name:       "fDenyTSConnections",
@@ -67,7 +67,7 @@ func TestWinRegTaskValidation(t *testing.T) {
 		},
 		{
 			Name: "present, missing type",
-			Task: WrTask{
+			InputTask: WrTask{
 				Path:       "winregpath",
 				ActionType: ActionWinRegPresent,
 				Name:       "fDenyTSConnections",
@@ -79,7 +79,7 @@ func TestWinRegTaskValidation(t *testing.T) {
 		},
 		{
 			Name: "absent, missing name",
-			Task: WrTask{
+			InputTask: WrTask{
 				Path:       "winregpath",
 				ActionType: ActionWinRegAbsent,
 				// Name:       "fDenyTSConnections",
@@ -89,7 +89,7 @@ func TestWinRegTaskValidation(t *testing.T) {
 		},
 		{
 			Name: "absent, missing reg path",
-			Task: WrTask{
+			InputTask: WrTask{
 				Path:       "winregpath",
 				ActionType: ActionWinRegAbsent,
 				Name:       "fDenyTSConnections",
@@ -99,7 +99,7 @@ func TestWinRegTaskValidation(t *testing.T) {
 		},
 		{
 			Name: "absent, missing name",
-			Task: WrTask{
+			InputTask: WrTask{
 				Path:       "winregpath",
 				ActionType: ActionWinRegAbsent,
 				// Name:       "fDenyTSConnections",
@@ -109,7 +109,7 @@ func TestWinRegTaskValidation(t *testing.T) {
 		},
 		{
 			Name: "absent key, missing reg path",
-			Task: WrTask{
+			InputTask: WrTask{
 				Path:       "winregpath",
 				ActionType: ActionWinRegAbsentKey,
 				// RegPath: `HKLM:\System\CurrentControlSet\Control\Terminal Server`,
