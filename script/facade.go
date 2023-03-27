@@ -4,8 +4,21 @@ import (
 	"context"
 	"io"
 
+	"github.com/realvnc-labs/tacoscript/builder"
 	"github.com/realvnc-labs/tacoscript/exec"
 	"github.com/realvnc-labs/tacoscript/pkgmanager"
+	"github.com/realvnc-labs/tacoscript/tasks/cmdrun"
+	cmdrunbuilder "github.com/realvnc-labs/tacoscript/tasks/cmdrun/builder"
+	"github.com/realvnc-labs/tacoscript/tasks/filemanaged"
+	filemanagedbuilder "github.com/realvnc-labs/tacoscript/tasks/filemanaged/builder"
+	"github.com/realvnc-labs/tacoscript/tasks/filereplace"
+	filereplacebuilder "github.com/realvnc-labs/tacoscript/tasks/filereplace/builder"
+	"github.com/realvnc-labs/tacoscript/tasks/pkgtask"
+	pkgtaskbuilder "github.com/realvnc-labs/tacoscript/tasks/pkgtask/builder"
+	"github.com/realvnc-labs/tacoscript/tasks/realvncserver"
+	realvncserverbuilder "github.com/realvnc-labs/tacoscript/tasks/realvncserver/builder"
+	"github.com/realvnc-labs/tacoscript/tasks/winreg"
+	winregbuilder "github.com/realvnc-labs/tacoscript/tasks/winreg/builder"
 	"github.com/realvnc-labs/tacoscript/utils"
 
 	"github.com/realvnc-labs/tacoscript/tasks"
@@ -19,17 +32,17 @@ func RunScript(scriptPath string, abortOnError bool, output io.Writer) error {
 
 	parser := Builder{
 		DataProvider: fileDataProvider,
-		TaskBuilder: tasks.NewBuilderRouter(map[string]tasks.Builder{
-			tasks.TaskTypeCmdRun:  &tasks.CmdRunTaskBuilder{},
-			tasks.FileManaged:     &tasks.FileManagedTaskBuilder{},
-			tasks.FileReplace:     &tasks.FileReplaceTaskBuilder{},
-			tasks.RealVNCServer:   &tasks.RealVNCServerTaskBuilder{},
-			tasks.PkgInstalled:    &tasks.PkgTaskBuilder{},
-			tasks.PkgRemoved:      &tasks.PkgTaskBuilder{},
-			tasks.PkgUpgraded:     &tasks.PkgTaskBuilder{},
-			tasks.WinRegPresent:   &tasks.WinRegTaskBuilder{},
-			tasks.WinRegAbsent:    &tasks.WinRegTaskBuilder{},
-			tasks.WinRegAbsentKey: &tasks.WinRegTaskBuilder{},
+		TaskBuilder: builder.NewBuilderRouter(map[string]builder.Builder{
+			cmdrun.TaskTypeCmdRun:               &cmdrunbuilder.CmdRunTaskBuilder{},
+			filemanaged.TaskTypeFileManaged:     &filemanagedbuilder.FileManagedTaskBuilder{},
+			filereplace.TaskTypeFileReplace:     &filereplacebuilder.FileReplaceTaskBuilder{},
+			realvncserver.TaskTypeRealVNCServer: &realvncserverbuilder.RealVNCServerTaskBuilder{},
+			pkgtask.TaskTypePkgInstalled:        &pkgtaskbuilder.PkgTaskBuilder{},
+			pkgtask.TaskTypePkgRemoved:          &pkgtaskbuilder.PkgTaskBuilder{},
+			pkgtask.TaskTypePkgUpgraded:         &pkgtaskbuilder.PkgTaskBuilder{},
+			winreg.TaskTypeWinRegPresent:        &winregbuilder.WinRegTaskBuilder{},
+			winreg.TaskTypeWinRegAbsent:         &winregbuilder.WinRegTaskBuilder{},
+			winreg.TaskTypeWinRegAbsentKey:      &winregbuilder.WinRegTaskBuilder{},
 		}),
 		TemplateVariablesProvider: utils.OSDataProvider{},
 	}
@@ -43,42 +56,42 @@ func RunScript(scriptPath string, abortOnError bool, output io.Writer) error {
 		ManagementCmdsProviderBuildFunc: pkgmanager.BuildManagementCmdsProviders,
 	}
 
-	pkgTaskExecutor := &tasks.PkgTaskExecutor{
+	pkgTaskExecutor := &pkgtask.PkgTaskExecutor{
 		PackageManager: pkgTaskManager,
 		Runner:         cmdRunner,
 		FsManager:      &utils.FsManager{},
 	}
 
-	winRegTaskExecutor := &tasks.WinRegTaskExecutor{
+	winRegTaskExecutor := &winreg.WinRegTaskExecutor{
 		Runner:    cmdRunner,
 		FsManager: &utils.FsManager{},
 	}
 
 	execRouter := tasks.ExecutorRouter{
 		Executors: map[string]tasks.Executor{
-			tasks.TaskTypeCmdRun: &tasks.CmdRunTaskExecutor{
+			cmdrun.TaskTypeCmdRun: &cmdrun.CmdRunTaskExecutor{
 				Runner:    cmdRunner,
 				FsManager: &utils.FsManager{},
 			},
-			tasks.FileManaged: &tasks.FileManagedTaskExecutor{
+			filemanaged.TaskTypeFileManaged: &filemanaged.FileManagedTaskExecutor{
 				Runner:      cmdRunner,
 				FsManager:   &utils.FsManager{},
 				HashManager: &utils.HashManager{},
 			},
-			tasks.FileReplace: &tasks.FileReplaceTaskExecutor{
+			filereplace.TaskTypeFileReplace: &filereplace.FileReplaceTaskExecutor{
 				Runner:    cmdRunner,
 				FsManager: &utils.FsManager{},
 			},
-			tasks.RealVNCServer: &tasks.RealVNCServerTaskExecutor{
+			realvncserver.TaskTypeRealVNCServer: &realvncserver.RealVNCServerTaskExecutor{
 				Runner:    cmdRunner,
 				FsManager: &utils.FsManager{},
 			},
-			tasks.PkgInstalled:    pkgTaskExecutor,
-			tasks.PkgRemoved:      pkgTaskExecutor,
-			tasks.PkgUpgraded:     pkgTaskExecutor,
-			tasks.WinRegPresent:   winRegTaskExecutor,
-			tasks.WinRegAbsent:    winRegTaskExecutor,
-			tasks.WinRegAbsentKey: winRegTaskExecutor,
+			pkgtask.TaskTypePkgInstalled:   pkgTaskExecutor,
+			pkgtask.TaskTypePkgRemoved:     pkgTaskExecutor,
+			pkgtask.TaskTypePkgUpgraded:    pkgTaskExecutor,
+			winreg.TaskTypeWinRegPresent:   winRegTaskExecutor,
+			winreg.TaskTypeWinRegAbsent:    winRegTaskExecutor,
+			winreg.TaskTypeWinRegAbsentKey: winRegTaskExecutor,
 		},
 	}
 

@@ -12,6 +12,13 @@ import (
 
 	"github.com/realvnc-labs/tacoscript/exec"
 	"github.com/realvnc-labs/tacoscript/tasks"
+	"github.com/realvnc-labs/tacoscript/tasks/cmdrun"
+	"github.com/realvnc-labs/tacoscript/tasks/executionresult"
+	"github.com/realvnc-labs/tacoscript/tasks/filemanaged"
+	"github.com/realvnc-labs/tacoscript/tasks/filereplace"
+	"github.com/realvnc-labs/tacoscript/tasks/pkgtask"
+	"github.com/realvnc-labs/tacoscript/tasks/realvncserver"
+	"github.com/realvnc-labs/tacoscript/tasks/winreg"
 )
 
 type Runner struct {
@@ -59,12 +66,12 @@ func (r Runner) Run(ctx context.Context, scripts tasks.Scripts, globalAbortOnErr
 			comment := ""
 			changeMap := make(map[string]interface{})
 
-			if cmdRunTask, ok := task.(*tasks.CmdRunTask); ok {
+			if cmdRunTask, ok := task.(*cmdrun.CmdRunTask); ok {
 				// summary and changeMap will be updated
 				name, comment, abort = handleCmdRunResults(cmdRunTask, &summary, &res, changeMap)
 			}
 
-			if pkgTask, ok := task.(*tasks.PkgTask); ok {
+			if pkgTask, ok := task.(*pkgtask.PkgTask); ok {
 				name = pkgTask.Named.Name
 				comment = res.Comment
 				if res.Err == nil && !pkgTask.Updated {
@@ -72,7 +79,7 @@ func (r Runner) Run(ctx context.Context, scripts tasks.Scripts, globalAbortOnErr
 				}
 			}
 
-			if winRegTask, ok := task.(*tasks.WinRegTask); ok {
+			if winRegTask, ok := task.(*winreg.WinRegTask); ok {
 				name = winRegTask.RegPath + `\` + winRegTask.Name
 				comment = res.Comment
 				if res.Err == nil && !winRegTask.Updated {
@@ -80,7 +87,7 @@ func (r Runner) Run(ctx context.Context, scripts tasks.Scripts, globalAbortOnErr
 				}
 			}
 
-			if managedTask, ok := task.(*tasks.FileManagedTask); ok {
+			if managedTask, ok := task.(*filemanaged.FileManagedTask); ok {
 				name = managedTask.Name
 				comment = res.Comment
 				if res.Err == nil && !managedTask.Updated {
@@ -88,7 +95,7 @@ func (r Runner) Run(ctx context.Context, scripts tasks.Scripts, globalAbortOnErr
 				}
 			}
 
-			if replaceTask, ok := task.(*tasks.FileReplaceTask); ok {
+			if replaceTask, ok := task.(*filereplace.FileReplaceTask); ok {
 				name = replaceTask.Name
 				comment = res.Comment
 				if res.Err == nil && !replaceTask.Updated {
@@ -96,7 +103,7 @@ func (r Runner) Run(ctx context.Context, scripts tasks.Scripts, globalAbortOnErr
 				}
 			}
 
-			if realVNCServerTask, ok := task.(*tasks.RealVNCServerTask); ok {
+			if realVNCServerTask, ok := task.(*realvncserver.RealVNCServerTask); ok {
 				comment = res.Comment
 				if res.Err == nil && !realVNCServerTask.Updated {
 					comment = "Config not changed " + res.SkipReason
@@ -155,9 +162,9 @@ func (r Runner) Run(ctx context.Context, scripts tasks.Scripts, globalAbortOnErr
 }
 
 func handleCmdRunResults(
-	cmdRunTask *tasks.CmdRunTask,
+	cmdRunTask *cmdrun.CmdRunTask,
 	summary *scriptSummary,
-	res *tasks.ExecutionResult,
+	res *executionresult.ExecutionResult,
 	changeMap map[string]interface{}) (name string, comment string, abort bool) {
 	name = strings.Join(cmdRunTask.Named.GetNames(), "; ")
 

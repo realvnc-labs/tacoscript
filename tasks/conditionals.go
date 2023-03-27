@@ -8,7 +8,7 @@ import (
 	tacoexec "github.com/realvnc-labs/tacoscript/exec"
 )
 
-func checkConditionals(ctx *tacoexec.Context, fsManager FsManager, runner tacoexec.Runner, task Task) (
+func CheckConditionals(ctx *tacoexec.Context, fsManager FsManager, runner tacoexec.Runner, task Task) (
 	skipExecutionReason string, err error) {
 	defer func() {
 		if skipExecutionReason != "" {

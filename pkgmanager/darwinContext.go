@@ -7,7 +7,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/realvnc-labs/tacoscript/tasks"
+	"github.com/realvnc-labs/tacoscript/tasks/pkgtask"
 )
 
 func BuildManagementCmdsProviders() ([]ManagementCmdsProvider, error) {
@@ -18,7 +18,7 @@ func BuildManagementCmdsProviders() ([]ManagementCmdsProvider, error) {
 
 type OsPackageManagerCmdProvider struct{}
 
-func (ecb OsPackageManagerCmdProvider) GetManagementCmds(t *tasks.PkgTask) (*ManagementCmds, error) {
+func (ecb OsPackageManagerCmdProvider) GetManagementCmds(t *pkgtask.PkgTask) (*ManagementCmds, error) {
 	rawCmds := t.Named.GetNames()
 	rawInstallCmds := make([]string, 0, len(rawCmds))
 	if t.Version != "" {

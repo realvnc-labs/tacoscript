@@ -5,13 +5,13 @@ import (
 	"reflect"
 )
 
-type fieldNameMap map[string]string
+type FieldNameMap map[string]string
 
-type fieldStatusMap map[string]FieldStatus
+type FieldStatusMap map[string]FieldStatus
 
 type FieldNameStatusTracker struct {
-	nameMap   fieldNameMap
-	statusMap fieldStatusMap
+	NameMap   FieldNameMap
+	StatusMap FieldStatusMap
 }
 
 const (
@@ -22,16 +22,16 @@ var (
 	ErrFieldNotFoundInTracker = errors.New("field key not found in tracker")
 )
 
-func newFieldNameMapper() (tr *FieldNameStatusTracker) {
+func NewFieldNameMapper() (tr *FieldNameStatusTracker) {
 	return &FieldNameStatusTracker{
-		nameMap: fieldNameMap{},
+		NameMap: FieldNameMap{},
 	}
 }
 
-func newFieldCombinedTracker() (tr *FieldNameStatusTracker) {
+func NewFieldCombinedTracker() (tr *FieldNameStatusTracker) {
 	return &FieldNameStatusTracker{
-		nameMap:   fieldNameMap{},
-		statusMap: fieldStatusMap{},
+		NameMap:   FieldNameMap{},
+		StatusMap: FieldStatusMap{},
 	}
 }
 
@@ -52,29 +52,29 @@ func (tr *FieldNameStatusTracker) BuildFieldMap(t Task) {
 }
 
 func (tr *FieldNameStatusTracker) SetFieldName(fieldKey string, fieldName string) {
-	tr.nameMap[fieldKey] = fieldName
+	tr.NameMap[fieldKey] = fieldName
 }
 
 func (tr *FieldNameStatusTracker) GetFieldName(fk string) (fieldName string) {
-	fieldName = tr.nameMap[fk]
+	fieldName = tr.NameMap[fk]
 	return fieldName
 }
 
 func (tr *FieldNameStatusTracker) Init() {
-	tr.statusMap = fieldStatusMap{}
+	tr.StatusMap = FieldStatusMap{}
 }
 
 func (tr *FieldNameStatusTracker) GetFieldStatus(fieldName string) (status FieldStatus, found bool) {
-	status, found = tr.statusMap[fieldName]
+	status, found = tr.StatusMap[fieldName]
 	return status, found
 }
 
 func (tr *FieldNameStatusTracker) SetFieldStatus(fieldName string, status FieldStatus) {
-	tr.statusMap[fieldName] = status
+	tr.StatusMap[fieldName] = status
 }
 
 func (tr *FieldNameStatusTracker) HasNewValue(fieldName string) (hasNew bool) {
-	fieldStatus, found := tr.statusMap[fieldName]
+	fieldStatus, found := tr.StatusMap[fieldName]
 	if found {
 		return fieldStatus.HasNewValue
 	}
@@ -82,7 +82,7 @@ func (tr *FieldNameStatusTracker) HasNewValue(fieldName string) (hasNew bool) {
 }
 
 func (tr *FieldNameStatusTracker) ShouldClear(fieldName string) (should bool) {
-	fieldStatus, found := tr.statusMap[fieldName]
+	fieldStatus, found := tr.StatusMap[fieldName]
 	if found {
 		return fieldStatus.Clear
 	}
@@ -94,7 +94,7 @@ func (tr *FieldNameStatusTracker) SetHasNewValue(fieldName string) (err error) {
 	if !found {
 		return ErrFieldNotFoundInTracker
 	}
-	tr.statusMap[fieldName] = FieldStatus{
+	tr.StatusMap[fieldName] = FieldStatus{
 		HasNewValue:   true,
 		ChangeApplied: existingStatus.ChangeApplied,
 		Clear:         existingStatus.Clear,
@@ -107,7 +107,7 @@ func (tr *FieldNameStatusTracker) SetClear(fieldName string) (err error) {
 	if !found {
 		return ErrFieldNotFoundInTracker
 	}
-	tr.statusMap[fieldName] = FieldStatus{
+	tr.StatusMap[fieldName] = FieldStatus{
 		HasNewValue:   true,
 		ChangeApplied: existingStatus.ChangeApplied,
 		Clear:         true,
@@ -120,7 +120,7 @@ func (tr *FieldNameStatusTracker) SetChangeApplied(fieldName string) (err error)
 	if !found {
 		return ErrFieldNotFoundInTracker
 	}
-	tr.statusMap[fieldName] = FieldStatus{
+	tr.StatusMap[fieldName] = FieldStatus{
 		HasNewValue:   existingStatus.HasNewValue,
 		ChangeApplied: true,
 		Clear:         existingStatus.Clear,
@@ -129,7 +129,7 @@ func (tr *FieldNameStatusTracker) SetChangeApplied(fieldName string) (err error)
 }
 
 func (tr *FieldNameStatusTracker) WithNewValues(applyFn func(fn string, fs FieldStatus) (err error)) (err error) {
-	for fn, fs := range tr.statusMap {
+	for fn, fs := range tr.StatusMap {
 		if fs.HasNewValue {
 			err = applyFn(fn, fs)
 			if err != nil {

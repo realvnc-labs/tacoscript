@@ -72,7 +72,7 @@ func (t *TestTaskWithCombinedNameMapperAndChangeTracker) GetCreatesFilesList() [
 
 func (t *TestTaskWithCombinedNameMapperAndChangeTracker) GetMapper() (mapper FieldNameMapper) {
 	if t.mapper == nil {
-		t.mapper = newFieldCombinedTracker()
+		t.mapper = NewFieldCombinedTracker()
 	}
 	return t.mapper
 }
@@ -82,7 +82,7 @@ func (t *TestTaskWithCombinedNameMapperAndChangeTracker) Validate(goos string) e
 }
 
 func TestShouldBuildFieldMapForTask(t *testing.T) {
-	tracker := newFieldCombinedTracker()
+	tracker := NewFieldCombinedTracker()
 	task := &TestTaskWithCombinedNameMapperAndChangeTracker{
 		mapper:  tracker,
 		tracker: tracker,
@@ -102,7 +102,7 @@ func TestShouldBuildFieldMapForTask(t *testing.T) {
 }
 
 func TestShouldSetGetFieldStatus(t *testing.T) {
-	tracker := newFieldCombinedTracker()
+	tracker := NewFieldCombinedTracker()
 	task := &TestTaskWithCombinedNameMapperAndChangeTracker{
 		tracker: tracker,
 	}
@@ -116,7 +116,7 @@ func TestShouldSetGetFieldStatus(t *testing.T) {
 }
 
 func TestShouldFailGetFieldStatus(t *testing.T) {
-	tracker := newFieldCombinedTracker()
+	tracker := NewFieldCombinedTracker()
 	task := &TestTaskWithCombinedNameMapperAndChangeTracker{
 		tracker: tracker,
 	}
@@ -126,7 +126,7 @@ func TestShouldFailGetFieldStatus(t *testing.T) {
 }
 
 func TestShouldHandleHasNewValue(t *testing.T) {
-	tracker := newFieldCombinedTracker()
+	tracker := NewFieldCombinedTracker()
 	task := &TestTaskWithCombinedNameMapperAndChangeTracker{
 		tracker: tracker,
 	}
@@ -141,7 +141,7 @@ func TestShouldHandleHasNewValue(t *testing.T) {
 }
 
 func TestShouldHandleClearChange(t *testing.T) {
-	tracker := newFieldCombinedTracker()
+	tracker := NewFieldCombinedTracker()
 	task := &TestTaskWithCombinedNameMapperAndChangeTracker{
 		tracker: tracker,
 	}
@@ -160,7 +160,7 @@ func TestShouldHandleClearChange(t *testing.T) {
 }
 
 func TestShouldSetChangeApplied(t *testing.T) {
-	tracker := newFieldCombinedTracker()
+	tracker := NewFieldCombinedTracker()
 	task := &TestTaskWithCombinedNameMapperAndChangeTracker{
 		tracker: tracker,
 	}
@@ -176,7 +176,7 @@ func TestShouldSetChangeApplied(t *testing.T) {
 }
 
 func TestShouldKnowIfFieldIsNotChangeField(t *testing.T) {
-	tracker := newFieldCombinedTracker()
+	tracker := NewFieldCombinedTracker()
 	task := &TestTaskWithCombinedNameMapperAndChangeTracker{
 		tracker: tracker,
 	}

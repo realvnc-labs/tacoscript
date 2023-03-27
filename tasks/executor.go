@@ -3,10 +3,12 @@ package tasks
 import (
 	"context"
 	"fmt"
+
+	"github.com/realvnc-labs/tacoscript/tasks/executionresult"
 )
 
 type Executor interface {
-	Execute(ctx context.Context, task Task) ExecutionResult
+	Execute(ctx context.Context, task Task) executionresult.ExecutionResult
 }
 
 type ExecutorRouter struct {

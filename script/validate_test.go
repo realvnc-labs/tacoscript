@@ -7,6 +7,7 @@ import (
 	"github.com/stretchr/testify/assert"
 
 	"github.com/realvnc-labs/tacoscript/tasks"
+	"github.com/realvnc-labs/tacoscript/tasks/executionresult"
 )
 
 type RequirementsTaskMock struct {
@@ -21,8 +22,8 @@ func (rtm *RequirementsTaskMock) GetTypeName() string {
 	return ""
 }
 
-func (rtm *RequirementsTaskMock) Execute(ctx context.Context) tasks.ExecutionResult {
-	return tasks.ExecutionResult{}
+func (rtm *RequirementsTaskMock) Execute(ctx context.Context) executionresult.ExecutionResult {
+	return executionresult.ExecutionResult{}
 }
 
 func (rtm *RequirementsTaskMock) Validate(goos string) error {
@@ -63,7 +64,7 @@ func TestScriptsValidation(t *testing.T) {
 		{
 			name: "cycle of 2 scripts requiring each other",
 			scripts: tasks.Scripts{
-				{
+				tasks.Script{
 					ID: "script one",
 					Tasks: []tasks.Task{
 						&RequirementsTaskMock{
@@ -72,7 +73,7 @@ func TestScriptsValidation(t *testing.T) {
 						},
 					},
 				},
-				{
+				tasks.Script{
 					ID: "script two",
 					Tasks: []tasks.Task{
 						&RequirementsTaskMock{
@@ -93,7 +94,7 @@ func TestScriptsValidation(t *testing.T) {
 		{
 			name: "no requirement cycle",
 			scripts: tasks.Scripts{
-				{
+				tasks.Script{
 					ID: "script 3",
 					Tasks: []tasks.Task{
 						&RequirementsTaskMock{},
@@ -102,7 +103,7 @@ func TestScriptsValidation(t *testing.T) {
 						},
 					},
 				},
-				{
+				tasks.Script{
 					ID:    "script 4",
 					Tasks: []tasks.Task{},
 				},
@@ -114,7 +115,7 @@ func TestScriptsValidation(t *testing.T) {
 		{
 			name: "circling cycle",
 			scripts: tasks.Scripts{
-				{
+				tasks.Script{
 					ID: "script 6",
 					Tasks: []tasks.Task{
 						&RequirementsTaskMock{
@@ -122,7 +123,7 @@ func TestScriptsValidation(t *testing.T) {
 						},
 					},
 				},
-				{
+				tasks.Script{
 					ID: "script 7",
 					Tasks: []tasks.Task{
 						&RequirementsTaskMock{
@@ -130,7 +131,7 @@ func TestScriptsValidation(t *testing.T) {
 						},
 					},
 				},
-				{
+				tasks.Script{
 					ID: "script 8",
 					Tasks: []tasks.Task{
 						&RequirementsTaskMock{
@@ -138,7 +139,7 @@ func TestScriptsValidation(t *testing.T) {
 						},
 					},
 				},
-				{
+				tasks.Script{
 					ID: "script 9",
 					Tasks: []tasks.Task{
 						&RequirementsTaskMock{
@@ -159,7 +160,7 @@ func TestScriptsValidation(t *testing.T) {
 		{
 			name: "many_scripts_no_cycle",
 			scripts: tasks.Scripts{
-				{
+				tasks.Script{
 					ID: "script 10",
 					Tasks: []tasks.Task{
 						&RequirementsTaskMock{
@@ -167,7 +168,7 @@ func TestScriptsValidation(t *testing.T) {
 						},
 					},
 				},
-				{
+				tasks.Script{
 					ID: "script 11",
 					Tasks: []tasks.Task{
 						&RequirementsTaskMock{
@@ -175,7 +176,7 @@ func TestScriptsValidation(t *testing.T) {
 						},
 					},
 				},
-				{
+				tasks.Script{
 					ID: "script 13",
 					Tasks: []tasks.Task{
 						&RequirementsTaskMock{
@@ -183,7 +184,7 @@ func TestScriptsValidation(t *testing.T) {
 						},
 					},
 				},
-				{
+				tasks.Script{
 					ID: "script 12",
 					Tasks: []tasks.Task{
 						&RequirementsTaskMock{
@@ -199,7 +200,7 @@ func TestScriptsValidation(t *testing.T) {
 		{
 			name: "require itself",
 			scripts: tasks.Scripts{
-				{
+				tasks.Script{
 					ID: "script 20",
 					Tasks: []tasks.Task{
 						&RequirementsTaskMock{
@@ -216,7 +217,7 @@ func TestScriptsValidation(t *testing.T) {
 		{
 			name: "multiple required scripts not found",
 			scripts: tasks.Scripts{
-				{
+				tasks.Script{
 					ID: "script 30",
 					Tasks: []tasks.Task{
 						&RequirementsTaskMock{
@@ -237,7 +238,7 @@ func TestScriptsValidation(t *testing.T) {
 		{
 			name: "all required scripts are found",
 			scripts: tasks.Scripts{
-				{
+				tasks.Script{
 					ID: "script 32",
 					Tasks: []tasks.Task{
 						&RequirementsTaskMock{
@@ -245,11 +246,11 @@ func TestScriptsValidation(t *testing.T) {
 						},
 					},
 				},
-				{
+				tasks.Script{
 					ID:    "script 33",
 					Tasks: []tasks.Task{&RequirementsTaskMock{}},
 				},
-				{
+				tasks.Script{
 					ID:    "script 34",
 					Tasks: []tasks.Task{&RequirementsTaskMock{}},
 				},
@@ -261,7 +262,7 @@ func TestScriptsValidation(t *testing.T) {
 		{
 			name: "some required scripts not found",
 			scripts: tasks.Scripts{
-				{
+				tasks.Script{
 					ID: "script 35",
 					Tasks: []tasks.Task{
 						&RequirementsTaskMock{
@@ -269,14 +270,14 @@ func TestScriptsValidation(t *testing.T) {
 						},
 					},
 				},
-				{
+				tasks.Script{
 					ID: "script 36",
 					Tasks: []tasks.Task{&RequirementsTaskMock{
 						RequirementsToGive: []string{"script 37"},
 						Path:               "path 36",
 					}},
 				},
-				{
+				tasks.Script{
 					ID: "script 38",
 					Tasks: []tasks.Task{&RequirementsTaskMock{
 						RequirementsToGive: []string{"script 40"},

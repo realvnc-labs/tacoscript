@@ -10,6 +10,7 @@ import (
 
 	"gopkg.in/yaml.v2"
 
+	"github.com/realvnc-labs/tacoscript/builder"
 	"github.com/realvnc-labs/tacoscript/tasks"
 	"github.com/realvnc-labs/tacoscript/utils"
 )
@@ -32,7 +33,7 @@ type TemplateVariablesProvider interface {
 
 type Builder struct {
 	DataProvider              RawDataProvider
-	TaskBuilder               tasks.Builder
+	TaskBuilder               builder.Builder
 	TemplateVariablesProvider TemplateVariablesProvider
 }
 

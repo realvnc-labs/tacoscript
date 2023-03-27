@@ -1,17 +1,6 @@
 package tasks
 
 const (
-	TaskTypeCmdRun  = "cmd.run"
-	FileManaged     = "file.managed"
-	FileReplace     = "file.replace"
-	PkgInstalled    = "pkg.installed"
-	PkgRemoved      = "pkg.removed"
-	PkgUpgraded     = "pkg.uptodate"
-	WinRegPresent   = "win_reg.present"
-	WinRegAbsent    = "win_reg.absent"
-	WinRegAbsentKey = "win_reg.absent_key"
-	RealVNCServer   = "realvnc_server.config_update"
-
 	NameField  = "name"
 	NamesField = "names"
 
@@ -79,7 +68,7 @@ var (
 	sharedFields = []string{"name", "names", "require", "creates", "onlyif", "unless", "shell"}
 )
 
-func sharedField(fieldKey string) (shared bool) {
+func SharedField(fieldKey string) (shared bool) {
 	for _, f := range sharedFields {
 		if fieldKey == f {
 			return true

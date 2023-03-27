@@ -14,7 +14,7 @@ func TestSort(t *testing.T) {
 	}{
 		{
 			scriptsInInput: tasks.Scripts{
-				{
+				tasks.Script{
 					ID: "script 7",
 					Tasks: []tasks.Task{
 						&RequirementsTaskMock{
@@ -28,19 +28,19 @@ func TestSort(t *testing.T) {
 						},
 					},
 				},
-				{
+				tasks.Script{
 					ID:    "script 5",
 					Tasks: []tasks.Task{},
 				},
-				{
+				tasks.Script{
 					ID:    "script 6",
 					Tasks: []tasks.Task{},
 				},
-				{
+				tasks.Script{
 					ID:    "script 4",
 					Tasks: []tasks.Task{},
 				},
-				{
+				tasks.Script{
 					ID: "script 8",
 					Tasks: []tasks.Task{
 						&RequirementsTaskMock{
@@ -48,11 +48,11 @@ func TestSort(t *testing.T) {
 						},
 					},
 				},
-				{
+				tasks.Script{
 					ID:    "script 1",
 					Tasks: []tasks.Task{},
 				},
-				{
+				tasks.Script{
 					ID:    "script 9",
 					Tasks: []tasks.Task{},
 				},
@@ -61,7 +61,7 @@ func TestSort(t *testing.T) {
 		},
 		{
 			scriptsInInput: tasks.Scripts{
-				{
+				tasks.Script{
 					ID: "script 1",
 					Tasks: []tasks.Task{
 						&RequirementsTaskMock{
@@ -69,11 +69,11 @@ func TestSort(t *testing.T) {
 						},
 					},
 				},
-				{
+				tasks.Script{
 					ID:    "script 2",
 					Tasks: []tasks.Task{},
 				},
-				{
+				tasks.Script{
 					ID:    "script 3",
 					Tasks: []tasks.Task{},
 				},
@@ -82,7 +82,7 @@ func TestSort(t *testing.T) {
 		},
 		{
 			scriptsInInput: tasks.Scripts{
-				{
+				tasks.Script{
 					ID: "script 12",
 					Tasks: []tasks.Task{
 						&RequirementsTaskMock{
@@ -96,7 +96,7 @@ func TestSort(t *testing.T) {
 						},
 					},
 				},
-				{
+				tasks.Script{
 					ID: "script 10",
 					Tasks: []tasks.Task{
 						&RequirementsTaskMock{
@@ -104,7 +104,7 @@ func TestSort(t *testing.T) {
 						},
 					},
 				},
-				{
+				tasks.Script{
 					ID:    "script 11",
 					Tasks: []tasks.Task{},
 				},
