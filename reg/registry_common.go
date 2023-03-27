@@ -1,4 +1,4 @@
-package winreg
+package reg
 
 import "errors"
 

@@ -11,8 +11,9 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
+	"github.com/realvnc-labs/tacoscript/reg"
+	"github.com/realvnc-labs/tacoscript/tasks"
 	"github.com/realvnc-labs/tacoscript/utils"
-	"github.com/realvnc-labs/tacoscript/winreg"
 )
 
 var origHKCUBaseKey string
@@ -30,7 +31,7 @@ func testTeardown(t *testing.T) {
 	t.Helper()
 	// remove test key and restore base key
 	defer func() {
-		_ = winreg.DeleteKeyRecursive(testRealVNCBaseKey)
+		_ = reg.DeleteKeyRecursive(testRealVNCBaseKey)
 		HKCUBaseKey = origHKCUBaseKey
 	}()
 }
@@ -54,8 +55,8 @@ func TestShouldSetSimpleConfigRegistryParam(t *testing.T) {
 		ServerMode: "User",
 		Encryption: "AlwaysOn",
 
-		mapper:  tracker,
-		tracker: tracker,
+		Mapper:  tracker,
+		Tracker: tracker,
 	}
 
 	err := task.Validate(runtime.GOOS)
@@ -67,7 +68,7 @@ func TestShouldSetSimpleConfigRegistryParam(t *testing.T) {
 
 	assert.Equal(t, "1 config value change(s) applied", res.Changes["count"])
 
-	found, regVal, err := winreg.GetValue(HKCUBaseKey, "Encryption", winreg.REG_SZ)
+	found, regVal, err := reg.GetValue(HKCUBaseKey, "Encryption", reg.REG_SZ)
 	require.NoError(t, err)
 	assert.True(t, found)
 	assert.Equal(t, "AlwaysOn", regVal)
@@ -92,8 +93,8 @@ func TestShouldUpdateSimpleConfigRegistryParam(t *testing.T) {
 		ServerMode: "User",
 		Encryption: "AlwaysOn",
 
-		mapper:  tracker,
-		tracker: tracker,
+		Mapper:  tracker,
+		Tracker: tracker,
 	}
 
 	err := setupTask.Validate(runtime.GOOS)
@@ -108,8 +109,8 @@ func TestShouldUpdateSimpleConfigRegistryParam(t *testing.T) {
 		ServerMode: "User",
 		Encryption: "PreferOn",
 
-		mapper:  tracker,
-		tracker: tracker,
+		Mapper:  tracker,
+		Tracker: tracker,
 	}
 
 	err = task.Validate(runtime.GOOS)
@@ -121,7 +122,7 @@ func TestShouldUpdateSimpleConfigRegistryParam(t *testing.T) {
 
 	assert.Equal(t, "1 config value change(s) applied", res.Changes["count"])
 
-	found, regVal, err := winreg.GetValue(HKCUBaseKey, "Encryption", winreg.REG_SZ)
+	found, regVal, err := reg.GetValue(HKCUBaseKey, "Encryption", reg.REG_SZ)
 	require.NoError(t, err)
 	assert.True(t, found)
 	assert.Equal(t, "PreferOn", regVal)
@@ -139,12 +140,12 @@ func TestShouldClearSimpleConfigRegistryParam(t *testing.T) {
 		Reloader: &mockConfigReloader{},
 	}
 
-	tracker := &FieldNameStatusTracker{
-		NameMap: FieldNameMap{
+	tracker := &tasks.FieldNameStatusTracker{
+		NameMap: tasks.FieldNameMap{
 			"blank_screen": "BlankScreen",
 		},
-		StatusMap: FieldStatusMap{
-			"BlankScreen": FieldStatus{
+		StatusMap: tasks.FieldStatusMap{
+			"BlankScreen": tasks.FieldStatus{
 				HasNewValue: true,
 				Clear:       false,
 			},
@@ -156,8 +157,8 @@ func TestShouldClearSimpleConfigRegistryParam(t *testing.T) {
 		ServerMode:  "User",
 		BlankScreen: true,
 
-		mapper:  tracker,
-		tracker: tracker,
+		Mapper:  tracker,
+		Tracker: tracker,
 	}
 
 	err := setupTask.Validate(runtime.GOOS)
@@ -167,12 +168,12 @@ func TestShouldClearSimpleConfigRegistryParam(t *testing.T) {
 	require.NoError(t, res.Err)
 	require.True(t, setupTask.Updated)
 
-	tracker = &FieldNameStatusTracker{
-		NameMap: FieldNameMap{
+	tracker = &tasks.FieldNameStatusTracker{
+		NameMap: tasks.FieldNameMap{
 			"blank_screen": "BlankScreen",
 		},
-		StatusMap: FieldStatusMap{
-			"BlankScreen": FieldStatus{
+		StatusMap: tasks.FieldStatusMap{
+			"BlankScreen": tasks.FieldStatus{
 				HasNewValue: true,
 				Clear:       true,
 			},
@@ -184,8 +185,8 @@ func TestShouldClearSimpleConfigRegistryParam(t *testing.T) {
 		ServerMode:  "User",
 		BlankScreen: false,
 
-		mapper:  tracker,
-		tracker: tracker,
+		Mapper:  tracker,
+		Tracker: tracker,
 	}
 
 	err = clearTask.Validate(runtime.GOOS)
@@ -197,7 +198,7 @@ func TestShouldClearSimpleConfigRegistryParam(t *testing.T) {
 
 	assert.Equal(t, "1 config value change(s) applied", res.Changes["count"])
 
-	found, _, err := winreg.GetValue(HKCUBaseKey, "BlankScreen", winreg.REG_SZ)
+	found, _, err := reg.GetValue(HKCUBaseKey, "BlankScreen", reg.REG_SZ)
 	require.NoError(t, err)
 	assert.False(t, found)
 }

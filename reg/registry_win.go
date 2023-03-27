@@ -1,11 +1,12 @@
 //go:build windows
 // +build windows
 
-package winreg
+package reg
 
 import (
 	"bytes"
 	"errors"
+	"fmt"
 	"strings"
 
 	"golang.org/x/sys/windows/registry"
@@ -50,6 +51,7 @@ func SetValue(regPath string, name string, val any, valType RegistryType) (updat
 
 	k, keyExists, err := registry.CreateKey(key, keyPath, registry.ALL_ACCESS)
 	if err != nil {
+		fmt.Printf("err = %+v\n", err)
 		return false, "", ErrFailedCreatingOrOpeningKey
 	}
 	defer k.Close()
@@ -239,7 +241,7 @@ func compareValueByType(val1 any, val2 any, valType RegistryType) (match bool, e
 		if !ok {
 			return false, ErrFailedToConvertVal
 		}
-		match = bytes.Compare(binVal1, binVal2) == 0
+		match = bytes.Equal(binVal1, binVal2)
 	case REG_DWORD:
 		intVal1, ok := val1.(uint32)
 		if !ok {

@@ -1,7 +1,7 @@
 //go:build windows
 // +build windows
 
-package winreg
+package reg
 
 import (
 	"fmt"

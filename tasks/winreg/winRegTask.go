@@ -9,9 +9,9 @@ import (
 	"time"
 
 	tacoexec "github.com/realvnc-labs/tacoscript/exec"
+	"github.com/realvnc-labs/tacoscript/reg"
 	"github.com/realvnc-labs/tacoscript/tasks"
 	"github.com/realvnc-labs/tacoscript/tasks/executionresult"
-	"github.com/realvnc-labs/tacoscript/winreg"
 
 	"github.com/realvnc-labs/tacoscript/utils"
 
@@ -74,7 +74,7 @@ func (wrt *WrTask) Validate(goos string) error {
 		return errs.ToError()
 	}
 
-	err = winreg.HasValidRootKey(wrt.RegPath)
+	err = reg.HasValidRootKey(wrt.RegPath)
 	if err != nil {
 		errs.Add(err)
 	}
@@ -192,21 +192,21 @@ func (wrte *WrtExecutor) ExecuteTask(ctx context.Context, t *WrTask, res *execut
 
 	switch t.ActionType {
 	case ActionWinRegPresent:
-		updated, desc, err = winreg.SetValue(t.RegPath, t.Name, t.Val, winreg.REG_SZ)
+		updated, desc, err = reg.SetValue(t.RegPath, t.Name, t.Val, reg.REG_SZ)
 		if err != nil {
 			res.Err = err
 			return err
 		}
 		t.Updated = updated
 	case ActionWinRegAbsent:
-		updated, desc, err = winreg.RemoveValue(t.RegPath, t.Name)
+		updated, desc, err = reg.RemoveValue(t.RegPath, t.Name)
 		if err != nil {
 			res.Err = err
 			return err
 		}
 		t.Updated = updated
 	case ActionWinRegAbsentKey:
-		updated, desc, err = winreg.RemoveKey(t.RegPath)
+		updated, desc, err = reg.RemoveKey(t.RegPath)
 		if err != nil {
 			res.Err = err
 			return err

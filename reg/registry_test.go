@@ -1,11 +1,10 @@
 //go:build windows
 // +build windows
 
-package winreg_test
+package reg_test
 
 import (
 	"errors"
-	"fmt"
 	"strconv"
 	"testing"
 
@@ -13,7 +12,7 @@ import (
 	"github.com/stretchr/testify/require"
 	"golang.org/x/sys/windows/registry"
 
-	"github.com/realvnc-labs/tacoscript/winreg"
+	"github.com/realvnc-labs/tacoscript/reg"
 )
 
 const baseTestKey = `HKLM:\Software\TestTacoScript`
@@ -22,7 +21,7 @@ const testKey = `UnitTestRun`
 func setup(t *testing.T) {
 	t.Helper()
 
-	err := winreg.DeleteKeyRecursive(`HKLM:\Software\TestTacoScript`)
+	err := reg.DeleteKeyRecursive(`HKLM:\Software\TestTacoScript`)
 	if err != nil && !errors.Is(err, registry.ErrNotExist) {
 		require.NoError(t, err)
 	}
@@ -37,7 +36,7 @@ func TestShouldGetStringValue(t *testing.T) {
 	keyPath := `HKCU:\Software\GoProgrammingLanguage`
 	name := `installLocation`
 
-	found, val, err := winreg.GetValue(keyPath, name, winreg.REG_SZ)
+	found, val, err := reg.GetValue(keyPath, name, reg.REG_SZ)
 
 	assert.NoError(t, err)
 	assert.True(t, found)
@@ -48,17 +47,17 @@ func TestShouldEnsureNewRegistryValueIsPresent(t *testing.T) {
 	keyPath := newTestKeyPath(testKey)
 	name := `testValue`
 	val := `123456789`
-	valType := winreg.REG_SZ
+	valType := reg.REG_SZ
 
 	setup(t)
 
-	updated, desc, err := winreg.SetValue(keyPath, name, val, valType)
-	assert.NoError(t, err)
+	updated, desc, err := reg.SetValue(keyPath, name, val, valType)
+	require.NoError(t, err)
 	assert.True(t, updated)
 	assert.Equal(t, "added new key", desc)
 
-	found, currVal, err := winreg.GetValue(keyPath, name, winreg.REG_SZ)
-	assert.NoError(t, err)
+	found, currVal, err := reg.GetValue(keyPath, name, reg.REG_SZ)
+	require.NoError(t, err)
 	assert.True(t, found)
 	assert.Equal(t, val, currVal)
 }
@@ -67,21 +66,21 @@ func TestShouldEnsureExistingRegistryValueIsPresent(t *testing.T) {
 	keyPath := newTestKeyPath(testKey)
 	name := `testValue`
 	val := "1234567890"
-	valType := winreg.REG_SZ
+	valType := reg.REG_SZ
 
 	setup(t)
 
 	// set initial value
-	winreg.SetValue(keyPath, name, val, valType)
+	reg.SetValue(keyPath, name, val, valType)
 
 	// now update again without no change
-	updated, desc, err := winreg.SetValue(keyPath, name, val, valType)
+	updated, desc, err := reg.SetValue(keyPath, name, val, valType)
 	require.NoError(t, err)
 
 	assert.False(t, updated)
 	assert.Equal(t, "matching existing value", desc)
 
-	found, currVal, err := winreg.GetValue(keyPath, name, valType)
+	found, currVal, err := reg.GetValue(keyPath, name, valType)
 	assert.NoError(t, err)
 	assert.True(t, found)
 	assert.Equal(t, val, currVal)
@@ -91,22 +90,22 @@ func TestShouldEnsureExistingRegistryValueIsUpdated(t *testing.T) {
 	keyPath := newTestKeyPath(testKey)
 	name := `testValue`
 	val := `123456789`
-	valType := winreg.REG_SZ
+	valType := reg.REG_SZ
 
 	setup(t)
 
 	// set an initial value
-	winreg.SetValue(keyPath, name, val+"abc", valType)
+	reg.SetValue(keyPath, name, val+"abc", valType)
 
 	// now update again
-	updated, desc, err := winreg.SetValue(keyPath, name, val, valType)
+	updated, desc, err := reg.SetValue(keyPath, name, val, valType)
 	assert.NoError(t, err)
 
 	// new value will have updated as true as the value should have been updated
 	assert.True(t, updated)
 	assert.Equal(t, "existing value updated", desc)
 
-	_, updatedVal, err := winreg.GetValue(keyPath, name, winreg.REG_SZ)
+	_, updatedVal, err := reg.GetValue(keyPath, name, reg.REG_SZ)
 	require.NoError(t, err)
 
 	assert.Equal(t, val, updatedVal)
@@ -116,19 +115,19 @@ func TestShouldEnsureExistingRegistryValueIsUpdatedWhenTypeChange(t *testing.T) 
 	keyPath := newTestKeyPath(testKey)
 	name := `testValue`
 	var val uint32 = 1
-	valType := winreg.REG_DWORD
+	valType := reg.REG_DWORD
 
 	setup(t)
 
-	winreg.SetValue(keyPath, name, "existing value", winreg.REG_SZ)
+	reg.SetValue(keyPath, name, "existing value", reg.REG_SZ)
 
-	updated, desc, err := winreg.SetValue(keyPath, name, val, valType)
+	updated, desc, err := reg.SetValue(keyPath, name, val, valType)
 
 	require.NoError(t, err)
 	assert.True(t, updated)
 	assert.Equal(t, "existing value updated", desc)
 
-	found, currVal, err := winreg.GetValue(keyPath, name, valType)
+	found, currVal, err := reg.GetValue(keyPath, name, valType)
 	assert.NoError(t, err)
 	assert.True(t, found)
 	assert.Equal(t, val, currVal)
@@ -140,16 +139,16 @@ func TestShouldEnsureExistingRegistryValueIsAbsent(t *testing.T) {
 
 	setup(t)
 
-	winreg.SetValue(keyPath, name, "value to be removed", winreg.REG_SZ)
+	reg.SetValue(keyPath, name, "value to be removed", reg.REG_SZ)
 
-	updated, desc, err := winreg.RemoveValue(keyPath, name)
+	updated, desc, err := reg.RemoveValue(keyPath, name)
 	assert.NoError(t, err)
 
 	// updated set to true indicates that a value was removed
 	assert.True(t, updated)
 	assert.Equal(t, "value removed", desc)
 
-	found, _, err := winreg.GetValue(keyPath, name, winreg.REG_SZ)
+	found, _, err := reg.GetValue(keyPath, name, reg.REG_SZ)
 	require.NoError(t, err)
 	assert.False(t, found)
 }
@@ -161,19 +160,19 @@ func TestShouldWhenAbsentOnlyRemoveValue(t *testing.T) {
 
 	setup(t)
 
-	winreg.SetValue(keyPath, altName, "value to remain", winreg.REG_SZ)
+	reg.SetValue(keyPath, altName, "value to remain", reg.REG_SZ)
 
-	updated, desc, err := winreg.RemoveValue(keyPath, name)
+	updated, desc, err := reg.RemoveValue(keyPath, name)
 	require.NoError(t, err)
 
 	assert.False(t, updated)
 	assert.Equal(t, "no existing value", desc)
 
-	found, _, err := winreg.GetValue(keyPath, name, winreg.REG_SZ)
+	found, _, err := reg.GetValue(keyPath, name, reg.REG_SZ)
 	require.NoError(t, err)
 	assert.False(t, found)
 
-	found, val, err := winreg.GetValue(keyPath, altName, winreg.REG_SZ)
+	found, val, err := reg.GetValue(keyPath, altName, reg.REG_SZ)
 	require.NoError(t, err)
 	assert.True(t, found)
 	assert.Equal(t, "value to remain", val)
@@ -186,9 +185,9 @@ func TestShouldWhenAbsentAndNoExistingValueHaveCorrectDescription(t *testing.T) 
 
 	setup(t)
 
-	winreg.SetValue(keyPath, altName, "value to remain", winreg.REG_SZ)
+	reg.SetValue(keyPath, altName, "value to remain", reg.REG_SZ)
 
-	updated, desc, err := winreg.RemoveValue(keyPath, name)
+	updated, desc, err := reg.RemoveValue(keyPath, name)
 	require.NoError(t, err)
 
 	assert.False(t, updated)
@@ -202,21 +201,21 @@ func TestShouldEnsureExistingRegistryKeyIsAbsent(t *testing.T) {
 
 	setup(t)
 
-	winreg.SetValue(keyPathToRemove, name, "1234", winreg.REG_SZ)
-	winreg.SetValue(keyPathToRemove, altName, "value to remove also", winreg.REG_SZ)
+	reg.SetValue(keyPathToRemove, name, "1234", reg.REG_SZ)
+	reg.SetValue(keyPathToRemove, altName, "value to remove also", reg.REG_SZ)
 
-	updated, desc, err := winreg.RemoveKey(keyPathToRemove)
+	updated, desc, err := reg.RemoveKey(keyPathToRemove)
 	assert.NoError(t, err)
 
 	// updated set to true indicates that a value was removed
 	assert.True(t, updated)
 	assert.Equal(t, "key removed", desc)
 
-	found, _, err := winreg.GetValue(keyPathToRemove, name, winreg.REG_SZ)
+	found, _, err := reg.GetValue(keyPathToRemove, name, reg.REG_SZ)
 	require.NoError(t, err)
 	assert.False(t, found)
 
-	found, _, err = winreg.GetValue(keyPathToRemove, altName, winreg.REG_SZ)
+	found, _, err = reg.GetValue(keyPathToRemove, altName, reg.REG_SZ)
 	require.NoError(t, err)
 	assert.False(t, found)
 }
@@ -224,18 +223,18 @@ func TestShouldEnsureExistingRegistryKeyIsAbsent(t *testing.T) {
 func TestShouldDeleteSubKeyRecursively(t *testing.T) {
 	keyPath := createTestRegBranch(t)
 
-	updated, desc, err := winreg.RemoveKey(keyPath + `\2`)
+	updated, desc, err := reg.RemoveKey(keyPath + `\2`)
 	assert.NoError(t, err)
 
 	// updated set to true indicates that a value was removed
 	assert.True(t, updated)
 	assert.Equal(t, "key removed", desc)
 
-	found, _, err := winreg.GetValue(keyPath+`\2`, "2", winreg.REG_SZ)
+	found, _, err := reg.GetValue(keyPath+`\2`, "2", reg.REG_SZ)
 	require.NoError(t, err)
 	assert.False(t, found)
 
-	found, _, err = winreg.GetValue(keyPath+`\6`, "4", winreg.REG_SZ)
+	found, _, err = reg.GetValue(keyPath+`\6`, "4", reg.REG_SZ)
 	require.NoError(t, err)
 	assert.True(t, found)
 }
@@ -243,25 +242,24 @@ func TestShouldDeleteSubKeyRecursively(t *testing.T) {
 func TestShouldDeleteSubKeyWithoutChildrenRecursively(t *testing.T) {
 	keyPath := createTestRegBranch(t)
 
-	updated, desc, err := winreg.RemoveKey(keyPath + `\6`)
+	updated, desc, err := reg.RemoveKey(keyPath + `\6`)
 	assert.NoError(t, err)
 
 	// updated set to true indicates that a value was removed
 	assert.True(t, updated)
 	assert.Equal(t, "key removed", desc)
 
-	found, _, err := winreg.GetValue(keyPath+`\6`, "4", winreg.REG_SZ)
+	found, _, err := reg.GetValue(keyPath+`\6`, "4", reg.REG_SZ)
 	require.NoError(t, err)
 	assert.False(t, found)
 
-	found, _, err = winreg.GetValue(keyPath+`\2`, "4", winreg.REG_SZ)
+	found, _, err = reg.GetValue(keyPath+`\2`, "4", reg.REG_SZ)
 	require.NoError(t, err)
 	assert.True(t, found)
 }
 
 func createTestRegBranch(t *testing.T) (keyPath string) {
 	keyPath = newTestKeyPath(testKey)
-	fmt.Printf("keyPath = %+v\n", keyPath)
 
 	createBranchLeaves(t, keyPath, 0, 9)
 	createBranchLeaves(t, keyPath+`\2`, 2, 5)
@@ -277,7 +275,7 @@ func createTestRegBranch(t *testing.T) (keyPath string) {
 
 func createBranchLeaves(t *testing.T, keyPath string, from int, to int) {
 	for i := from; i <= to; i++ {
-		_, _, err := winreg.SetValue(keyPath, strconv.Itoa(i), strconv.Itoa(i), winreg.REG_SZ)
+		_, _, err := reg.SetValue(keyPath, strconv.Itoa(i), strconv.Itoa(i), reg.REG_SZ)
 		require.NoError(t, err)
 	}
 }

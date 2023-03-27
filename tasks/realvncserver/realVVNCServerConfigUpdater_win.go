@@ -12,7 +12,8 @@ import (
 	"github.com/sirupsen/logrus"
 
 	tacoexec "github.com/realvnc-labs/tacoscript/exec"
-	"github.com/realvnc-labs/tacoscript/winreg"
+	"github.com/realvnc-labs/tacoscript/reg"
+	"github.com/realvnc-labs/tacoscript/tasks"
 )
 
 const (
@@ -28,7 +29,7 @@ var (
 func (rvste *RvstExecutor) applyConfigChanges(rvst *RvsTask) (addedCount int, updatedCount int, err error) {
 	baseKey := getBaseKeyForServerMode(rvst.ServerMode)
 
-	err = rvst.tracker.WithNewValues(func(fieldName string, fs FieldStatus) (err error) {
+	err = rvst.Tracker.WithNewValues(func(fieldName string, fs tasks.FieldStatus) (err error) {
 		regPath := fieldName
 		regValue, err := rvst.getFieldValueAsString(fieldName)
 		if err != nil {
@@ -38,7 +39,7 @@ func (rvste *RvstExecutor) applyConfigChanges(rvst *RvsTask) (addedCount int, up
 		desc := ""
 
 		if fs.Clear {
-			_, desc, err = winreg.RemoveValue(baseKey, regPath)
+			_, desc, err = reg.RemoveValue(baseKey, regPath)
 			if err != nil {
 				return err
 			}
@@ -47,7 +48,7 @@ func (rvste *RvstExecutor) applyConfigChanges(rvst *RvsTask) (addedCount int, up
 				logrus.Debugf(`removed key %s\%s`, baseKey, regPath)
 			}
 		} else {
-			_, desc, err = winreg.SetValue(baseKey, regPath, regValue, winreg.REG_SZ)
+			_, desc, err = reg.SetValue(baseKey, regPath, regValue, reg.REG_SZ)
 			if err != nil {
 				return err
 			}
@@ -60,7 +61,7 @@ func (rvste *RvstExecutor) applyConfigChanges(rvst *RvsTask) (addedCount int, up
 			}
 		}
 
-		err = rvst.tracker.SetChangeApplied(fieldName)
+		err = rvst.Tracker.SetChangeApplied(fieldName)
 		if err != nil {
 			return err
 		}

@@ -8,7 +8,6 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/realvnc-labs/tacoscript/tasks"
 	"github.com/realvnc-labs/tacoscript/tasks/pkgtask"
 )
 
