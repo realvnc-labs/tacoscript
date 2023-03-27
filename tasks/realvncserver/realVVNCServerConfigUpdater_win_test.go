@@ -41,7 +41,7 @@ func TestShouldSetSimpleConfigRegistryParam(t *testing.T) {
 
 	ctx := context.Background()
 
-	executor := &RealVNCServerTaskExecutor{
+	executor := &RvstExecutor{
 		FsManager: &utils.FsManager{},
 
 		Reloader: &mockConfigReloader{},
@@ -49,7 +49,7 @@ func TestShouldSetSimpleConfigRegistryParam(t *testing.T) {
 
 	tracker := newTrackerWithSingleFieldStatus("encryption", "Encryption")
 
-	task := &RealVNCServerTask{
+	task := &RvsTask{
 		Path:       "realvnc-server-1",
 		ServerMode: "User",
 		Encryption: "AlwaysOn",
@@ -79,7 +79,7 @@ func TestShouldUpdateSimpleConfigRegistryParam(t *testing.T) {
 
 	ctx := context.Background()
 
-	executor := &RealVNCServerTaskExecutor{
+	executor := &RvstExecutor{
 		FsManager: &utils.FsManager{},
 
 		Reloader: &mockConfigReloader{},
@@ -87,7 +87,7 @@ func TestShouldUpdateSimpleConfigRegistryParam(t *testing.T) {
 
 	tracker := newTrackerWithSingleFieldStatus("encryption", "Encryption")
 
-	setupTask := &RealVNCServerTask{
+	setupTask := &RvsTask{
 		Path:       "realvnc-server-1",
 		ServerMode: "User",
 		Encryption: "AlwaysOn",
@@ -103,7 +103,7 @@ func TestShouldUpdateSimpleConfigRegistryParam(t *testing.T) {
 	require.NoError(t, res.Err)
 	require.True(t, setupTask.Updated)
 
-	task := &RealVNCServerTask{
+	task := &RvsTask{
 		Path:       "realvnc-server-2",
 		ServerMode: "User",
 		Encryption: "PreferOn",
@@ -133,7 +133,7 @@ func TestShouldClearSimpleConfigRegistryParam(t *testing.T) {
 
 	ctx := context.Background()
 
-	executor := &RealVNCServerTaskExecutor{
+	executor := &RvstExecutor{
 		FsManager: &utils.FsManager{},
 
 		Reloader: &mockConfigReloader{},
@@ -151,7 +151,7 @@ func TestShouldClearSimpleConfigRegistryParam(t *testing.T) {
 		},
 	}
 
-	setupTask := &RealVNCServerTask{
+	setupTask := &RvsTask{
 		Path:        "realvnc-server-1",
 		ServerMode:  "User",
 		BlankScreen: true,
@@ -179,7 +179,7 @@ func TestShouldClearSimpleConfigRegistryParam(t *testing.T) {
 		},
 	}
 
-	clearTask := &RealVNCServerTask{
+	clearTask := &RvsTask{
 		Path:        "realvnc-server-1",
 		ServerMode:  "User",
 		BlankScreen: false,

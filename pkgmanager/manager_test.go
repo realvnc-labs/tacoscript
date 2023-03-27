@@ -18,7 +18,7 @@ type MockedOsPackageManagerCmdProvider struct {
 	ErrToGive error
 }
 
-func (ecb MockedOsPackageManagerCmdProvider) GetManagementCmds(t *pkgtask.PkgTask) (*ManagementCmds, error) {
+func (ecb MockedOsPackageManagerCmdProvider) GetManagementCmds(t *pkgtask.PTask) (*ManagementCmds, error) {
 	rawCmds := t.Named.GetNames()
 
 	versionStr := ""
@@ -39,7 +39,7 @@ func (ecb MockedOsPackageManagerCmdProvider) GetManagementCmds(t *pkgtask.PkgTas
 func TestTaskExecution(t *testing.T) {
 	testCases := []struct {
 		Runner           *exec.RunnerMock
-		Task             *pkgtask.PkgTask
+		Task             *pkgtask.PTask
 		Name             string
 		CmdBuildErrorStr string
 		ExpectedCmds     []string
@@ -55,7 +55,7 @@ func TestTaskExecution(t *testing.T) {
 					assert.NoError(t, err)
 				},
 			},
-			Task: &pkgtask.PkgTask{
+			Task: &pkgtask.PTask{
 				ActionType: pkgtask.ActionInstall,
 				Named:      namedtask.NamedTask{Name: "vim"},
 				Path:       "somePath",
@@ -73,7 +73,7 @@ func TestTaskExecution(t *testing.T) {
 					assert.NoError(t, err)
 				},
 			},
-			Task: &pkgtask.PkgTask{
+			Task: &pkgtask.PTask{
 				ActionType: pkgtask.ActionInstall,
 				Named:      namedtask.NamedTask{Name: "vim"},
 				Version:    "1.1.0",
@@ -86,7 +86,7 @@ func TestTaskExecution(t *testing.T) {
 			Runner: &exec.RunnerMock{
 				GivenExecContexts: []*exec.Context{},
 			},
-			Task: &pkgtask.PkgTask{
+			Task: &pkgtask.PTask{
 				ActionType: pkgtask.ActionInstall,
 				Named:      namedtask.NamedTask{Names: []string{"vim", "nano"}},
 			},
@@ -97,7 +97,7 @@ func TestTaskExecution(t *testing.T) {
 			Runner: &exec.RunnerMock{
 				GivenExecContexts: []*exec.Context{},
 			},
-			Task: &pkgtask.PkgTask{
+			Task: &pkgtask.PTask{
 				ActionType: pkgtask.ActionUninstall,
 				Named:      namedtask.NamedTask{Names: []string{"vim", "nano"}, Name: "mc"},
 			},
@@ -108,7 +108,7 @@ func TestTaskExecution(t *testing.T) {
 			Runner: &exec.RunnerMock{
 				GivenExecContexts: []*exec.Context{},
 			},
-			Task: &pkgtask.PkgTask{
+			Task: &pkgtask.PTask{
 				ActionType: pkgtask.ActionUpdate,
 				Named:      namedtask.NamedTask{Names: []string{"vim", "nano"}},
 			},
@@ -120,7 +120,7 @@ func TestTaskExecution(t *testing.T) {
 				GivenExecContexts: []*exec.Context{},
 				ErrToReturn:       errors.New("non existing pkg manager"),
 			},
-			Task: &pkgtask.PkgTask{
+			Task: &pkgtask.PTask{
 				ActionType: pkgtask.ActionInstall,
 				Named:      namedtask.NamedTask{Names: []string{"vim", "nano"}},
 			},
@@ -132,7 +132,7 @@ func TestTaskExecution(t *testing.T) {
 			Runner: &exec.RunnerMock{
 				GivenExecContexts: []*exec.Context{},
 			},
-			Task: &pkgtask.PkgTask{
+			Task: &pkgtask.PTask{
 				ShouldRefresh: true,
 				ActionType:    pkgtask.ActionUpdate,
 				Named:         namedtask.NamedTask{Names: []string{"vim", "nano"}},
@@ -144,7 +144,7 @@ func TestTaskExecution(t *testing.T) {
 			Runner: &exec.RunnerMock{
 				GivenExecContexts: []*exec.Context{},
 			},
-			Task: &pkgtask.PkgTask{
+			Task: &pkgtask.PTask{
 				TypeName:   "some unknown type name",
 				ActionType: 0,
 			},
@@ -156,7 +156,7 @@ func TestTaskExecution(t *testing.T) {
 			Runner: &exec.RunnerMock{
 				GivenExecContexts: []*exec.Context{},
 			},
-			Task: &pkgtask.PkgTask{
+			Task: &pkgtask.PTask{
 				TypeName:   "some uknown type name",
 				ActionType: pkgtask.ActionInstall,
 			},

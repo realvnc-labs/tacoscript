@@ -18,12 +18,12 @@ import (
 func TestFileReplaceTaskValidation(t *testing.T) {
 	testCases := []struct {
 		Name             string
-		Task             FileReplaceTask
+		Task             FrTask
 		ExpectedErrorStr string
 	}{
 		{
 			Name: "missing_name",
-			Task: FileReplaceTask{
+			Task: FrTask{
 				Path:    "somepath",
 				Pattern: "search for this text",
 			},
@@ -31,14 +31,14 @@ func TestFileReplaceTaskValidation(t *testing.T) {
 		},
 		{
 			Name: "valid task",
-			Task: FileReplaceTask{
+			Task: FrTask{
 				Name:    "some p",
 				Pattern: "search for this text",
 			},
 		},
 		{
 			Name: "bad pattern",
-			Task: FileReplaceTask{
+			Task: FrTask{
 				Name:    "some p",
 				Pattern: "*.txt",
 			},
@@ -46,7 +46,7 @@ func TestFileReplaceTaskValidation(t *testing.T) {
 		},
 		{
 			Name: "invalid file size units",
-			Task: FileReplaceTask{
+			Task: FrTask{
 				Name:        "some p",
 				Pattern:     "search for this text",
 				MaxFileSize: "100c",
@@ -55,7 +55,7 @@ func TestFileReplaceTaskValidation(t *testing.T) {
 		},
 		{
 			Name: "append and prepend",
-			Task: FileReplaceTask{
+			Task: FrTask{
 				Name:              "some p",
 				Pattern:           "search for this text",
 				AppendIfNotFound:  true,
@@ -126,10 +126,10 @@ func TestShouldFailWhenTargetFileNotFound(t *testing.T) {
 
 	testFilename := getTestFilename()
 
-	executor := &FileReplaceTaskExecutor{
+	executor := &FrtExecutor{
 		FsManager: &utils.FsManager{},
 	}
-	task := &FileReplaceTask{
+	task := &FrTask{
 		Path:    "replace-1",
 		Name:    testFilename,
 		Pattern: "a test",
@@ -154,19 +154,19 @@ func TestShouldFailWhenTargetFileNotFound(t *testing.T) {
 func TestShouldFailWhenMandatoryParamsMissing(t *testing.T) {
 	cases := []struct {
 		name           string
-		task           FileReplaceTask
+		task           FrTask
 		expectedErrStr string
 	}{
 		{
 			name: "all required params",
-			task: FileReplaceTask{
+			task: FrTask{
 				Name:    "test",
 				Pattern: "pattern text",
 			},
 		},
 		{
 			name: "missing name",
-			task: FileReplaceTask{
+			task: FrTask{
 				// Name:    "test",
 				Pattern: "pattern text",
 			},
@@ -174,7 +174,7 @@ func TestShouldFailWhenMandatoryParamsMissing(t *testing.T) {
 		},
 		{
 			name: "missing pattern",
-			task: FileReplaceTask{
+			task: FrTask{
 				Name: "test",
 				// Pattern: "pattern text",
 			},
@@ -201,10 +201,10 @@ func TestShouldMakeBackupOfOriginalFileWhenBackupExtensionSet(t *testing.T) {
 	WriteTestFile(t, testFilename, simpleTestFileContents)
 	defer os.Remove(testFilename)
 
-	executor := &FileReplaceTaskExecutor{
+	executor := &FrtExecutor{
 		FsManager: &utils.FsManager{},
 	}
-	task := &FileReplaceTask{
+	task := &FrTask{
 		Path:            "replace-1",
 		Name:            testFilename,
 		Pattern:         "a test",
@@ -231,10 +231,10 @@ func TestShouldNotMakeBackupOfOriginalFileWhenBackupExtensionNotSet(t *testing.T
 	WriteTestFile(t, testConfigFilename, simpleTestFileContents)
 	defer os.Remove(testConfigFilename)
 
-	executor := &FileReplaceTaskExecutor{
+	executor := &FrtExecutor{
 		FsManager: &utils.FsManager{},
 	}
-	task := &FileReplaceTask{
+	task := &FrTask{
 		Path:    "replace-1",
 		Name:    testConfigFilename,
 		Pattern: "a test",
@@ -260,10 +260,10 @@ func TestShouldReplaceAllMatchingItems(t *testing.T) {
 	WriteTestFile(t, testFilename, simpleTestFileContentWithRepetition)
 	defer os.Remove(testFilename)
 
-	executor := &FileReplaceTaskExecutor{
+	executor := &FrtExecutor{
 		FsManager: &utils.FsManager{},
 	}
-	task := &FileReplaceTask{
+	task := &FrTask{
 		Path:    "replace-1",
 		Name:    testFilename,
 		Pattern: "line",
@@ -298,10 +298,10 @@ func TestShouldNotReplaceAnything(t *testing.T) {
 	origfileInfo, err := os.Stat(testFilename)
 	require.NoError(t, err)
 
-	executor := &FileReplaceTaskExecutor{
+	executor := &FrtExecutor{
 		FsManager: &utils.FsManager{},
 	}
-	task := &FileReplaceTask{
+	task := &FrTask{
 		Path:    "replace-1",
 		Name:    testFilename,
 		Pattern: "unknown line",
@@ -334,10 +334,10 @@ func TestShouldReplaceCountMatchingItems(t *testing.T) {
 	WriteTestFile(t, testFilename, simpleTestFileContentWithRepetition)
 	defer os.Remove(testFilename)
 
-	executor := &FileReplaceTaskExecutor{
+	executor := &FrtExecutor{
 		FsManager: &utils.FsManager{},
 	}
-	task := &FileReplaceTask{
+	task := &FrTask{
 		Path:    "replace-1",
 		Name:    testFilename,
 		Pattern: "line",
@@ -371,10 +371,10 @@ func TestShouldSkipWhenFilesizeTooLarge(t *testing.T) {
 	WriteTestFile(t, testFilename, largerContents)
 	defer os.Remove(testFilename)
 
-	executor := &FileReplaceTaskExecutor{
+	executor := &FrtExecutor{
 		FsManager: &utils.FsManager{},
 	}
-	task := &FileReplaceTask{
+	task := &FrTask{
 		Path:        "replace-1",
 		Name:        testFilename,
 		Pattern:     "line",
@@ -403,10 +403,10 @@ func TestShouldErrorIfTargetNotRegularFile(t *testing.T) {
 		testFilename = "/tmp"
 	}
 
-	executor := &FileReplaceTaskExecutor{
+	executor := &FrtExecutor{
 		FsManager: &utils.FsManager{},
 	}
-	task := &FileReplaceTask{
+	task := &FrTask{
 		Path:    "replace-1",
 		Name:    testFilename,
 		Pattern: "line",
@@ -430,10 +430,10 @@ func TestShouldAppendNotFoundContent(t *testing.T) {
 	WriteTestFile(t, testFilename, simpleTestFileContentWithRepetition)
 	defer os.Remove(testFilename)
 
-	executor := &FileReplaceTaskExecutor{
+	executor := &FrtExecutor{
 		FsManager: &utils.FsManager{},
 	}
-	task := &FileReplaceTask{
+	task := &FrTask{
 		Path:             "replace-1",
 		Name:             testFilename,
 		Pattern:          "unknown line",
@@ -469,10 +469,10 @@ func TestShouldPrependNotFoundContent(t *testing.T) {
 	WriteTestFile(t, testFilename, simpleTestFileContentWithRepetition)
 	defer os.Remove(testFilename)
 
-	executor := &FileReplaceTaskExecutor{
+	executor := &FrtExecutor{
 		FsManager: &utils.FsManager{},
 	}
-	task := &FileReplaceTask{
+	task := &FrTask{
 		Path:              "replace-1",
 		Name:              testFilename,
 		Pattern:           "unknown line",
@@ -508,10 +508,10 @@ func TestShouldUseReplContentWhenWhenNoNotFoundContent(t *testing.T) {
 	WriteTestFile(t, testFilename, simpleTestFileContentWithRepetition)
 	defer os.Remove(testFilename)
 
-	executor := &FileReplaceTaskExecutor{
+	executor := &FrtExecutor{
 		FsManager: &utils.FsManager{},
 	}
-	task := &FileReplaceTask{
+	task := &FrTask{
 		Path:    "replace-1",
 		Name:    testFilename,
 		Pattern: "unknown line",

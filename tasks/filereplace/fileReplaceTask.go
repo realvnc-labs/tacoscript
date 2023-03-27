@@ -27,7 +27,7 @@ const (
 	defaultMaxFileSize = "512k"
 )
 
-type FileReplaceTask struct {
+type FrTask struct {
 	TypeName string // TaskType
 	Path     string // TaskName
 
@@ -54,35 +54,35 @@ type FileReplaceTask struct {
 	Updated bool
 }
 
-func (t *FileReplaceTask) GetTypeName() string {
+func (t *FrTask) GetTypeName() string {
 	return t.TypeName
 }
 
-func (t *FileReplaceTask) GetRequirements() []string {
+func (t *FrTask) GetRequirements() []string {
 	return t.Require
 }
 
-func (t *FileReplaceTask) GetPath() string {
+func (t *FrTask) GetPath() string {
 	return t.Path
 }
 
-func (t *FileReplaceTask) String() string {
+func (t *FrTask) String() string {
 	return fmt.Sprintf("task '%s' at path '%s'", t.TypeName, t.GetPath())
 }
 
-func (t *FileReplaceTask) GetOnlyIfCmds() []string {
+func (t *FrTask) GetOnlyIfCmds() []string {
 	return t.OnlyIf
 }
 
-func (t *FileReplaceTask) GetUnlessCmds() []string {
+func (t *FrTask) GetUnlessCmds() []string {
 	return t.Unless
 }
 
-func (t *FileReplaceTask) GetCreatesFilesList() []string {
+func (t *FrTask) GetCreatesFilesList() []string {
 	return t.Creates
 }
 
-func (t *FileReplaceTask) Validate(goos string) error {
+func (t *FrTask) Validate(goos string) error {
 	errs := &utils.Errors{}
 
 	err := tasks.ValidateRequired(t.Name, t.Path+"."+tasks.NameField)
@@ -120,20 +120,20 @@ func (t *FileReplaceTask) Validate(goos string) error {
 	return errs.ToError()
 }
 
-type FileReplaceTaskExecutor struct {
+type FrtExecutor struct {
 	FsManager tasks.FsManager
 	Runner    tacoexec.Runner
 }
 
-func (frte *FileReplaceTaskExecutor) Execute(ctx context.Context, task tasks.CoreTask) executionresult.ExecutionResult {
+func (frte *FrtExecutor) Execute(ctx context.Context, task tasks.CoreTask) executionresult.ExecutionResult {
 	logrus.Debugf("will trigger '%s' task", task.GetPath())
 	execRes := executionresult.ExecutionResult{
 		Changes: make(map[string]string),
 	}
 
-	frt, ok := task.(*FileReplaceTask)
+	frt, ok := task.(*FrTask)
 	if !ok {
-		execRes.Err = fmt.Errorf("cannot convert task '%v' to FileReplaceTask", task)
+		execRes.Err = fmt.Errorf("cannot convert task '%v' to FrTask", task)
 		return execRes
 	}
 

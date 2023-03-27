@@ -14,7 +14,7 @@ import (
 type mockConfigReloader struct {
 }
 
-func (rl *mockConfigReloader) Reload(rvst *RealVNCServerTask) (err error) {
+func (rl *mockConfigReloader) Reload(rvst *RvsTask) (err error) {
 	return nil
 }
 
@@ -24,7 +24,7 @@ func TestShouldPerformSimpleConfigParamUpdate(t *testing.T) {
 
 	ctx := context.Background()
 
-	executor := &RealVNCServerTaskExecutor{
+	executor := &RvstExecutor{
 		FsManager: &utils.FsManager{},
 
 		Reloader: &mockConfigReloader{},
@@ -39,7 +39,7 @@ func TestShouldPerformSimpleConfigParamUpdate(t *testing.T) {
 		},
 	}
 
-	task := &RealVNCServerTask{
+	task := &RvsTask{
 		Path:       "realvnc-server-1",
 		Encryption: "AlwaysOn",
 		ServerMode: "User",

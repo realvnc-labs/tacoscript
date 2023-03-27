@@ -25,7 +25,7 @@ const (
 	DefaultFileMode = 0744
 )
 
-type FileManagedTask struct {
+type FmTask struct {
 	TypeName string
 	Path     string
 	Mode     os.FileMode
@@ -52,15 +52,15 @@ type FileManagedTask struct {
 	Updated bool
 }
 
-func (t *FileManagedTask) GetTypeName() string {
+func (t *FmTask) GetTypeName() string {
 	return t.TypeName
 }
 
-func (t *FileManagedTask) GetRequirements() []string {
+func (t *FmTask) GetRequirements() []string {
 	return t.Require
 }
 
-func (t *FileManagedTask) Validate(goos string) error {
+func (t *FmTask) Validate(goos string) error {
 	errs := &utils.Errors{}
 
 	err1 := tasks.ValidateRequired(t.Name, t.Path+"."+tasks.NameField)
@@ -88,23 +88,23 @@ func (t *FileManagedTask) Validate(goos string) error {
 	return errs.ToError()
 }
 
-func (t *FileManagedTask) GetPath() string {
+func (t *FmTask) GetPath() string {
 	return t.Path
 }
 
-func (t *FileManagedTask) String() string {
+func (t *FmTask) String() string {
 	return fmt.Sprintf("task '%s' at path '%s'", t.TypeName, t.GetPath())
 }
 
-func (t *FileManagedTask) GetOnlyIfCmds() []string {
+func (t *FmTask) GetOnlyIfCmds() []string {
 	return t.OnlyIf
 }
 
-func (t *FileManagedTask) GetUnlessCmds() []string {
+func (t *FmTask) GetUnlessCmds() []string {
 	return t.Unless
 }
 
-func (t *FileManagedTask) GetCreatesFilesList() []string {
+func (t *FmTask) GetCreatesFilesList() []string {
 	return t.Creates
 }
 
@@ -113,21 +113,21 @@ type HashManager interface {
 	HashSum(hashAlgoName, filePath string) (hashSum string, err error)
 }
 
-type FileManagedTaskExecutor struct {
+type FmtExecutor struct {
 	FsManager   tasks.FsManager
 	HashManager HashManager
 	Runner      tacoexec.Runner
 }
 
-func (fmte *FileManagedTaskExecutor) Execute(ctx context.Context, task tasks.CoreTask) executionresult.ExecutionResult {
+func (fmte *FmtExecutor) Execute(ctx context.Context, task tasks.CoreTask) executionresult.ExecutionResult {
 	logrus.Debugf("will trigger '%s' task", task.GetPath())
 	execRes := executionresult.ExecutionResult{
 		Changes: make(map[string]string),
 	}
 
-	fileManagedTask, ok := task.(*FileManagedTask)
+	fileManagedTask, ok := task.(*FmTask)
 	if !ok {
-		execRes.Err = fmt.Errorf("cannot convert task '%v' to FileManagedTask", task)
+		execRes.Err = fmt.Errorf("cannot convert task '%v' to FmTask", task)
 		return execRes
 	}
 
@@ -218,7 +218,7 @@ func (fmte *FileManagedTaskExecutor) Execute(ctx context.Context, task tasks.Cor
 	return execRes
 }
 
-func (fmte *FileManagedTaskExecutor) fileShouldBeReplaced(fileManagedTask *FileManagedTask) (bool, error) {
+func (fmte *FmtExecutor) fileShouldBeReplaced(fileManagedTask *FmTask) (bool, error) {
 	if fileManagedTask.Replace {
 		return true, nil
 	}
@@ -236,8 +236,8 @@ func (fmte *FileManagedTaskExecutor) fileShouldBeReplaced(fileManagedTask *FileM
 	return true, nil
 }
 
-func (fmte *FileManagedTaskExecutor) checkFileManagedConditions(
-	fileManagedTask *FileManagedTask,
+func (fmte *FmtExecutor) checkFileManagedConditions(
+	fileManagedTask *FmTask,
 	execRes *executionresult.ExecutionResult,
 ) (skipReason string, err error) {
 	if fileManagedTask.SourceHash != "" {
@@ -269,7 +269,7 @@ func (fmte *FileManagedTaskExecutor) checkFileManagedConditions(
 	return "", nil
 }
 
-func (fmte *FileManagedTaskExecutor) copySourceToTarget(ctx context.Context, fileManagedTask *FileManagedTask) error {
+func (fmte *FmtExecutor) copySourceToTarget(ctx context.Context, fileManagedTask *FmTask) error {
 	source := fileManagedTask.Source
 	if source.RawLocation == "" {
 		logrus.Debug("source location is empty will ignore it")
@@ -283,7 +283,7 @@ func (fmte *FileManagedTaskExecutor) copySourceToTarget(ctx context.Context, fil
 	return fmte.handleRemoteSource(ctx, fileManagedTask)
 }
 
-func (fmte *FileManagedTaskExecutor) handleRemoteSource(ctx context.Context, fileManagedTask *FileManagedTask) error {
+func (fmte *FmtExecutor) handleRemoteSource(ctx context.Context, fileManagedTask *FmTask) error {
 	tempTargetPath := fileManagedTask.Name + "_temp"
 
 	defer func(f string) {
@@ -331,7 +331,7 @@ func (fmte *FileManagedTaskExecutor) handleRemoteSource(ctx context.Context, fil
 	return nil
 }
 
-func (fmte *FileManagedTaskExecutor) handleLocalSource(fileManagedTask *FileManagedTask, sourcePath string) error {
+func (fmte *FmtExecutor) handleLocalSource(fileManagedTask *FmTask, sourcePath string) error {
 	logrus.Debug("source location is a local file path")
 	source := fileManagedTask.Source
 
@@ -351,7 +351,7 @@ func (fmte *FileManagedTaskExecutor) handleLocalSource(fileManagedTask *FileMana
 	return fmte.FsManager.CopyLocalFile(source.LocalPath, fileManagedTask.Name, mode)
 }
 
-func (fmte *FileManagedTaskExecutor) checkIfLocalFileShouldBeCopied(fileManagedTask *FileManagedTask, sourcePath string) (bool, error) {
+func (fmte *FmtExecutor) checkIfLocalFileShouldBeCopied(fileManagedTask *FmTask, sourcePath string) (bool, error) {
 	const defaultHashAlgoName = "sha256"
 
 	if !fileManagedTask.SkipVerify {
@@ -421,7 +421,7 @@ func (fmte *FileManagedTaskExecutor) checkIfLocalFileShouldBeCopied(fileManagedT
 	return false, nil
 }
 
-func (fmte *FileManagedTaskExecutor) copyContentToTarget(fileManagedTask *FileManagedTask) error {
+func (fmte *FmtExecutor) copyContentToTarget(fileManagedTask *FmTask) error {
 	if !fileManagedTask.Contents.Valid {
 		logrus.Debug("contents field is empty, will not manage content")
 		return nil
@@ -449,8 +449,8 @@ func (fmte *FileManagedTaskExecutor) copyContentToTarget(fileManagedTask *FileMa
 	return err
 }
 
-func (fmte *FileManagedTaskExecutor) shouldSkipForContentExpectation(
-	fileManagedTask *FileManagedTask,
+func (fmte *FmtExecutor) shouldSkipForContentExpectation(
+	fileManagedTask *FmTask,
 	execRes *executionresult.ExecutionResult,
 ) (skipReason string, err error) {
 	if !fileManagedTask.Contents.Valid {
@@ -495,7 +495,7 @@ func (fmte *FileManagedTaskExecutor) shouldSkipForContentExpectation(
 	return "", nil
 }
 
-func (fmte *FileManagedTaskExecutor) createDirPathIfNeeded(fileManagedTask *FileManagedTask) error {
+func (fmte *FmtExecutor) createDirPathIfNeeded(fileManagedTask *FmTask) error {
 	if !fileManagedTask.MakeDirs {
 		return nil
 	}
@@ -512,7 +512,7 @@ func (fmte *FileManagedTaskExecutor) createDirPathIfNeeded(fileManagedTask *File
 	return fmte.FsManager.CreateDirPathIfNeeded(fileManagedTask.Name, mode)
 }
 
-func (fmte *FileManagedTaskExecutor) applyFileAttributesToTarget(fileManagedTask *FileManagedTask) error {
+func (fmte *FmtExecutor) applyFileAttributesToTarget(fileManagedTask *FmTask) error {
 	logrus.Debugf("will change file attributes '%s'", fileManagedTask.Name)
 
 	info, err := fmte.FsManager.Stat(fileManagedTask.Name)

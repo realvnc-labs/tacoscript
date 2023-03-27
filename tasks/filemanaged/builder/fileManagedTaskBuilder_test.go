@@ -17,7 +17,7 @@ func TestFileManagedTaskBuilder(t *testing.T) {
 		typeName      string
 		path          string
 		values        []interface{}
-		expectedTask  *filemanaged.FileManagedTask
+		expectedTask  *filemanaged.FmTask
 		expectedError string
 	}{
 		{
@@ -35,7 +35,7 @@ func TestFileManagedTaskBuilder(t *testing.T) {
 				yaml.MapSlice{yaml.MapItem{Key: tasks.CreatesField, Value: "C:\\Program Files\notepad++\notepad++.exe"}},
 				yaml.MapSlice{yaml.MapItem{Key: tasks.ShellField, Value: "someshell"}},
 			},
-			expectedTask: &filemanaged.FileManagedTask{
+			expectedTask: &filemanaged.FmTask{
 				TypeName: "fileManagedType",
 				Path:     "fileManagedPath",
 				Name:     "C:\temp\npp.7.8.8.Installer.x64.exe",
@@ -77,7 +77,7 @@ func TestFileManagedTaskBuilder(t *testing.T) {
 				return
 			}
 
-			actualTask, ok := actualTaskI.(*filemanaged.FileManagedTask)
+			actualTask, ok := actualTaskI.(*filemanaged.FmTask)
 			assert.True(t, ok)
 			if !ok {
 				return
@@ -88,7 +88,7 @@ func TestFileManagedTaskBuilder(t *testing.T) {
 	}
 }
 
-func assertFileManagedTaskEquals(t *testing.T, expectedTask, actualTask *filemanaged.FileManagedTask) {
+func assertFileManagedTaskEquals(t *testing.T, expectedTask, actualTask *filemanaged.FmTask) {
 	assert.Equal(t, expectedTask.TypeName, actualTask.TypeName)
 	assert.Equal(t, expectedTask.User, actualTask.User)
 	assert.Equal(t, expectedTask.Group, actualTask.Group)

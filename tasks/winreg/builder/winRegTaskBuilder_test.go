@@ -14,7 +14,7 @@ func TestWinRegTaskBuilder(t *testing.T) {
 		typeName      string
 		path          string
 		ctx           []interface{}
-		expectedTask  *winreg.WinRegTask
+		expectedTask  *winreg.WrTask
 		expectedError string
 	}{
 		{
@@ -43,7 +43,7 @@ func TestWinRegTaskBuilder(t *testing.T) {
 				}}},
 				yaml.MapSlice{yaml.MapItem{Key: tasks.ShellField, Value: "someshell"}},
 			},
-			expectedTask: &winreg.WinRegTask{
+			expectedTask: &winreg.WrTask{
 				ActionType: winreg.ActionWinRegPresent,
 				TypeName:   winreg.TaskTypeWinRegPresent,
 				Path:       "WinRegPath",
@@ -93,7 +93,7 @@ func TestWinRegTaskBuilder(t *testing.T) {
 					"Unless one",
 				}}},
 			},
-			expectedTask: &winreg.WinRegTask{
+			expectedTask: &winreg.WrTask{
 				ActionType: winreg.ActionWinRegAbsent,
 				TypeName:   winreg.TaskTypeWinRegAbsent,
 				Name:       "VMware User Process",
@@ -139,7 +139,7 @@ func TestWinRegTaskBuilder(t *testing.T) {
 					"Unless one",
 				}}},
 			},
-			expectedTask: &winreg.WinRegTask{
+			expectedTask: &winreg.WrTask{
 				ActionType: winreg.ActionWinRegAbsentKey,
 				TypeName:   winreg.TaskTypeWinRegAbsentKey,
 				Name:       "VMware User Process",
@@ -183,7 +183,7 @@ func TestWinRegTaskBuilder(t *testing.T) {
 				return
 			}
 
-			actualTask, ok := actualTaskI.(*winreg.WinRegTask)
+			actualTask, ok := actualTaskI.(*winreg.WrTask)
 			assert.True(t, ok)
 			if !ok {
 				return
@@ -194,7 +194,7 @@ func TestWinRegTaskBuilder(t *testing.T) {
 	}
 }
 
-func assertWinRegTaskEquals(t *testing.T, expectedTask, actualTask *winreg.WinRegTask) {
+func assertWinRegTaskEquals(t *testing.T, expectedTask, actualTask *winreg.WrTask) {
 	t.Helper()
 
 	assert.Equal(t, expectedTask.TypeName, actualTask.TypeName, "TypeName")

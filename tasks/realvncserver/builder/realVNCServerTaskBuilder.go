@@ -11,7 +11,7 @@ type RealVNCServerTaskBuilder struct {
 
 func (tb RealVNCServerTaskBuilder) Build(typeName, path string, fields interface{}) (t tasks.CoreTask, err error) {
 	tracker := tasks.NewFieldCombinedTracker()
-	task := &realvncserver.RealVNCServerTask{
+	task := &realvncserver.RvsTask{
 		TypeName: typeName,
 		Path:     path,
 		Mapper:   tracker,

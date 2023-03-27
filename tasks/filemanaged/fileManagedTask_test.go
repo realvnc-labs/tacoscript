@@ -37,7 +37,7 @@ type fileManagedTestCase struct {
 	InitialFileContents string
 	ContentEncoding     string
 	LogExpectation      string
-	Task                *FileManagedTask
+	Task                *FmTask
 	ExpectedResult      executionresult.ExecutionResult
 	RunnerMock          *appExec.SystemRunner
 	FileExpectation     *apptest.FileExpectation
@@ -112,7 +112,7 @@ func TestFileManagedTaskExecution(t *testing.T) {
 	testCases := []fileManagedTestCase{
 		{
 			Name: "test creates field",
-			Task: &FileManagedTask{
+			Task: &FmTask{
 				Path:    "somepath",
 				Name:    "some test command",
 				Creates: []string{"some_file.123", "sourceFileAtLocal.txt"},
@@ -123,7 +123,7 @@ func TestFileManagedTaskExecution(t *testing.T) {
 		},
 		{
 			Name: "test hash matches",
-			Task: &FileManagedTask{
+			Task: &FmTask{
 				Path:       "somepath",
 				Name:       "someTempFile.txt",
 				SourceHash: "md5=5e4fe0155703dde467f3ab234e6f966f",
@@ -135,7 +135,7 @@ func TestFileManagedTaskExecution(t *testing.T) {
 		},
 		{
 			Name: "test_wrong_hash_format_error",
-			Task: &FileManagedTask{
+			Task: &FmTask{
 				Path:       "somepath",
 				Name:       "someTempFile.txt",
 				SourceHash: "md4=5e4fe0155703dde467f3ab234e6f966f",
@@ -146,7 +146,7 @@ func TestFileManagedTaskExecution(t *testing.T) {
 		},
 		{
 			Name: "local_source_copy_success",
-			Task: &FileManagedTask{
+			Task: &FmTask{
 				Path:       "local_source_copy_success_path",
 				Name:       "targetFileAtLocalCopy.txt",
 				SourceHash: "md5=5e4fe0155703dde467f3ab234e6f966f",
@@ -167,7 +167,7 @@ func TestFileManagedTaskExecution(t *testing.T) {
 		},
 		{
 			Name: "http_source_copy_success",
-			Task: &FileManagedTask{
+			Task: &FmTask{
 				Path:       "http_source_copy_success_path",
 				Name:       "targetFileFromHttp.txt",
 				SourceHash: "md5=5e4fe0155703dde467f3ab234e6f966f",
@@ -186,7 +186,7 @@ func TestFileManagedTaskExecution(t *testing.T) {
 		},
 		{
 			Name: "http_source_copy_wrong_source_checksum",
-			Task: &FileManagedTask{
+			Task: &FmTask{
 				Path:       "http_source_copy_wrong_source_checksum_path",
 				Name:       "targetFileFromHttp2.txt",
 				SourceHash: "md5=dafdfdafdafdfad",
@@ -206,7 +206,7 @@ func TestFileManagedTaskExecution(t *testing.T) {
 		},
 		{
 			Name: "https_source_copy_success",
-			Task: &FileManagedTask{
+			Task: &FmTask{
 				Path:       "https_source_copy_success_path",
 				Name:       "targetFileFromHttps.txt",
 				SourceHash: "md5=5e4fe0155703dde467f3ab234e6f966f",
@@ -226,7 +226,7 @@ func TestFileManagedTaskExecution(t *testing.T) {
 		},
 		{
 			Name: "ftp_source_copy_success",
-			Task: &FileManagedTask{
+			Task: &FmTask{
 				Path:       "ftp_source_copy_success_path",
 				Name:       "targetFileFromFtp.txt",
 				SourceHash: "md5=5e4fe0155703dde467f3ab234e6f966f",
@@ -245,7 +245,7 @@ func TestFileManagedTaskExecution(t *testing.T) {
 		},
 		{
 			Name: "executing_onlyif_condition_failure",
-			Task: &FileManagedTask{
+			Task: &FmTask{
 				Name:   "cmd with OnlyIf failure",
 				OnlyIf: []string{"check OnlyIf error"},
 			},
@@ -267,7 +267,7 @@ func TestFileManagedTaskExecution(t *testing.T) {
 		},
 		{
 			Name: "executing_onlyif_condition_success",
-			Task: &FileManagedTask{
+			Task: &FmTask{
 				Name:   "onlyIfConditionTrue.txt",
 				OnlyIf: []string{"check OnlyIf success 1", "check OnlyIf success 2"},
 				Source: utils.Location{
@@ -290,7 +290,7 @@ func TestFileManagedTaskExecution(t *testing.T) {
 		},
 		{
 			Name: "saving_contents_to_file",
-			Task: &FileManagedTask{
+			Task: &FmTask{
 				Name: "contentsToFile.txt",
 				Path: "saving_contents_to_file_path",
 				Contents: sql.NullString{
@@ -327,7 +327,7 @@ four`,
 		},
 		{
 			Name: "skipping_content_on_empty_diff",
-			Task: &FileManagedTask{
+			Task: &FmTask{
 				Name: "skipping_content_on_empty_diff.txt",
 				Path: "skipping_content_on_empty_diff_file",
 				Contents: sql.NullString{
@@ -351,7 +351,7 @@ three`,
 		},
 		{
 			Name: "make_dirs_success",
-			Task: &FileManagedTask{
+			Task: &FmTask{
 				MakeDirs:   true,
 				Name:       "sub/dir/sourceFileAtLocal.txt",
 				Path:       "make_dirs_success_path",
@@ -371,7 +371,7 @@ three`,
 		},
 		{
 			Name: "make_dirs_fail",
-			Task: &FileManagedTask{
+			Task: &FmTask{
 				MakeDirs:   false,
 				Name:       "dfasdfaf/sourceFileAtLocal2.txt",
 				Path:       "make_dirs_fail_path",
@@ -392,7 +392,7 @@ three`,
 		},
 		{
 			Name: "replace_false",
-			Task: &FileManagedTask{
+			Task: &FmTask{
 				Replace:    false,
 				Name:       "existingFileToReplace.txt",
 				Path:       "replace_false_path",
@@ -413,7 +413,7 @@ three`,
 		},
 		{
 			Name: "replace_true",
-			Task: &FileManagedTask{
+			Task: &FmTask{
 				Replace:    true,
 				Name:       "existingFileToReplace2.txt",
 				Path:       "replace_true_path",
@@ -432,7 +432,7 @@ three`,
 		},
 		{
 			Name: "skip_verify_success_for_url",
-			Task: &FileManagedTask{
+			Task: &FmTask{
 				SkipVerify: true,
 				Replace:    true,
 				Name:       "skipVerifyFileSuccess.txt",
@@ -452,7 +452,7 @@ three`,
 		},
 		{
 			Name: "skip_verify_no_content_change",
-			Task: &FileManagedTask{
+			Task: &FmTask{
 				SkipVerify: true,
 				Replace:    true,
 				Name:       "skipVerifyFileNoChange.txt",
@@ -472,7 +472,7 @@ three`,
 		},
 		{
 			Name: "skip_verify_success_for_local",
-			Task: &FileManagedTask{
+			Task: &FmTask{
 				SkipVerify: true,
 				Replace:    true,
 				Name:       "skipVerifyFileLocalSuccess.txt",
@@ -494,7 +494,7 @@ three`,
 		},
 		{
 			Name: "encoding_success",
-			Task: &FileManagedTask{
+			Task: &FmTask{
 				Replace:    true,
 				SkipVerify: true,
 				Name:       "encodingSuccessFile.txt",
@@ -514,7 +514,7 @@ three`,
 		},
 		{
 			Name: "encoding_with_content_compare",
-			Task: &FileManagedTask{
+			Task: &FmTask{
 				Name: "encodingWithContentCompare.txt",
 				Path: "encoding_with_content_compare_path",
 				Contents: sql.NullString{
@@ -564,7 +564,7 @@ three`,
 				runner = &appExec.SystemRunner{SystemAPI: &appExec.SystemAPIMock{}}
 			}
 
-			fileManagedExecutor := &FileManagedTaskExecutor{
+			fileManagedExecutor := &FmtExecutor{
 				Runner:      runner,
 				FsManager:   &utils.FsManager{},
 				HashManager: &utils.HashManager{},
@@ -657,14 +657,14 @@ func assertLogExpectation(t *testing.T, expectedLog string, logs *applog.Buffere
 
 func TestFileManagedUserAndGroup(t *testing.T) {
 	testCases := []struct {
-		task               *FileManagedTask
+		task               *FmTask
 		chownError         string
 		fileStatError      string
 		expectedError      string
 		expectedChownInput *apptest.ChownInput
 	}{
 		{
-			task: &FileManagedTask{
+			task: &FmTask{
 				Name:       "someFile.txt",
 				SkipVerify: true,
 				Replace:    true,
@@ -682,7 +682,7 @@ func TestFileManagedUserAndGroup(t *testing.T) {
 			},
 		},
 		{
-			task: &FileManagedTask{
+			task: &FmTask{
 				Name:       "someFile2.txt",
 				SkipVerify: true,
 				Replace:    true,
@@ -702,7 +702,7 @@ func TestFileManagedUserAndGroup(t *testing.T) {
 			expectedError: "some chown error",
 		},
 		{
-			task: &FileManagedTask{
+			task: &FmTask{
 				Name:       "someFile3.txt",
 				SkipVerify: true,
 				Replace:    true,
@@ -733,7 +733,7 @@ func TestFileManagedUserAndGroup(t *testing.T) {
 			fsMock.StatOutputError = errors.New(testCase.fileStatError)
 		}
 
-		fileManagedExecutor := &FileManagedTaskExecutor{
+		fileManagedExecutor := &FmtExecutor{
 			FsManager:   fsMock,
 			HashManager: &utils.HashManager{},
 		}
@@ -763,11 +763,11 @@ func TestFileManagedTaskValidation(t *testing.T) {
 	testCases := []struct {
 		Name          string
 		ExpectedError string
-		Task          FileManagedTask
+		Task          FmTask
 	}{
 		{
 			Name: "missing_name",
-			Task: FileManagedTask{
+			Task: FmTask{
 				Path:   "somepath",
 				Source: utils.Location{RawLocation: "some location"},
 			},
@@ -775,7 +775,7 @@ func TestFileManagedTaskValidation(t *testing.T) {
 		},
 		{
 			Name: "missing_hash_for_url",
-			Task: FileManagedTask{
+			Task: FmTask{
 				Name: "task1",
 				Path: "somepath1",
 				Source: utils.Location{
@@ -795,7 +795,7 @@ func TestFileManagedTaskValidation(t *testing.T) {
 		},
 		{
 			Name: "missing_hash_for_ftp",
-			Task: FileManagedTask{
+			Task: FmTask{
 				Name: "task2",
 				Path: "somepath2",
 				Source: utils.Location{
@@ -815,7 +815,7 @@ func TestFileManagedTaskValidation(t *testing.T) {
 		},
 		{
 			Name: "valid_task",
-			Task: FileManagedTask{
+			Task: FmTask{
 				Name: "some p",
 				Source: utils.Location{
 					RawLocation: "some location",
@@ -824,7 +824,7 @@ func TestFileManagedTaskValidation(t *testing.T) {
 		},
 		{
 			Name: "missing_source_and_content",
-			Task: FileManagedTask{
+			Task: FmTask{
 				Name: "task missing source",
 				Path: "some task missing source",
 			},
@@ -832,7 +832,7 @@ func TestFileManagedTaskValidation(t *testing.T) {
 		},
 		{
 			Name: "empty_content",
-			Task: FileManagedTask{
+			Task: FmTask{
 				Name: "task empty_content",
 				Contents: sql.NullString{
 					Valid:  true,
@@ -842,7 +842,7 @@ func TestFileManagedTaskValidation(t *testing.T) {
 		},
 		{
 			Name: "missing_hash_with_skip_verify",
-			Task: FileManagedTask{
+			Task: FmTask{
 				Name: "missing_hash_with_skip_verify",
 				Path: "missing_hash_with_skip_verify_path",
 				Source: utils.Location{

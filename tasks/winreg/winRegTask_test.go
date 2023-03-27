@@ -18,11 +18,11 @@ func TestWinRegTaskValidation(t *testing.T) {
 	testCases := []struct {
 		Name        string
 		ExpectedErr string
-		Task        WinRegTask
+		Task        WrTask
 	}{
 		{
 			Name: "invalid_action_name",
-			Task: WinRegTask{
+			Task: WrTask{
 				TypeName:   "unknown type name",
 				Path:       "somepath",
 				ActionType: 0,
@@ -31,7 +31,7 @@ func TestWinRegTaskValidation(t *testing.T) {
 		},
 		{
 			Name: "present, missing name",
-			Task: WinRegTask{
+			Task: WrTask{
 				Path:       "winregpath",
 				ActionType: ActionWinRegPresent,
 				// Name:       "fDenyTSConnections",
@@ -43,7 +43,7 @@ func TestWinRegTaskValidation(t *testing.T) {
 		},
 		{
 			Name: "present, missing reg path",
-			Task: WinRegTask{
+			Task: WrTask{
 				Path:       "winregpath",
 				ActionType: ActionWinRegPresent,
 				Name:       "fDenyTSConnections",
@@ -55,7 +55,7 @@ func TestWinRegTaskValidation(t *testing.T) {
 		},
 		{
 			Name: "present, missing value",
-			Task: WinRegTask{
+			Task: WrTask{
 				Path:       "winregpath",
 				ActionType: ActionWinRegPresent,
 				Name:       "fDenyTSConnections",
@@ -67,7 +67,7 @@ func TestWinRegTaskValidation(t *testing.T) {
 		},
 		{
 			Name: "present, missing type",
-			Task: WinRegTask{
+			Task: WrTask{
 				Path:       "winregpath",
 				ActionType: ActionWinRegPresent,
 				Name:       "fDenyTSConnections",
@@ -79,7 +79,7 @@ func TestWinRegTaskValidation(t *testing.T) {
 		},
 		{
 			Name: "absent, missing name",
-			Task: WinRegTask{
+			Task: WrTask{
 				Path:       "winregpath",
 				ActionType: ActionWinRegAbsent,
 				// Name:       "fDenyTSConnections",
@@ -89,7 +89,7 @@ func TestWinRegTaskValidation(t *testing.T) {
 		},
 		{
 			Name: "absent, missing reg path",
-			Task: WinRegTask{
+			Task: WrTask{
 				Path:       "winregpath",
 				ActionType: ActionWinRegAbsent,
 				Name:       "fDenyTSConnections",
@@ -99,7 +99,7 @@ func TestWinRegTaskValidation(t *testing.T) {
 		},
 		{
 			Name: "absent, missing name",
-			Task: WinRegTask{
+			Task: WrTask{
 				Path:       "winregpath",
 				ActionType: ActionWinRegAbsent,
 				// Name:       "fDenyTSConnections",
@@ -109,7 +109,7 @@ func TestWinRegTaskValidation(t *testing.T) {
 		},
 		{
 			Name: "absent key, missing reg path",
-			Task: WinRegTask{
+			Task: WrTask{
 				Path:       "winregpath",
 				ActionType: ActionWinRegAbsentKey,
 				// RegPath: `HKLM:\System\CurrentControlSet\Control\Terminal Server`,
@@ -132,7 +132,7 @@ func TestWinRegTaskValidation(t *testing.T) {
 }
 
 func TestWinRegTaskPath(t *testing.T) {
-	task := WinRegTask{
+	task := WrTask{
 		Path: "winregpath",
 	}
 
@@ -140,7 +140,7 @@ func TestWinRegTaskPath(t *testing.T) {
 }
 
 func TestWinRegTaskName(t *testing.T) {
-	task := WinRegTask{
+	task := WrTask{
 		TypeName: WinRegPresent,
 	}
 
@@ -148,7 +148,7 @@ func TestWinRegTaskName(t *testing.T) {
 }
 
 func TestWinRegTaskString(t *testing.T) {
-	task := WinRegTask{
+	task := WrTask{
 		Path:     "task1",
 		TypeName: WinRegAbsent,
 	}
@@ -157,7 +157,7 @@ func TestWinRegTaskString(t *testing.T) {
 }
 
 func TestWinRegTaskRequire(t *testing.T) {
-	task := WinRegTask{
+	task := WrTask{
 		Require: []string{"require one", "require two"},
 	}
 
@@ -167,9 +167,9 @@ func TestWinRegTaskRequire(t *testing.T) {
 func TestShouldEnsureRegistryValueIsPresent(t *testing.T) {
 	ctx := context.Background()
 
-	executor := &WinRegTaskExecutor{}
+	executor := &WrtExecutor{}
 
-	task := &WinRegTask{
+	task := &WrTask{
 		ActionType: ActionWinRegPresent,
 		Path:       "set-value-1",
 		Name:       "testValue",
@@ -199,9 +199,9 @@ func TestShouldEnsureRegistryValueIsPresent(t *testing.T) {
 func TestShouldEnsureRegistryValueIsAbsent(t *testing.T) {
 	ctx := context.Background()
 
-	executor := &WinRegTaskExecutor{}
+	executor := &WrtExecutor{}
 
-	task := &WinRegTask{
+	task := &WrTask{
 		ActionType: ActionWinRegAbsent,
 		Path:       "set-value-1",
 		Name:       "testValue",
@@ -230,9 +230,9 @@ func TestShouldEnsureRegistryValueIsAbsent(t *testing.T) {
 func TestShouldEnsureRegistryKeyIsAbsent(t *testing.T) {
 	ctx := context.Background()
 
-	executor := &WinRegTaskExecutor{}
+	executor := &WrtExecutor{}
 
-	task := &WinRegTask{
+	task := &WrTask{
 		ActionType: ActionWinRegAbsentKey,
 		Path:       "set-value-1",
 		Name:       "testValue",

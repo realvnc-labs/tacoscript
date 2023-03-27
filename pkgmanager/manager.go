@@ -25,7 +25,7 @@ type ManagementCmds struct {
 }
 
 type ManagementCmdsProvider interface {
-	GetManagementCmds(t *pkgtask.PkgTask) (*ManagementCmds, error)
+	GetManagementCmds(t *pkgtask.PTask) (*ManagementCmds, error)
 }
 
 type PackageTaskManager struct {
@@ -33,7 +33,7 @@ type PackageTaskManager struct {
 	ManagementCmdsProviderBuildFunc func() ([]ManagementCmdsProvider, error)
 }
 
-func (pm PackageTaskManager) ExecuteTask(ctx context.Context, t *pkgtask.PkgTask) (res *pkgtask.PackageManagerExecutionResult, err error) {
+func (pm PackageTaskManager) ExecuteTask(ctx context.Context, t *pkgtask.PTask) (res *pkgtask.PackageManagerExecutionResult, err error) {
 	managementCmdProviders, err := pm.ManagementCmdsProviderBuildFunc()
 	if err != nil {
 		return nil, err
@@ -104,7 +104,7 @@ func (pm PackageTaskManager) ExecuteTask(ctx context.Context, t *pkgtask.PkgTask
 
 func (pm PackageTaskManager) executePackageMethod(
 	ctx context.Context,
-	t *pkgtask.PkgTask,
+	t *pkgtask.PTask,
 	managementCmds *ManagementCmds,
 	res *pkgtask.PackageManagerExecutionResult,
 ) (err error) {
@@ -137,7 +137,7 @@ func (pm PackageTaskManager) executePackageMethod(
 func (pm PackageTaskManager) getPackageDiff(
 	ctx context.Context,
 	managementCmds *ManagementCmds,
-	t *pkgtask.PkgTask,
+	t *pkgtask.PTask,
 	packagesListBefore []string,
 ) map[string]string {
 	res := map[string]string{}
@@ -163,7 +163,7 @@ func (pm PackageTaskManager) getPackageDiff(
 	return res
 }
 
-func (pm PackageTaskManager) getAffectedPackagesStr(t *pkgtask.PkgTask) string {
+func (pm PackageTaskManager) getAffectedPackagesStr(t *pkgtask.PTask) string {
 	packages := make([]string, 0, len(t.Named.Names)+1)
 	if t.Named.Name != "" {
 		packages = append(packages, t.Named.Name)
@@ -180,7 +180,7 @@ func (pm PackageTaskManager) getAffectedPackagesStr(t *pkgtask.PkgTask) string {
 
 func (pm PackageTaskManager) installPackages(
 	ctx context.Context,
-	t *pkgtask.PkgTask,
+	t *pkgtask.PTask,
 	mngtCmds *ManagementCmds,
 	res *pkgtask.PackageManagerExecutionResult,
 ) (err error) {
@@ -193,7 +193,7 @@ func (pm PackageTaskManager) installPackages(
 
 func (pm PackageTaskManager) uninstallPackages(
 	ctx context.Context,
-	t *pkgtask.PkgTask,
+	t *pkgtask.PTask,
 	mngtCmds *ManagementCmds,
 	res *pkgtask.PackageManagerExecutionResult,
 ) (err error) {
@@ -206,7 +206,7 @@ func (pm PackageTaskManager) uninstallPackages(
 
 func (pm PackageTaskManager) updatePackages(
 	ctx context.Context,
-	t *pkgtask.PkgTask,
+	t *pkgtask.PTask,
 	mngtCmds *ManagementCmds,
 	res *pkgtask.PackageManagerExecutionResult,
 ) (err error) {
@@ -219,7 +219,7 @@ func (pm PackageTaskManager) updatePackages(
 
 func (pm PackageTaskManager) updatePkgManagerIfNeeded(
 	ctx context.Context,
-	t *pkgtask.PkgTask,
+	t *pkgtask.PTask,
 	mngtCmds *ManagementCmds,
 ) (err error) {
 	if !t.ShouldRefresh {
@@ -239,7 +239,7 @@ func (pm PackageTaskManager) updatePkgManagerIfNeeded(
 
 func (pm PackageTaskManager) getPackagesList(
 	ctx context.Context,
-	t *pkgtask.PkgTask,
+	t *pkgtask.PTask,
 	mngtCmds *ManagementCmds,
 ) (packagesList []string, err error) {
 	logrus.Debugf("will fetch packages list: %s", mngtCmds.ListCmd)
@@ -263,7 +263,7 @@ func (pm PackageTaskManager) getPackagesList(
 
 func (pm PackageTaskManager) run(
 	ctx context.Context,
-	t *pkgtask.PkgTask,
+	t *pkgtask.PTask,
 	res *pkgtask.PackageManagerExecutionResult,
 	rawCmds ...string,
 ) (err error) {

@@ -16,7 +16,7 @@ type CmdRunTaskBuilder struct {
 var cmdRunTaskParamsFnMap = parser.TaskFieldsParserConfig{
 	tasks.NameField: parser.TaskField{
 		ParseFn: func(task tasks.CoreTask, path string, val interface{}) error {
-			t := task.(*cmdrun.CmdRunTask)
+			t := task.(*cmdrun.CrTask)
 			t.Named.Name = fmt.Sprint(val)
 			return nil
 		},
@@ -25,7 +25,7 @@ var cmdRunTaskParamsFnMap = parser.TaskFieldsParserConfig{
 	tasks.NamesField: parser.TaskField{
 		ParseFn: func(task tasks.CoreTask, path string, val interface{}) error {
 			var err error
-			t := task.(*cmdrun.CmdRunTask)
+			t := task.(*cmdrun.CrTask)
 			t.Named.Names, err = conv.ConvertToValues(val)
 			return err
 		},
@@ -34,7 +34,7 @@ var cmdRunTaskParamsFnMap = parser.TaskFieldsParserConfig{
 	tasks.EnvField: parser.TaskField{
 		ParseFn: func(task tasks.CoreTask, path string, val interface{}) error {
 			var err error
-			t := task.(*cmdrun.CmdRunTask)
+			t := task.(*cmdrun.CrTask)
 			t.Envs, err = conv.ConvertToKeyValues(val, path)
 			return err
 		},
@@ -43,7 +43,7 @@ var cmdRunTaskParamsFnMap = parser.TaskFieldsParserConfig{
 }
 
 func (crtb CmdRunTaskBuilder) Build(typeName, path string, params interface{}) (t tasks.CoreTask, err error) {
-	task := &cmdrun.CmdRunTask{
+	task := &cmdrun.CrTask{
 		TypeName: typeName,
 		Path:     path,
 	}

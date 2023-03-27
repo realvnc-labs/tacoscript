@@ -66,12 +66,12 @@ func (r Runner) Run(ctx context.Context, scripts tasks.Scripts, globalAbortOnErr
 			comment := ""
 			changeMap := make(map[string]interface{})
 
-			if cmdRunTask, ok := task.(*cmdrun.CmdRunTask); ok {
+			if cmdRunTask, ok := task.(*cmdrun.CrTask); ok {
 				// summary and changeMap will be updated
 				name, comment, abort = handleCmdRunResults(cmdRunTask, &summary, &res, changeMap)
 			}
 
-			if pkgTask, ok := task.(*pkgtask.PkgTask); ok {
+			if pkgTask, ok := task.(*pkgtask.PTask); ok {
 				name = pkgTask.Named.Name
 				comment = res.Comment
 				if res.Err == nil && !pkgTask.Updated {
@@ -79,7 +79,7 @@ func (r Runner) Run(ctx context.Context, scripts tasks.Scripts, globalAbortOnErr
 				}
 			}
 
-			if winRegTask, ok := task.(*winreg.WinRegTask); ok {
+			if winRegTask, ok := task.(*winreg.WrTask); ok {
 				name = winRegTask.RegPath + `\` + winRegTask.Name
 				comment = res.Comment
 				if res.Err == nil && !winRegTask.Updated {
@@ -87,7 +87,7 @@ func (r Runner) Run(ctx context.Context, scripts tasks.Scripts, globalAbortOnErr
 				}
 			}
 
-			if managedTask, ok := task.(*filemanaged.FileManagedTask); ok {
+			if managedTask, ok := task.(*filemanaged.FmTask); ok {
 				name = managedTask.Name
 				comment = res.Comment
 				if res.Err == nil && !managedTask.Updated {
@@ -95,7 +95,7 @@ func (r Runner) Run(ctx context.Context, scripts tasks.Scripts, globalAbortOnErr
 				}
 			}
 
-			if replaceTask, ok := task.(*filereplace.FileReplaceTask); ok {
+			if replaceTask, ok := task.(*filereplace.FrTask); ok {
 				name = replaceTask.Name
 				comment = res.Comment
 				if res.Err == nil && !replaceTask.Updated {
@@ -103,7 +103,7 @@ func (r Runner) Run(ctx context.Context, scripts tasks.Scripts, globalAbortOnErr
 				}
 			}
 
-			if realVNCServerTask, ok := task.(*realvncserver.RealVNCServerTask); ok {
+			if realVNCServerTask, ok := task.(*realvncserver.RvsTask); ok {
 				comment = res.Comment
 				if res.Err == nil && !realVNCServerTask.Updated {
 					comment = "Config not changed " + res.SkipReason
@@ -162,7 +162,7 @@ func (r Runner) Run(ctx context.Context, scripts tasks.Scripts, globalAbortOnErr
 }
 
 func handleCmdRunResults(
-	cmdRunTask *cmdrun.CmdRunTask,
+	cmdRunTask *cmdrun.CrTask,
 	summary *scriptSummary,
 	res *executionresult.ExecutionResult,
 	changeMap map[string]interface{}) (name string, comment string, abort bool) {

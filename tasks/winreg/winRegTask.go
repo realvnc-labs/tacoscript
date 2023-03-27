@@ -32,7 +32,7 @@ const (
 
 var ErrUnknownWinRegAction = errors.New("unknown action")
 
-type WinRegTask struct {
+type WrTask struct {
 	ActionType WinRegActionType
 	TypeName   string
 	Path       string
@@ -52,15 +52,15 @@ type WinRegTask struct {
 	Updated bool
 }
 
-func (wrt *WinRegTask) GetTypeName() string {
+func (wrt *WrTask) GetTypeName() string {
 	return wrt.TypeName
 }
 
-func (wrt *WinRegTask) GetRequirements() []string {
+func (wrt *WrTask) GetRequirements() []string {
 	return wrt.Require
 }
 
-func (wrt *WinRegTask) Validate(goos string) error {
+func (wrt *WrTask) Validate(goos string) error {
 	errs := &utils.Errors{}
 
 	if wrt.ActionType == 0 {
@@ -101,32 +101,32 @@ func (wrt *WinRegTask) Validate(goos string) error {
 	return errs.ToError()
 }
 
-func (wrt *WinRegTask) GetPath() string {
+func (wrt *WrTask) GetPath() string {
 	return wrt.Path
 }
 
-func (wrt *WinRegTask) String() string {
+func (wrt *WrTask) String() string {
 	return fmt.Sprintf("task '%s' at path '%s'", wrt.TypeName, wrt.GetPath())
 }
 
-func (wrt *WinRegTask) GetOnlyIfCmds() []string {
+func (wrt *WrTask) GetOnlyIfCmds() []string {
 	return wrt.OnlyIf
 }
 
-func (wrt *WinRegTask) GetUnlessCmds() []string {
+func (wrt *WrTask) GetUnlessCmds() []string {
 	return wrt.Unless
 }
 
-func (wrt *WinRegTask) GetCreatesFilesList() []string {
+func (wrt *WrTask) GetCreatesFilesList() []string {
 	return wrt.Creates
 }
 
-type WinRegTaskExecutor struct {
+type WrtExecutor struct {
 	Runner    tacoexec.Runner
 	FsManager *utils.FsManager
 }
 
-func (wrte *WinRegTaskExecutor) Execute(ctx context.Context, task tasks.CoreTask) executionresult.ExecutionResult {
+func (wrte *WrtExecutor) Execute(ctx context.Context, task tasks.CoreTask) executionresult.ExecutionResult {
 	execRes := executionresult.ExecutionResult{
 		Name:    task.GetTypeName(),
 		Comment: "registry not updated",
@@ -140,9 +140,9 @@ func (wrte *WinRegTaskExecutor) Execute(ctx context.Context, task tasks.CoreTask
 
 	logrus.Debugf("will trigger '%s' task", task.GetPath())
 
-	wrt, ok := task.(*WinRegTask)
+	wrt, ok := task.(*WrTask)
 	if !ok {
-		execRes.Err = fmt.Errorf("cannot convert task '%v' to WinRegTask", task)
+		execRes.Err = fmt.Errorf("cannot convert task '%v' to WrTask", task)
 		return execRes
 	}
 
@@ -186,7 +186,7 @@ func (wrte *WinRegTaskExecutor) Execute(ctx context.Context, task tasks.CoreTask
 	return execRes
 }
 
-func (wrte *WinRegTaskExecutor) ExecuteTask(ctx context.Context, t *WinRegTask, res *executionresult.ExecutionResult) (err error) {
+func (wrte *WrtExecutor) ExecuteTask(ctx context.Context, t *WrTask, res *executionresult.ExecutionResult) (err error) {
 	var updated bool
 	var desc string
 

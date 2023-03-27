@@ -8,6 +8,7 @@ import (
 	"strings"
 
 	"github.com/realvnc-labs/tacoscript/tasks"
+	"github.com/realvnc-labs/tacoscript/tasks/pkgtask"
 	"github.com/realvnc-labs/tacoscript/utils"
 	"github.com/sirupsen/logrus"
 )
@@ -54,7 +55,7 @@ func BuildManagementCmdsProviders() ([]ManagementCmdsProvider, error) {
 
 type AptCmdsProvider struct{}
 
-func (ecb AptCmdsProvider) GetManagementCmds(t *tasks.PkgTask) (*ManagementCmds, error) {
+func (ecb AptCmdsProvider) GetManagementCmds(t *pkgtask.PTask) (*ManagementCmds, error) {
 	rawCmds := t.Named.GetNames()
 	rawInstallCmds := buildInstallCmds(rawCmds, t.Version)
 
@@ -70,7 +71,7 @@ func (ecb AptCmdsProvider) GetManagementCmds(t *tasks.PkgTask) (*ManagementCmds,
 
 type AptGetCmdsProvider struct{}
 
-func (ecb AptGetCmdsProvider) GetManagementCmds(t *tasks.PkgTask) (*ManagementCmds, error) {
+func (ecb AptGetCmdsProvider) GetManagementCmds(t *pkgtask.PTask) (*ManagementCmds, error) {
 	rawCmds := t.Named.GetNames()
 	rawInstallCmds := buildInstallCmds(rawCmds, t.Version)
 
@@ -86,7 +87,7 @@ func (ecb AptGetCmdsProvider) GetManagementCmds(t *tasks.PkgTask) (*ManagementCm
 
 type YumCmdsProvider struct{}
 
-func (ecb YumCmdsProvider) GetManagementCmds(t *tasks.PkgTask) (*ManagementCmds, error) {
+func (ecb YumCmdsProvider) GetManagementCmds(t *pkgtask.PTask) (*ManagementCmds, error) {
 	rawCmds := t.Named.GetNames()
 	rawInstallCmds := buildInstallCmds(rawCmds, t.Version)
 
@@ -102,7 +103,7 @@ func (ecb YumCmdsProvider) GetManagementCmds(t *tasks.PkgTask) (*ManagementCmds,
 
 type DnfCmdsProvider struct{}
 
-func (ecb DnfCmdsProvider) GetManagementCmds(t *tasks.PkgTask) (*ManagementCmds, error) {
+func (ecb DnfCmdsProvider) GetManagementCmds(t *pkgtask.PTask) (*ManagementCmds, error) {
 	rawCmds := t.Named.GetNames()
 	rawInstallCmds := buildInstallCmds(rawCmds, t.Version)
 

@@ -16,7 +16,7 @@ func TestRealVNCServerTaskBuilder(t *testing.T) {
 		typeName      string
 		path          string
 		values        []interface{}
-		expectedTask  *realvncserver.RealVNCServerTask
+		expectedTask  *realvncserver.RvsTask
 		expectedError string
 	}{
 		{
@@ -57,7 +57,7 @@ func TestRealVNCServerTaskBuilder(t *testing.T) {
 
 				yaml.MapSlice{yaml.MapItem{Key: tasks.ShellField, Value: "someshell"}},
 			},
-			expectedTask: &realvncserver.RealVNCServerTask{
+			expectedTask: &realvncserver.RvsTask{
 				TypeName: "realVNCServerType",
 				Path:     "realVNCServerPath",
 
@@ -111,7 +111,7 @@ func TestRealVNCServerTaskBuilder(t *testing.T) {
 			}
 			require.NoError(t, err)
 
-			actualTask, ok := task.(*realvncserver.RealVNCServerTask)
+			actualTask, ok := task.(*realvncserver.RvsTask)
 			require.True(t, ok)
 
 			assertRealVNCServerTaskEquals(t, tc.expectedTask, actualTask)
@@ -125,7 +125,7 @@ func TestRealVNCServerTaskBuilderWithUnsets(t *testing.T) {
 		typeName      string
 		path          string
 		values        []interface{}
-		expectedTask  *realvncserver.RealVNCServerTask
+		expectedTask  *realvncserver.RvsTask
 		expectedError string
 	}{
 		{
@@ -159,7 +159,7 @@ func TestRealVNCServerTaskBuilderWithUnsets(t *testing.T) {
 
 				yaml.MapSlice{yaml.MapItem{Key: tasks.ShellField, Value: "someshell"}},
 			},
-			expectedTask: &realvncserver.RealVNCServerTask{
+			expectedTask: &realvncserver.RvsTask{
 				TypeName: "realVNCServerType",
 				Path:     "realVNCServerPath",
 
@@ -207,7 +207,7 @@ func TestRealVNCServerTaskBuilderWithUnsets(t *testing.T) {
 			}
 			require.NoError(t, err)
 
-			actualTask, ok := task.(*realvncserver.RealVNCServerTask)
+			actualTask, ok := task.(*realvncserver.RvsTask)
 			require.True(t, ok)
 
 			assertRealVNCServerTaskEquals(t, tc.expectedTask, actualTask)
@@ -215,7 +215,7 @@ func TestRealVNCServerTaskBuilderWithUnsets(t *testing.T) {
 	}
 }
 
-func assertRealVNCServerTaskEquals(t *testing.T, expectedTask, actualTask *realvncserver.RealVNCServerTask) {
+func assertRealVNCServerTaskEquals(t *testing.T, expectedTask, actualTask *realvncserver.RvsTask) {
 	assert.Equal(t, expectedTask.Path, actualTask.GetPath())
 
 	assert.Equal(t, expectedTask.Encryption, actualTask.Encryption)

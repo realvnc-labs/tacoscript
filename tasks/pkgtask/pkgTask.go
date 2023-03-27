@@ -29,7 +29,7 @@ const (
 	ActionUpdate
 )
 
-type PkgTask struct {
+type PTask struct {
 	ActionType PkgActionType
 	TypeName   string
 	Path       string
@@ -46,15 +46,15 @@ type PkgTask struct {
 	Updated bool
 }
 
-func (pt *PkgTask) GetTypeName() string {
+func (pt *PTask) GetTypeName() string {
 	return pt.TypeName
 }
 
-func (pt *PkgTask) GetRequirements() []string {
+func (pt *PTask) GetRequirements() []string {
 	return pt.Require
 }
 
-func (pt *PkgTask) Validate(goos string) error {
+func (pt *PTask) Validate(goos string) error {
 	errs := &utils.Errors{}
 
 	err1 := tasks.ValidateRequired(pt.Named.Name, pt.Path+"."+tasks.NameField)
@@ -72,23 +72,23 @@ func (pt *PkgTask) Validate(goos string) error {
 	return errs.ToError()
 }
 
-func (pt *PkgTask) GetPath() string {
+func (pt *PTask) GetPath() string {
 	return pt.Path
 }
 
-func (pt *PkgTask) String() string {
+func (pt *PTask) String() string {
 	return fmt.Sprintf("task '%s' at path '%s'", pt.TypeName, pt.GetPath())
 }
 
-func (pt *PkgTask) GetOnlyIfCmds() []string {
+func (pt *PTask) GetOnlyIfCmds() []string {
 	return pt.OnlyIf
 }
 
-func (pt *PkgTask) GetUnlessCmds() []string {
+func (pt *PTask) GetUnlessCmds() []string {
 	return pt.Unless
 }
 
-func (pt *PkgTask) GetCreatesFilesList() []string {
+func (pt *PTask) GetCreatesFilesList() []string {
 	return pt.Creates
 }
 
@@ -100,22 +100,22 @@ type PackageManagerExecutionResult struct {
 }
 
 type PackageManager interface {
-	ExecuteTask(ctx context.Context, t *PkgTask) (res *PackageManagerExecutionResult, err error)
+	ExecuteTask(ctx context.Context, t *PTask) (res *PackageManagerExecutionResult, err error)
 }
 
-type PkgTaskExecutor struct {
+type PtExecutor struct {
 	PackageManager PackageManager
 	Runner         tacoexec.Runner
 	FsManager      *utils.FsManager
 }
 
-func (pte *PkgTaskExecutor) Execute(ctx context.Context, task tasks.CoreTask) executionresult.ExecutionResult {
+func (pte *PtExecutor) Execute(ctx context.Context, task tasks.CoreTask) executionresult.ExecutionResult {
 	logrus.Debugf("will trigger '%s' task", task.GetPath())
 	execRes := executionresult.ExecutionResult{}
 
-	pkgTask, ok := task.(*PkgTask)
+	pkgTask, ok := task.(*PTask)
 	if !ok {
-		execRes.Err = fmt.Errorf("cannot convert task '%v' to PkgTask", task)
+		execRes.Err = fmt.Errorf("cannot convert task '%v' to PTask", task)
 		return execRes
 	}
 

@@ -30,7 +30,7 @@ const (
 	DefaultConfigFilePermissions = 0644
 )
 
-func (rvste *RealVNCServerTaskExecutor) applyConfigChanges(rvst *RealVNCServerTask) (addedCount int, updatedCount int, err error) {
+func (rvste *RvstExecutor) applyConfigChanges(rvst *RvsTask) (addedCount int, updatedCount int, err error) {
 	configValues, outputBuffer, err := newConfigValuesWithOutputBuffer(rvst)
 	if err != nil {
 		return 0, 0, err
@@ -49,7 +49,7 @@ func (rvste *RealVNCServerTaskExecutor) applyConfigChanges(rvst *RealVNCServerTa
 	return addedCount, updatedCount, nil
 }
 
-func newConfigValuesWithOutputBuffer(rvst *RealVNCServerTask) (
+func newConfigValuesWithOutputBuffer(rvst *RvsTask) (
 	configValuesFile *realvnc.ConfigValues, outputBuffer *bytes.Buffer, err error) {
 	configFilename := rvst.ConfigFile
 	if configFilename == "" {
@@ -71,7 +71,7 @@ func newConfigValuesWithOutputBuffer(rvst *RealVNCServerTask) (
 	return configValuesFile, outputBuffer, nil
 }
 
-func (rvste *RealVNCServerTaskExecutor) makeChanges(rvst *RealVNCServerTask, configValues *realvnc.ConfigValues) (
+func (rvste *RvstExecutor) makeChanges(rvst *RvsTask, configValues *realvnc.ConfigValues) (
 	addedCount int, updatedCount int, err error) {
 	updatedCount, err = rvste.updateExistingValues(rvst, configValues)
 	if err != nil {
@@ -86,7 +86,7 @@ func (rvste *RealVNCServerTaskExecutor) makeChanges(rvst *RealVNCServerTask, con
 	return addedCount, updatedCount, nil
 }
 
-func (rvste *RealVNCServerTaskExecutor) updateExistingValues(rvst *RealVNCServerTask, configValues *realvnc.ConfigValues) (
+func (rvste *RvstExecutor) updateExistingValues(rvst *RvsTask, configValues *realvnc.ConfigValues) (
 	updatedCount int, err error) {
 	updatedCount = 0
 	lineNum := 0
@@ -179,7 +179,7 @@ func (rvste *RealVNCServerTaskExecutor) updateExistingValues(rvst *RealVNCServer
 	return updatedCount, nil
 }
 
-func (rvste *RealVNCServerTaskExecutor) addNewValues(rvst *RealVNCServerTask, configValues *realvnc.ConfigValues) (
+func (rvste *RvstExecutor) addNewValues(rvst *RvsTask, configValues *realvnc.ConfigValues) (
 	addedCount int, err error) {
 	addedCount = 0
 
@@ -220,7 +220,7 @@ func (rvste *RealVNCServerTaskExecutor) addNewValues(rvst *RealVNCServerTask, co
 	return addedCount, nil
 }
 
-func (t *RealVNCServerTask) getChangeValue(fieldName string) (changeValue realvnc.ConfigValue, err error) {
+func (t *RvsTask) getChangeValue(fieldName string) (changeValue realvnc.ConfigValue, err error) {
 	// get the current field value as a string
 	val, err := t.getFieldValueAsString(fieldName)
 	if err != nil {
@@ -236,7 +236,7 @@ func (t *RealVNCServerTask) getChangeValue(fieldName string) (changeValue realvn
 	return changeValue, nil
 }
 
-func commitChanges(rvst *RealVNCServerTask, outputBuffer *bytes.Buffer) (err error) {
+func commitChanges(rvst *RvsTask, outputBuffer *bytes.Buffer) (err error) {
 	configFilename := rvst.ConfigFile
 	existingConfig := true
 
@@ -287,7 +287,7 @@ func commitChanges(rvst *RealVNCServerTask, outputBuffer *bytes.Buffer) (err err
 	return nil
 }
 
-func (rvste *RealVNCServerTaskExecutor) ReloadConfig(rvst *RealVNCServerTask) (err error) {
+func (rvste *RvstExecutor) ReloadConfig(rvst *RvsTask) (err error) {
 	var cmd *exec.Cmd
 
 	execCmd, params := makeReloadCmdLine(rvst, runtime.GOOS)
@@ -310,7 +310,7 @@ func (rvste *RealVNCServerTaskExecutor) ReloadConfig(rvst *RealVNCServerTask) (e
 	return nil
 }
 
-func makeReloadCmdLine(rvst *RealVNCServerTask, goos string) (cmd string, params []string) {
+func makeReloadCmdLine(rvst *RvsTask, goos string) (cmd string, params []string) {
 	baseCmdLine := `%s/%s`
 	argumentList := []string{`-service`, `-reload`}
 	if rvst.ServerMode == UserServerMode {

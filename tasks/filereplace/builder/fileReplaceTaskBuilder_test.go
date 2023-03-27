@@ -15,7 +15,7 @@ func TestFileReplaceTaskBuilder(t *testing.T) {
 		typeName      string
 		path          string
 		values        []interface{}
-		expectedTask  *filereplace.FileReplaceTask
+		expectedTask  *filereplace.FrTask
 		expectedError string
 	}{
 		{
@@ -39,7 +39,7 @@ func TestFileReplaceTaskBuilder(t *testing.T) {
 
 				yaml.MapSlice{yaml.MapItem{Key: tasks.ShellField, Value: "someshell"}},
 			},
-			expectedTask: &filereplace.FileReplaceTask{
+			expectedTask: &filereplace.FrTask{
 				TypeName:          "fileReplaceType",
 				Path:              "fileReplacePath",
 				Name:              "/tmp/file-to-replace.txt",
@@ -78,7 +78,7 @@ func TestFileReplaceTaskBuilder(t *testing.T) {
 			}
 			require.NoError(t, err)
 
-			actualTask, ok := task.(*filereplace.FileReplaceTask)
+			actualTask, ok := task.(*filereplace.FrTask)
 			require.True(t, ok)
 
 			assertFileReplaceTaskEquals(t, tc.expectedTask, actualTask)
@@ -86,7 +86,7 @@ func TestFileReplaceTaskBuilder(t *testing.T) {
 	}
 }
 
-func assertFileReplaceTaskEquals(t *testing.T, expectedTask, actualTask *filereplace.FileReplaceTask) {
+func assertFileReplaceTaskEquals(t *testing.T, expectedTask, actualTask *filereplace.FrTask) {
 	assert.Equal(t, expectedTask.Name, actualTask.Name)
 	assert.Equal(t, expectedTask.Path, actualTask.GetPath())
 

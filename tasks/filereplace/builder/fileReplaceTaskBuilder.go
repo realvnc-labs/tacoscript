@@ -10,7 +10,7 @@ type FileReplaceTaskBuilder struct {
 }
 
 func (frtb FileReplaceTaskBuilder) Build(typeName, path string, params interface{}) (t tasks.CoreTask, err error) {
-	task := &filereplace.FileReplaceTask{
+	task := &filereplace.FrTask{
 		TypeName: typeName,
 		Path:     path,
 	}

@@ -53,7 +53,7 @@ func TestShouldUpdateSimpleConfigFileParam(t *testing.T) {
 
 	ctx := context.Background()
 
-	executor := &RealVNCServerTaskExecutor{
+	executor := &RvstExecutor{
 		FsManager: &utils.FsManager{},
 
 		Reloader: &mockConfigReloader{},
@@ -68,7 +68,7 @@ func TestShouldUpdateSimpleConfigFileParam(t *testing.T) {
 		},
 	}
 
-	task := &RealVNCServerTask{
+	task := &RvsTask{
 		Path:       "realvnc-server-1",
 		ConfigFile: "../../realvnc/test/realvncserver-config.conf",
 		Encryption: "AlwaysOn",
@@ -101,7 +101,7 @@ func TestShouldAddSimpleConfigFileParam(t *testing.T) {
 
 	ctx := context.Background()
 
-	executor := &RealVNCServerTaskExecutor{
+	executor := &RvstExecutor{
 		FsManager: &utils.FsManager{},
 
 		Reloader: &mockConfigReloader{},
@@ -116,7 +116,7 @@ func TestShouldAddSimpleConfigFileParam(t *testing.T) {
 		},
 	}
 
-	task := &RealVNCServerTask{
+	task := &RvsTask{
 		Path:        "realvnc-server-1",
 		ConfigFile:  "../../realvnc/test/realvncserver-config.conf",
 		SkipBackup:  true,
@@ -146,7 +146,7 @@ func TestShouldAddSimpleConfigFileParam(t *testing.T) {
 func TestShouldAddSimpleConfigWhenNoExistingConfigFile(t *testing.T) {
 	ctx := context.Background()
 
-	executor := &RealVNCServerTaskExecutor{
+	executor := &RvstExecutor{
 		FsManager: &utils.FsManager{},
 
 		Reloader: &mockConfigReloader{},
@@ -169,7 +169,7 @@ func TestShouldAddSimpleConfigWhenNoExistingConfigFile(t *testing.T) {
 		},
 	}
 
-	task := &RealVNCServerTask{
+	task := &RvsTask{
 		Path:        "realvnc-server-1",
 		ConfigFile:  newConfigFilename,
 		IdleTimeout: 3600,
@@ -206,7 +206,7 @@ func TestShouldRemoveSimpleConfigFileParam(t *testing.T) {
 
 	ctx := context.Background()
 
-	executor := &RealVNCServerTaskExecutor{
+	executor := &RvstExecutor{
 		FsManager: &utils.FsManager{},
 
 		Reloader: &mockConfigReloader{},
@@ -222,7 +222,7 @@ func TestShouldRemoveSimpleConfigFileParam(t *testing.T) {
 		},
 	}
 
-	task := &RealVNCServerTask{
+	task := &RvsTask{
 		Path:       "realvnc-server-1",
 		ConfigFile: "../../realvnc/test/realvncserver-config.conf",
 		Encryption: "!UNSET!",
@@ -249,14 +249,14 @@ func TestShouldRemoveSimpleConfigFileParam(t *testing.T) {
 func TestShouldMakeReloadCmdLine(t *testing.T) {
 	cases := []struct {
 		name            string
-		task            RealVNCServerTask
+		task            RvsTask
 		goos            string
 		expectedCmdLine string
 		expectedParams  []string
 	}{
 		{
 			name: "linux default",
-			task: RealVNCServerTask{
+			task: RvsTask{
 				Path:       "MyTask",
 				ServerMode: UserServerMode,
 			},
@@ -266,7 +266,7 @@ func TestShouldMakeReloadCmdLine(t *testing.T) {
 		},
 		{
 			name: "linux user server mode",
-			task: RealVNCServerTask{
+			task: RvsTask{
 				Path:       "MyTask",
 				ServerMode: UserServerMode,
 			},
@@ -276,7 +276,7 @@ func TestShouldMakeReloadCmdLine(t *testing.T) {
 		},
 		{
 			name: "linux service server mode",
-			task: RealVNCServerTask{
+			task: RvsTask{
 				Path:       "MyTask",
 				ServerMode: ServiceServerMode,
 			},
@@ -286,7 +286,7 @@ func TestShouldMakeReloadCmdLine(t *testing.T) {
 		},
 		{
 			name: "linux virtual server mode",
-			task: RealVNCServerTask{
+			task: RvsTask{
 				Path:       "MyTask",
 				ServerMode: VirtualServerMode,
 			},

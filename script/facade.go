@@ -56,33 +56,33 @@ func RunScript(scriptPath string, abortOnError bool, output io.Writer) error {
 		ManagementCmdsProviderBuildFunc: pkgmanager.BuildManagementCmdsProviders,
 	}
 
-	pkgTaskExecutor := &pkgtask.PkgTaskExecutor{
+	pkgTaskExecutor := &pkgtask.PtExecutor{
 		PackageManager: pkgTaskManager,
 		Runner:         cmdRunner,
 		FsManager:      &utils.FsManager{},
 	}
 
-	winRegTaskExecutor := &winreg.WinRegTaskExecutor{
+	winRegTaskExecutor := &winreg.WrtExecutor{
 		Runner:    cmdRunner,
 		FsManager: &utils.FsManager{},
 	}
 
 	execRouter := tasks.ExecutorRouter{
 		Executors: map[string]tasks.Executor{
-			cmdrun.TaskTypeCmdRun: &cmdrun.CmdRunTaskExecutor{
+			cmdrun.TaskTypeCmdRun: &cmdrun.CrtExecutor{
 				Runner:    cmdRunner,
 				FsManager: &utils.FsManager{},
 			},
-			filemanaged.TaskTypeFileManaged: &filemanaged.FileManagedTaskExecutor{
+			filemanaged.TaskTypeFileManaged: &filemanaged.FmtExecutor{
 				Runner:      cmdRunner,
 				FsManager:   &utils.FsManager{},
 				HashManager: &utils.HashManager{},
 			},
-			filereplace.TaskTypeFileReplace: &filereplace.FileReplaceTaskExecutor{
+			filereplace.TaskTypeFileReplace: &filereplace.FrtExecutor{
 				Runner:    cmdRunner,
 				FsManager: &utils.FsManager{},
 			},
-			realvncserver.TaskTypeRealVNCServer: &realvncserver.RealVNCServerTaskExecutor{
+			realvncserver.TaskTypeRealVNCServer: &realvncserver.RvstExecutor{
 				Runner:    cmdRunner,
 				FsManager: &utils.FsManager{},
 			},

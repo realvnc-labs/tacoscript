@@ -28,12 +28,12 @@ func (bm *BuilderMock) Build(typeName, path string, ctx interface{}) (tasks.Core
 
 func TestBuildWithRouting(t *testing.T) {
 	successBuilder := &BuilderMock{
-		TaskToReturn: &cmdrun.CmdRunTask{TypeName: "successTask", Path: "someSuccessPath"},
+		TaskToReturn: &cmdrun.CrTask{TypeName: "successTask", Path: "someSuccessPath"},
 		ErrToReturn:  nil,
 	}
 
 	failBuilder := &BuilderMock{
-		TaskToReturn: &cmdrun.CmdRunTask{TypeName: "failedTask", Path: "someFailedPath"},
+		TaskToReturn: &cmdrun.CrTask{TypeName: "failedTask", Path: "someFailedPath"},
 		ErrToReturn:  errors.New("some error"),
 	}
 

@@ -23,7 +23,7 @@ const (
 	TaskTypeCmdRun = "cmd.run"
 )
 
-type CmdRunTask struct {
+type CrTask struct {
 	TypeName string
 	Path     string
 	Named    namedtask.NamedTask
@@ -41,15 +41,15 @@ type CmdRunTask struct {
 	AbortOnError bool
 }
 
-func (crt *CmdRunTask) GetTypeName() string {
+func (crt *CrTask) GetTypeName() string {
 	return crt.TypeName
 }
 
-func (crt *CmdRunTask) GetRequirements() []string {
+func (crt *CrTask) GetRequirements() []string {
 	return crt.Require
 }
 
-func (crt *CmdRunTask) Validate(goos string) error {
+func (crt *CrTask) Validate(goos string) error {
 	errs := &utils.Errors{}
 	err1 := tasks.ValidateRequired(crt.Named.Name, crt.Path+"."+tasks.NameField)
 	err2 := tasks.ValidateRequiredMany(crt.Named.Names, crt.Path+"."+tasks.NamesField)
@@ -63,36 +63,36 @@ func (crt *CmdRunTask) Validate(goos string) error {
 	return nil
 }
 
-func (crt *CmdRunTask) GetPath() string {
+func (crt *CrTask) GetPath() string {
 	return crt.Path
 }
 
-func (crt *CmdRunTask) String() string {
+func (crt *CrTask) String() string {
 	return conv.ConvertSourceToJSONStrIfPossible(crt)
 }
 
-func (crt *CmdRunTask) GetOnlyIfCmds() []string {
+func (crt *CrTask) GetOnlyIfCmds() []string {
 	return crt.OnlyIf
 }
 
-func (crt *CmdRunTask) GetUnlessCmds() []string {
+func (crt *CrTask) GetUnlessCmds() []string {
 	return crt.Unless
 }
 
-func (crt *CmdRunTask) GetCreatesFilesList() []string {
+func (crt *CrTask) GetCreatesFilesList() []string {
 	return crt.Creates
 }
 
-type CmdRunTaskExecutor struct {
+type CrtExecutor struct {
 	Runner    tacoexec.Runner
 	FsManager tasks.FsManager
 }
 
-func (crte *CmdRunTaskExecutor) Execute(ctx context.Context, task tasks.CoreTask) executionresult.ExecutionResult {
+func (crte *CrtExecutor) Execute(ctx context.Context, task tasks.CoreTask) executionresult.ExecutionResult {
 	execRes := executionresult.ExecutionResult{}
-	cmdRunTask, ok := task.(*CmdRunTask)
+	cmdRunTask, ok := task.(*CrTask)
 	if !ok {
-		execRes.Err = fmt.Errorf("cannot convert task '%v' to CmdRunTask", task)
+		execRes.Err = fmt.Errorf("cannot convert task '%v' to CrTask", task)
 		return execRes
 	}
 	execRes.Name = strings.Join(cmdRunTask.Named.GetNames(), "; ")

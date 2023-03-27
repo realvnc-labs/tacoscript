@@ -10,7 +10,7 @@ type WinRegTaskBuilder struct {
 }
 
 func (wrtb WinRegTaskBuilder) Build(typeName, path string, params interface{}) (tasks.CoreTask, error) {
-	task := &winreg.WinRegTask{
+	task := &winreg.WrTask{
 		TypeName: typeName,
 		Path:     path,
 	}

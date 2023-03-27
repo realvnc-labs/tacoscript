@@ -28,7 +28,7 @@ var (
 	RvstNoChangeFields = []string{"ConfigFile", "ServerMode", "ExecPath", "ExecCmd", "SkipReload"}
 )
 
-type RealVNCServerTask struct {
+type RvsTask struct {
 	TypeName string // TaskType
 	Path     string // TaskName
 
@@ -75,18 +75,18 @@ var (
 	ErrFieldTypeNotSupported = errors.New("task field type not supported")
 
 	// make sure we support the field tracker interface
-	_ tasks.TaskWithFieldTracker = new(RealVNCServerTask)
+	_ tasks.TaskWithFieldTracker = new(RvsTask)
 )
 
-func (t *RealVNCServerTask) SetMapper(mapper tasks.FieldNameMapper) {
+func (t *RvsTask) SetMapper(mapper tasks.FieldNameMapper) {
 	t.Mapper = mapper
 }
 
-func (t *RealVNCServerTask) SetTracker(tracker tasks.FieldStatusTracker) {
+func (t *RvsTask) SetTracker(tracker tasks.FieldStatusTracker) {
 	t.Tracker = tracker
 }
 
-func (t *RealVNCServerTask) IsChangeField(fieldName string) (excluded bool) {
+func (t *RvsTask) IsChangeField(fieldName string) (excluded bool) {
 	for _, noChangeField := range RvstNoChangeFields {
 		if fieldName == noChangeField {
 			return false
@@ -95,35 +95,35 @@ func (t *RealVNCServerTask) IsChangeField(fieldName string) (excluded bool) {
 	return true
 }
 
-func (t *RealVNCServerTask) GetTypeName() string {
+func (t *RvsTask) GetTypeName() string {
 	return t.TypeName
 }
 
-func (t *RealVNCServerTask) GetRequirements() []string {
+func (t *RvsTask) GetRequirements() []string {
 	return t.Require
 }
 
-func (t *RealVNCServerTask) GetPath() string {
+func (t *RvsTask) GetPath() string {
 	return t.Path
 }
 
-func (t *RealVNCServerTask) String() string {
+func (t *RvsTask) String() string {
 	return fmt.Sprintf("task '%s' at path '%s'", t.TypeName, t.GetPath())
 }
 
-func (t *RealVNCServerTask) GetOnlyIfCmds() []string {
+func (t *RvsTask) GetOnlyIfCmds() []string {
 	return t.OnlyIf
 }
 
-func (t *RealVNCServerTask) GetUnlessCmds() []string {
+func (t *RvsTask) GetUnlessCmds() []string {
 	return t.Unless
 }
 
-func (t *RealVNCServerTask) GetCreatesFilesList() []string {
+func (t *RvsTask) GetCreatesFilesList() []string {
 	return t.Creates
 }
 
-func (t *RealVNCServerTask) getFieldValueAsString(fieldName string) (val string, err error) {
+func (t *RvsTask) getFieldValueAsString(fieldName string) (val string, err error) {
 	rTaskValue := reflect.ValueOf(*t)
 
 	// get field from the task
@@ -153,20 +153,18 @@ func (t *RealVNCServerTask) getFieldValueAsString(fieldName string) (val string,
 	return valStr, nil
 }
 
-type RealVNCServerConfigReloadFn func(rvst *RealVNCServerTask) (err error)
-
-type ConfigReloader interface {
-	Reload(rvst *RealVNCServerTask) (err error)
+type RvsConfigReloader interface {
+	Reload(rvst *RvsTask) (err error)
 }
 
-type RealVNCServerTaskExecutor struct {
+type RvstExecutor struct {
 	FsManager tasks.FsManager
 	Runner    tacoexec.Runner
 
-	Reloader ConfigReloader
+	Reloader RvsConfigReloader
 }
 
-func (rvste *RealVNCServerTaskExecutor) Execute(ctx context.Context, task tasks.CoreTask) executionresult.ExecutionResult {
+func (rvste *RvstExecutor) Execute(ctx context.Context, task tasks.CoreTask) executionresult.ExecutionResult {
 	start := time.Now()
 
 	logrus.Debugf("will trigger '%s' task", task.GetPath())
@@ -174,9 +172,9 @@ func (rvste *RealVNCServerTaskExecutor) Execute(ctx context.Context, task tasks.
 		Changes: make(map[string]string),
 	}
 
-	rvst, ok := task.(*RealVNCServerTask)
+	rvst, ok := task.(*RvsTask)
 	if !ok {
-		execRes.Err = fmt.Errorf("cannot convert task '%v' to RealVNCServerTask", task)
+		execRes.Err = fmt.Errorf("cannot convert task '%v' to RvsTask", task)
 		return execRes
 	}
 
