@@ -41,7 +41,7 @@ func TestShouldPerformSimpleConfigParamUpdate(t *testing.T) {
 	task := &RealVNCServerTask{
 		Path:       "realvnc-server-1",
 		Encryption: "AlwaysOn",
-		ServerMode: "User",
+		ServerMode: "Service",
 		mapper:     tracker,
 		tracker:    tracker,
 	}

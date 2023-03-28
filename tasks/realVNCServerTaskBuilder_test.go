@@ -37,8 +37,7 @@ func TestRealVNCServerTaskBuilder(t *testing.T) {
 				yaml.MapSlice{yaml.MapItem{Key: ConfigFileField, Value: "/tmp/config_file.conf"}},
 				yaml.MapSlice{yaml.MapItem{Key: ServerModeField, Value: "service"}},
 
-				yaml.MapSlice{yaml.MapItem{Key: ExecPathField, Value: "test/path"}},
-				yaml.MapSlice{yaml.MapItem{Key: ExecCmdField, Value: "test_cmd"}},
+				yaml.MapSlice{yaml.MapItem{Key: ReloadExecPathField, Value: "test/path/exe_cmd"}},
 				yaml.MapSlice{yaml.MapItem{Key: SkipReloadField, Value: true}},
 
 				yaml.MapSlice{yaml.MapItem{Key: BackupExtensionField, Value: "orig"}},
@@ -82,11 +81,10 @@ func TestRealVNCServerTaskBuilder(t *testing.T) {
 				},
 				Require: []string{"/tmp/required-file.txt"},
 
-				Backup:     "orig",
-				ExecPath:   "test/path",
-				ExecCmd:    "test_cmd",
-				SkipReload: true,
-				SkipBackup: true,
+				Backup:         "orig",
+				ReloadExecPath: "test/path/exe_cmd",
+				SkipReload:     true,
+				SkipBackup:     true,
 
 				Shell: "someshell",
 			},

@@ -2,30 +2,26 @@ Run:
   add-config-param:
     realvnc_server.config_update:
       - blank_screen: true
-      - server_mode: User 
       - skip_reload: true
   update-config-params-due-to-onlyif:
     realvnc_server.config_update:
-      - encryption: AlwaysOn
+      - encryption: AlwaysOff
       - onlyif:
-          - if (-not (Test-Path HKCU:\Software\RealVNC)) { throw "missing"}
-      - server_mode: User
+          - if (-not (Test-Path "HKLM:\Software\RealVNC")) { throw "missing"}
       - shell: powershell.exe
       - skip_reload: true
   do-not-update-config-params-due-to-onlyif:
     realvnc_server.config_update:
       - encryption: PreferOn
       - onlyif:
-          - if (-not (Test-Path HKCU:\Software\RealVNC_Missing)) { throw 'missing' }
-      - server_mode: User 
+          - if (-not (Test-Path "HKLM:\Software\RealVNC_Missing")) { throw 'missing' }
       - shell: powershell.exe
       - skip_reload: true
   update-config-params-due-to-missing-reg-key:
     realvnc_server.config_update:
       - encryption: PreferOn
       - unless:
-          - if (-not ((Test-Path HKCU:\Software\RealVNC_Missing)) { throw 'not found' }
-      - server_mode: User 
+          - if (-not ((Test-Path "HKLM:\Software\RealVNC_Missing")) { throw 'not found' }
       - shell: powershell.exe
       - skip_reload: true
 
@@ -34,8 +30,7 @@ On:
 
 Expect:
   PreExec: |
-    if (Test-Path HKCU:\Software\RealVNC) { throw 'existing reg key' }
-    # Remove-Item -Path HKCU:\Software\RealVNC -Recurse
+    if (-not (Test-Path "HKLM:\Software\RealVNC\vncserver.bak")) { Copy-Item -Path "HKLM:\Software\RealVNC\vncserver" -Destination "HKLM:\Software\RealVNC\vncserver.bak" }
   Summary:
     Succeeded: 4
     Changes: 3
@@ -66,10 +61,10 @@ Expect:
 
   PostExec: |
     $ErrorActionPreference = "Stop"
-    if (-not (Test-Path HKCU:\Software\RealVNC\vncserver)) {
-      Write-Error "base reg key not set"
+    if ((Get-Item -Path "HKLM:\Software\RealVNC\vncserver").GetValue('Encryption') -ne "PreferOn") {
+      Write-Error "unexpected Encryption reg value"
     }
-    if ((Get-Item -Path HKCU:\Software\RealVNC\vncserver).GetValue('Encryption') -eq $null) {
-      Write-Error "reg value not set"
+    if ((Get-Item -Path "HKLM:\Software\RealVNC\vncserver").GetValue('BlankScreen') -ne "true") {
+      Write-Error "unexpected BlankScreen reg value"
     }
-    Remove-Item -Path HKCU:\Software\RealVNC -Recurse
+    Remove-Item -Path "HKLM:\Software\RealVNC\vncserver"

@@ -21,7 +21,7 @@ const (
 
 var (
 	// these fields don't change the realvnc server config. they are only used by the task.
-	RvstNoChangeFields = []string{"ConfigFile", "ServerMode", "ExecPath", "ExecCmd", "SkipReload"}
+	RvstNoChangeFields = []string{"ConfigFile", "ServerMode", "ReloadExecPath", "ExecCmd", "SkipReload"}
 )
 
 type RealVNCServerTask struct {
@@ -43,8 +43,7 @@ type RealVNCServerTask struct {
 
 	ConfigFile          string `taco:"config_file"` // config file path for non-windows
 	ServerMode          string `taco:"server_mode"` // server mode for windows (registry keys)
-	ExecPath            string `taco:"exec_path"`
-	ExecCmd             string `taco:"exec_cmd"`
+	ReloadExecPath      string `taco:"reload_exec_path"`
 	SkipReload          bool   `taco:"skip_reload"`
 	UseVNCLicenseReload bool   `taco:"use_vnclicense_reload"`
 

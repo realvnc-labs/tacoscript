@@ -67,8 +67,7 @@ const (
 
 	ConfigFileField     = "config_file"
 	ServerModeField     = "server_mode"
-	ExecPathField       = "exec_path"
-	ExecCmdField        = "exec_cmd"
+	ReloadExecPathField = "reload_exec_path"
 	SkipReloadField     = "skip_reload"
 	UseVNCLicenseReload = "use_vnclicense_reload"
 

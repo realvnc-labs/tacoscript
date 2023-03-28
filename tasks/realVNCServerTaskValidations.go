@@ -148,25 +148,29 @@ func (t *RealVNCServerTask) ValidateServerModeField(goos string) error {
 		return nil
 	}
 
-	if goos != "linux" && t.ServerMode == VirtualServerMode {
-		return errors.New(ErrServerModeCannotBeVirtualWhenNotLinuxMsg)
-	}
-
 	caser := cases.Title(language.AmericanEnglish)
 	serverMode := caser.String(t.ServerMode)
+
+	// TODO: (rs): Remove this check when user and virtual server modes reintroduced
+	if serverMode != ServiceServerMode {
+		return errors.New("user and virtual server modes will be supported in a future release")
+	}
+
 	err := validation.Validate(serverMode,
 		validation.In(AllowableServerModes...).Error(ErrUnknownServerModeMsg),
 	)
-
-	if serverMode == VirtualServerMode {
-		t.UseVNCLicenseReload = true
-	}
-
-	t.ServerMode = serverMode
 	if err != nil {
 		return err
 	}
 
+	if serverMode == VirtualServerMode {
+		if goos != "linux" {
+			return errors.New(ErrServerModeCannotBeVirtualWhenNotLinuxMsg)
+		}
+		t.UseVNCLicenseReload = true
+	}
+
+	t.ServerMode = serverMode
 	return nil
 }
 

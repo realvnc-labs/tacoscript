@@ -72,7 +72,7 @@ func TestRealVNCNameFieldValidations(t *testing.T) {
 	}
 }
 
-func TestRealVNCConfigFileFieldValidations(t *testing.T) {
+func TestRealVNCConfigFileBaseFieldValidations(t *testing.T) {
 	if runtime.GOOS == "windows" {
 		t.Skip()
 	}
@@ -101,15 +101,6 @@ func TestRealVNCConfigFileFieldValidations(t *testing.T) {
 			expectedConfigFile: DefaultServiceServerModeConfigFile,
 		},
 		{
-			name: "default path when user server mode",
-			task: RealVNCServerTask{
-				Path:       "MyTask",
-				ServerMode: UserServerMode,
-			},
-			goos:               "any",
-			expectedConfigFile: DefaultUserServerModeConfigFile,
-		},
-		{
 			name: "default path when service server mode",
 			task: RealVNCServerTask{
 				Path:       "MyTask",
@@ -117,6 +108,56 @@ func TestRealVNCConfigFileFieldValidations(t *testing.T) {
 			},
 			goos:               "any",
 			expectedConfigFile: DefaultServiceServerModeConfigFile,
+		},
+	}
+
+	for _, testCase := range testCases {
+		tc := testCase
+		t.Run(tc.name, func(t *testing.T) {
+			task := tc.task
+
+			initMapperTracker(&task)
+
+			goos := runtime.GOOS
+			if tc.goos != "any" {
+				goos = tc.goos
+			}
+
+			err := task.Validate(goos)
+
+			if tc.expectedErrorMsg != "" {
+				assert.EqualError(t, err, tc.expectedErrorMsg)
+				return
+			}
+
+			assert.Contains(t, task.ConfigFile, tc.expectedConfigFile)
+			require.NoError(t, err)
+		})
+	}
+}
+
+func TestRealVNCConfigFileExtendedFieldValidations(t *testing.T) {
+	// TODO: (rs): remove this Skip when support for user and virtual server modes is reintroduced.
+	t.Skip()
+
+	if runtime.GOOS == "windows" {
+		t.Skip()
+	}
+	testCases := []struct {
+		name               string
+		task               RealVNCServerTask
+		goos               string
+		expectedErrorMsg   string
+		expectedConfigFile string
+	}{
+		{
+			name: "default path when user server mode",
+			task: RealVNCServerTask{
+				Path:       "MyTask",
+				ServerMode: UserServerMode,
+			},
+			goos:               "any",
+			expectedConfigFile: DefaultUserServerModeConfigFile,
 		},
 		{
 			name: "default path when virtual server mode",
@@ -174,6 +215,9 @@ func TestRealVNCConfigFileFieldValidations(t *testing.T) {
 }
 
 func TestShouldSetUseVNCLicenseReloadWhenVirtualServiceMode(t *testing.T) {
+	// TODO: (rs): remove this Skip when support for user and virtual server modes is reintroduced.
+	t.Skip()
+
 	cases := []struct {
 		name                  string
 		task                  RealVNCServerTask
@@ -220,6 +264,9 @@ func TestShouldSetUseVNCLicenseReloadWhenVirtualServiceMode(t *testing.T) {
 }
 
 func TestShouldNotSetUseVNCLicenseReloadWhenNotVirtualServiceMode(t *testing.T) {
+	// TODO: (rs): remove this Skip when support for user and virtual server modes is reintroduced.
+	t.Skip()
+
 	task := RealVNCServerTask{
 		Path: "MyTask",
 	}
@@ -233,6 +280,9 @@ func TestShouldNotSetUseVNCLicenseReloadWhenNotVirtualServiceMode(t *testing.T) 
 }
 
 func TestShouldErrorWhenVirtualServerModeAndNotLinux(t *testing.T) {
+	// TODO: (rs): remove this Skip when support for user and virtual server modes is reintroduced.
+	t.Skip()
+
 	task := &RealVNCServerTask{
 		Path:       "MyTask",
 		ServerMode: VirtualServerMode,
@@ -245,6 +295,9 @@ func TestShouldErrorWhenVirtualServerModeAndNotLinux(t *testing.T) {
 }
 
 func TestShouldNotErrorWhenVirtualServerModeAndLinux(t *testing.T) {
+	// TODO: (rs): remove this Skip when support for user and virtual server modes is reintroduced.
+	t.Skip()
+
 	task := &RealVNCServerTask{
 		Path:       "MyTask",
 		ServerMode: VirtualServerMode,

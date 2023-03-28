@@ -248,14 +248,14 @@ func TestShouldMakeReloadCmdLine(t *testing.T) {
 		expectedParams  []string
 	}{
 		{
-			name: "linux default",
+			name: "linux service server mode",
 			task: RealVNCServerTask{
 				Path:       "MyTask",
-				ServerMode: UserServerMode,
+				ServerMode: ServiceServerMode,
 			},
 			goos:            "linux",
 			expectedCmdLine: "/usr/bin/vncserver-x11",
-			expectedParams:  []string{"-reload"},
+			expectedParams:  []string{"-service", "-reload"},
 		},
 		{
 			name: "linux user server mode",
@@ -268,16 +268,6 @@ func TestShouldMakeReloadCmdLine(t *testing.T) {
 			expectedParams:  []string{"-reload"},
 		},
 		{
-			name: "linux service server mode",
-			task: RealVNCServerTask{
-				Path:       "MyTask",
-				ServerMode: ServiceServerMode,
-			},
-			goos:            "linux",
-			expectedCmdLine: "/usr/bin/vncserver-x11",
-			expectedParams:  []string{"-service", "-reload"},
-		},
-		{
 			name: "linux virtual server mode",
 			task: RealVNCServerTask{
 				Path:       "MyTask",
@@ -287,6 +277,17 @@ func TestShouldMakeReloadCmdLine(t *testing.T) {
 			expectedCmdLine: "/usr/bin/vnclicense",
 			expectedParams:  []string{"-reload"},
 		},
+		{
+			name: "user specified",
+			task: RealVNCServerTask{
+				Path:           "MyTask",
+				ServerMode:     ServiceServerMode,
+				ReloadExecPath: "/my/path/vncserver-x11",
+			},
+			goos:            "linux",
+			expectedCmdLine: "/my/path/vncserver-x11",
+			expectedParams:  []string{"-service", "-reload"},
+		},
 	}
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
@@ -294,8 +295,16 @@ func TestShouldMakeReloadCmdLine(t *testing.T) {
 
 			initMapperTracker(&task)
 
-			err := task.Validate(tc.goos)
-			require.NoError(t, err)
+			//nolint: gocritic // code will be re-enabed in the future. see comment below.
+			// err := task.Validate(tc.goos)
+			// require.NoError(t, err)
+
+			// TODO: (rs): no need to set the flag once validations are re-introduced with the additional
+			// server modes.
+
+			if task.ServerMode == VirtualServerMode {
+				task.UseVNCLicenseReload = true
+			}
 
 			cmdLine, params := makeReloadCmdLine(&task, tc.goos)
 			assert.Equal(t, tc.expectedCmdLine, cmdLine)

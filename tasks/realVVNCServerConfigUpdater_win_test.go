@@ -15,15 +15,15 @@ import (
 	"github.com/realvnc-labs/tacoscript/winreg"
 )
 
-var origHKCUBaseKey string
+var origHKLMBaseKey string
 var testRealVNCBaseKey string
 
 func testSetup(t *testing.T) {
 	t.Helper()
-	// setup test registry key. assumes User server mode.
-	origHKCUBaseKey = HKCUBaseKey
-	testRealVNCBaseKey = `HKCU:\Software\RealVNCTest`
-	HKCUBaseKey = testRealVNCBaseKey + `\vncserver`
+	// setup test registry key. assumes Service server mode.
+	origHKLMBaseKey = HKLMBaseKey
+	testRealVNCBaseKey = `HKLM:\Software\RealVNCTest`
+	HKLMBaseKey = testRealVNCBaseKey + `\vncserver`
 }
 
 func testTeardown(t *testing.T) {
@@ -31,7 +31,7 @@ func testTeardown(t *testing.T) {
 	// remove test key and restore base key
 	defer func() {
 		_ = winreg.DeleteKeyRecursive(testRealVNCBaseKey)
-		HKCUBaseKey = origHKCUBaseKey
+		HKCUBaseKey = origHKLMBaseKey
 	}()
 }
 
@@ -51,8 +51,8 @@ func TestShouldSetSimpleConfigRegistryParam(t *testing.T) {
 
 	task := &RealVNCServerTask{
 		Path:       "realvnc-server-1",
-		ServerMode: "User",
-		Encryption: "AlwaysOn",
+		ServerMode: "Service",
+		Encryption: "AlwaysOff",
 
 		mapper:  tracker,
 		tracker: tracker,
@@ -67,10 +67,10 @@ func TestShouldSetSimpleConfigRegistryParam(t *testing.T) {
 
 	assert.Equal(t, "1 config value change(s) applied", res.Changes["count"])
 
-	found, regVal, err := winreg.GetValue(HKCUBaseKey, "Encryption", winreg.REG_SZ)
+	found, regVal, err := winreg.GetValue(HKLMBaseKey, "Encryption", winreg.REG_SZ)
 	require.NoError(t, err)
 	assert.True(t, found)
-	assert.Equal(t, "AlwaysOn", regVal)
+	assert.Equal(t, "AlwaysOff", regVal)
 }
 
 func TestShouldUpdateSimpleConfigRegistryParam(t *testing.T) {
@@ -89,8 +89,8 @@ func TestShouldUpdateSimpleConfigRegistryParam(t *testing.T) {
 
 	setupTask := &RealVNCServerTask{
 		Path:       "realvnc-server-1",
-		ServerMode: "User",
-		Encryption: "AlwaysOn",
+		ServerMode: "Service",
+		Encryption: "AlwaysOff",
 
 		mapper:  tracker,
 		tracker: tracker,
@@ -105,7 +105,7 @@ func TestShouldUpdateSimpleConfigRegistryParam(t *testing.T) {
 
 	task := &RealVNCServerTask{
 		Path:       "realvnc-server-2",
-		ServerMode: "User",
+		ServerMode: "Service",
 		Encryption: "PreferOn",
 
 		mapper:  tracker,
@@ -121,7 +121,7 @@ func TestShouldUpdateSimpleConfigRegistryParam(t *testing.T) {
 
 	assert.Equal(t, "1 config value change(s) applied", res.Changes["count"])
 
-	found, regVal, err := winreg.GetValue(HKCUBaseKey, "Encryption", winreg.REG_SZ)
+	found, regVal, err := winreg.GetValue(HKLMBaseKey, "Encryption", winreg.REG_SZ)
 	require.NoError(t, err)
 	assert.True(t, found)
 	assert.Equal(t, "PreferOn", regVal)
@@ -153,7 +153,7 @@ func TestShouldClearSimpleConfigRegistryParam(t *testing.T) {
 
 	setupTask := &RealVNCServerTask{
 		Path:        "realvnc-server-1",
-		ServerMode:  "User",
+		ServerMode:  "Service",
 		BlankScreen: true,
 
 		mapper:  tracker,
@@ -181,7 +181,7 @@ func TestShouldClearSimpleConfigRegistryParam(t *testing.T) {
 
 	clearTask := &RealVNCServerTask{
 		Path:        "realvnc-server-1",
-		ServerMode:  "User",
+		ServerMode:  "Service",
 		BlankScreen: false,
 
 		mapper:  tracker,
@@ -197,7 +197,7 @@ func TestShouldClearSimpleConfigRegistryParam(t *testing.T) {
 
 	assert.Equal(t, "1 config value change(s) applied", res.Changes["count"])
 
-	found, _, err := winreg.GetValue(HKCUBaseKey, "BlankScreen", winreg.REG_SZ)
+	found, _, err := winreg.GetValue(HKLMBaseKey, "BlankScreen", winreg.REG_SZ)
 	require.NoError(t, err)
 	assert.False(t, found)
 }
