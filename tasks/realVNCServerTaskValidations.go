@@ -25,7 +25,7 @@ var (
 	AllowableAuthenticationValues    = []any{"VncAuth", "SystemAuth", "InteractiveSystemAuth", "SingleSignOn", "Certificate", "Radius", "None"}
 	AllowableFeaturePermissionsChars = "!-svkpctrhwdqf"
 	AllowableLogTargets              = []any{"stderr", "file", "EventLog", "syslog"}
-	AllowableServerModes             = []any{ServiceServerMode, UserServerMode, VirtualServerMode}
+	AllowableServerModes             = []any{ServiceServerMode, UserServerMode, VirtualServerMode, TestServerMode}
 	AllowableLogLevels               = []any{0, 10, 30, 100}
 
 	ErrInvalidNameFieldMsg          = "invalid task name"
@@ -152,7 +152,7 @@ func (t *RealVNCServerTask) ValidateServerModeField(goos string) error {
 	serverMode := caser.String(t.ServerMode)
 
 	// TODO: (rs): Remove this check when user and virtual server modes reintroduced
-	if serverMode != ServiceServerMode {
+	if serverMode != ServiceServerMode && serverMode != TestServerMode {
 		return errors.New("user and virtual server modes will be supported in a future release")
 	}
 

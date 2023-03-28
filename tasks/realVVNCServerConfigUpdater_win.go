@@ -22,6 +22,8 @@ const (
 var (
 	HKLMBaseKey = `HKLM:\SOFTWARE\RealVNC\vncserver`
 	HKCUBaseKey = `HKCU:\Software\RealVNC\vncserver`
+	// TODO: (rs): Remove this when we re-introduce User and Virtual server modes.
+	TestBaseKey = `HKCU:\Software\RealVNCTest\vncserver`
 )
 
 func (rvste *RealVNCServerTaskExecutor) applyConfigChanges(rvst *RealVNCServerTask) (addedCount int, updatedCount int, err error) {
@@ -103,6 +105,9 @@ func getBaseKeyForServerMode(serverMode string) (baseKey string) {
 	baseKey = HKLMBaseKey
 	if serverMode == UserServerMode {
 		baseKey = HKCUBaseKey
+	}
+	if serverMode == TestServerMode {
+		baseKey = TestBaseKey
 	}
 	return baseKey
 }

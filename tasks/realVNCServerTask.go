@@ -17,6 +17,10 @@ const (
 	ServiceServerMode = "Service"
 	UserServerMode    = "User"
 	VirtualServerMode = "Virtual"
+	// TODO: (rs): this is hack to get around no admin user when running github actions on windows.
+	// it can be removed when we re-introduce User server mode as the e2e tests can use that instead
+	// of Service server mode. will only work with windows.
+	TestServerMode = "Test"
 )
 
 var (

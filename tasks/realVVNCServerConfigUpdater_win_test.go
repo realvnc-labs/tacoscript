@@ -22,7 +22,7 @@ func testSetup(t *testing.T) {
 	t.Helper()
 	// setup test registry key. assumes Service server mode.
 	origHKLMBaseKey = HKLMBaseKey
-	testRealVNCBaseKey = `HKLM:\Software\RealVNCTest`
+	testRealVNCBaseKey = `HKCU:\Software\RealVNCTest`
 	HKLMBaseKey = testRealVNCBaseKey + `\vncserver`
 }
 
@@ -31,7 +31,7 @@ func testTeardown(t *testing.T) {
 	// remove test key and restore base key
 	defer func() {
 		_ = winreg.DeleteKeyRecursive(testRealVNCBaseKey)
-		HKCUBaseKey = origHKLMBaseKey
+		HKLMBaseKey = origHKLMBaseKey
 	}()
 }
 
