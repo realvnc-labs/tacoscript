@@ -27,58 +27,25 @@ const (
 type PkgTaskBuilder struct {
 }
 
-var pkgTaskParamsFnMap = taskParamsFnMap{
-	NameField: func(task Task, path string, val interface{}) error {
-		t := task.(*PkgTask)
-		t.Name = fmt.Sprint(val)
-		return nil
+var pkgTaskParamsFnMap = taskFieldsParserConfig{
+	NameField: {
+		parseFn: func(task Task, path string, val interface{}) error {
+			t := task.(*PkgTask)
+			t.Named.Name = fmt.Sprint(val)
+			return nil
+		},
+		fieldName: "Name",
 	},
-	ShellField: func(task Task, path string, val interface{}) error {
-		t := task.(*PkgTask)
-		t.Shell = fmt.Sprint(val)
-		return nil
-	},
-	RequireField: func(task Task, path string, val interface{}) error {
-		var err error
-		t := task.(*PkgTask)
-		t.Require, err = parseRequireField(val, path)
-		return err
-	},
-	CreatesField: func(task Task, path string, val interface{}) error {
-		var err error
-		t := task.(*PkgTask)
-		t.Creates, err = parseCreatesField(val, path)
-		return err
-	},
-	OnlyIfField: func(task Task, path string, val interface{}) error {
-		var err error
-		t := task.(*PkgTask)
-		t.OnlyIf, err = parseOnlyIfField(val, path)
-		return err
-	},
-	UnlessField: func(task Task, path string, val interface{}) error {
-		var err error
-		t := task.(*PkgTask)
-		t.Unless, err = parseUnlessField(val, path)
-		return err
-	},
-	Version: func(task Task, path string, val interface{}) error {
-		t := task.(*PkgTask)
-		t.Version = fmt.Sprint(val)
-		return nil
-	},
-	Refresh: func(task Task, path string, val interface{}) error {
-		t := task.(*PkgTask)
-		t.ShouldRefresh = parseBoolField(val)
-		return nil
-	},
-	NamesField: func(task Task, path string, val interface{}) error {
-		var names []string
-		var err error
-		t := task.(*PkgTask)
-		names, err = conv.ConvertToValues(val, path)
-		t.Names = names
-		return err
+	NamesField: {
+		parseFn: func(task Task, path string, val interface{}) error {
+			var names []string
+			var err error
+			t := task.(*PkgTask)
+			names, err = conv.ConvertToValues(val)
+			t.Named.Names = names
+			return err
+		},
+		fieldName: "Names",
 	},
 }
 
@@ -106,14 +73,15 @@ type PkgTask struct {
 	ActionType PkgActionType
 	TypeName   string
 	Path       string
-	NamedTask
-	Shell         string
-	Version       string
-	ShouldRefresh bool
-	Require       []string
-	Creates       []string
-	OnlyIf        []string
-	Unless        []string
+	Named      NamedTask
+
+	Shell         string   `taco:"shell"`
+	Version       string   `taco:"version"`
+	ShouldRefresh bool     `taco:"refresh"`
+	Require       []string `taco:"require"`
+	Creates       []string `taco:"creates"`
+	OnlyIf        []string `taco:"onlyif"`
+	Unless        []string `taco:"unless"`
 
 	Updated bool
 }
@@ -126,11 +94,11 @@ func (pt *PkgTask) GetRequirements() []string {
 	return pt.Require
 }
 
-func (pt *PkgTask) Validate() error {
+func (pt *PkgTask) Validate(goos string) error {
 	errs := &utils.Errors{}
 
-	err1 := ValidateRequired(pt.Name, pt.Path+"."+NameField)
-	err2 := ValidateRequiredMany(pt.Names, pt.Path+"."+NamesField)
+	err1 := ValidateRequired(pt.Named.Name, pt.Path+"."+NameField)
+	err2 := ValidateRequiredMany(pt.Named.Names, pt.Path+"."+NamesField)
 
 	if err1 != nil && err2 != nil {
 		errs.Add(err1)
@@ -191,7 +159,7 @@ func (pte *PkgTaskExecutor) Execute(ctx context.Context, task Task) ExecutionRes
 		return execRes
 	}
 
-	execRes.Name = strings.Join(pkgTask.GetNames(), "; ")
+	execRes.Name = strings.Join(pkgTask.Named.GetNames(), "; ")
 
 	var stdoutBuf, stderrBuf bytes.Buffer
 	execCtx := &tacoexec.Context{

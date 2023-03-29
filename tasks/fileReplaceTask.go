@@ -6,7 +6,6 @@ import (
 	"errors"
 	"fmt"
 	"regexp"
-	"strconv"
 	"time"
 
 	"github.com/realvnc-labs/tacoscript/conv"
@@ -28,23 +27,20 @@ type FileReplaceTask struct {
 	TypeName string // TaskType
 	Path     string // TaskName
 
-	Name              string // Target
-	Pattern           string
-	Repl              string
-	Count             int
-	AppendIfNotFound  bool
-	PrependIfNotFound bool
-	NotFoundContent   string
-	BackupExtension   string
-	MaxFileSize       string
-
-	Require []string
-
-	Creates []string
-	OnlyIf  []string
-	Unless  []string
-
-	Shell string
+	Name              string   `taco:"name"` // Target
+	Pattern           string   `taco:"pattern"`
+	Repl              string   `taco:"repl"`
+	Count             int      `taco:"count"`
+	AppendIfNotFound  bool     `taco:"append_if_not_found"`
+	PrependIfNotFound bool     `taco:"prepend_if_not_found"`
+	NotFoundContent   string   `taco:"not_found_content"`
+	BackupExtension   string   `taco:"backup"`
+	MaxFileSize       string   `taco:"max_file_size"`
+	Require           []string `taco:"require"`
+	Creates           []string `taco:"creates"`
+	OnlyIf            []string `taco:"onlyif"`
+	Unless            []string `taco:"unless"`
+	Shell             string   `taco:"shell"`
 
 	// values created during task build
 	maxFileSizeCalculated uint64
@@ -57,102 +53,13 @@ type FileReplaceTask struct {
 type FileReplaceTaskBuilder struct {
 }
 
-var fileReplaceTaskParamsFnMap = taskParamsFnMap{
-	NameField: func(task Task, path string, val interface{}) error {
-		t := task.(*FileReplaceTask)
-		t.Name = fmt.Sprint(val)
-		return nil
-	},
-
-	PatternField: func(task Task, path string, val interface{}) error {
-		t := task.(*FileReplaceTask)
-		valStr := fmt.Sprint(val)
-		t.Pattern = valStr
-		return nil
-	},
-	ReplField: func(task Task, path string, val interface{}) error {
-		t := task.(*FileReplaceTask)
-		t.Repl = fmt.Sprint(val)
-		return nil
-	},
-	CountField: func(task Task, path string, val interface{}) error {
-		t := task.(*FileReplaceTask)
-		valStr := fmt.Sprint(val)
-		count, err := strconv.Atoi(valStr)
-		if err != nil {
-			return nil
-		}
-		t.Count = count
-		return nil
-	},
-	AppendIfNotFoundField: func(task Task, path string, val interface{}) error {
-		t := task.(*FileReplaceTask)
-		t.AppendIfNotFound = conv.ConvertToBool(val)
-		return nil
-	},
-	PrependIfNotFoundField: func(task Task, path string, val interface{}) error {
-		t := task.(*FileReplaceTask)
-		t.PrependIfNotFound = conv.ConvertToBool(val)
-		return nil
-	},
-	NotFoundContentField: func(task Task, path string, val interface{}) error {
-		t := task.(*FileReplaceTask)
-		t.NotFoundContent = fmt.Sprint(val)
-		return nil
-	},
-	BackupExtensionField: func(task Task, path string, val interface{}) error {
-		t := task.(*FileReplaceTask)
-		t.BackupExtension = fmt.Sprint(val)
-		return nil
-	},
-	MaxFileSizeField: func(task Task, path string, val interface{}) error {
-		t := task.(*FileReplaceTask)
-		valStr := fmt.Sprint(val)
-		t.MaxFileSize = valStr
-		return nil
-	},
-
-	CreatesField: func(task Task, path string, val interface{}) error {
-		var err error
-		t := task.(*FileReplaceTask)
-		t.Creates, err = parseCreatesField(val, path)
-		return err
-	},
-	OnlyIfField: func(task Task, path string, val interface{}) error {
-		var err error
-		t := task.(*FileReplaceTask)
-		t.OnlyIf, err = parseOnlyIfField(val, path)
-		return err
-	},
-	UnlessField: func(task Task, path string, val interface{}) error {
-		var err error
-		t := task.(*FileReplaceTask)
-		t.Unless, err = parseUnlessField(val, path)
-		return err
-	},
-
-	RequireField: func(task Task, path string, val interface{}) error {
-		var err error
-		t := task.(*FileReplaceTask)
-		t.Require, err = parseRequireField(val, path)
-		return err
-	},
-
-	ShellField: func(task Task, path string, val interface{}) error {
-		valStr := fmt.Sprint(val)
-		t := task.(*FileReplaceTask)
-		t.Shell = valStr
-		return nil
-	},
-}
-
 func (frtb FileReplaceTaskBuilder) Build(typeName, path string, params interface{}) (t Task, err error) {
 	task := &FileReplaceTask{
 		TypeName: typeName,
 		Path:     path,
 	}
 
-	errs := Build(typeName, path, params, task, fileReplaceTaskParamsFnMap)
+	errs := Build(typeName, path, params, task, nil)
 
 	return task, errs.ToError()
 }
@@ -185,7 +92,7 @@ func (t *FileReplaceTask) GetCreatesFilesList() []string {
 	return t.Creates
 }
 
-func (t *FileReplaceTask) Validate() error {
+func (t *FileReplaceTask) Validate(goos string) error {
 	errs := &utils.Errors{}
 
 	err := ValidateRequired(t.Name, t.Path+"."+NameField)

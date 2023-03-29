@@ -83,11 +83,11 @@ func TestTacoScript(t *testing.T) {
 	assert.NoError(t, err)
 	if *testTacoScript != "" {
 		t.Logf("Running single tacoscript '%s'", *testTacoScript)
-		_, err := os.Stat(*testTacoScript)
+		_, err := os.Stat(*testTacoScript + ".yaml")
 		assert.NoError(t, err)
 	}
 	for _, file := range files {
-		if *testTacoScript != "" && file.Name() != *testTacoScript {
+		if *testTacoScript != "" && file.Name() != (*testTacoScript+".yaml") {
 			continue
 		}
 		if !strings.HasSuffix(file.Name(), ".yaml") {

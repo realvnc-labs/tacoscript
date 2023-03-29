@@ -11,6 +11,8 @@ linters-settings:
   goconst:
     min-len: 2
     min-occurrences: 6
+  nakedret:
+    max-func-lines: 5
   gocritic:
     enabled-tags:
       - diagnostic
@@ -81,7 +83,6 @@ linters:
     - nakedret
     - noctx
     - nolintlint
-    - rowserrcheck
     - exportloopref
     - staticcheck
     - stylecheck

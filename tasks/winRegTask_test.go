@@ -6,6 +6,7 @@ package tasks
 import (
 	"context"
 	"fmt"
+	"runtime"
 	"testing"
 
 	"github.com/realvnc-labs/tacoscript/winreg"
@@ -120,7 +121,7 @@ func TestWinRegTaskValidation(t *testing.T) {
 	for _, testCase := range testCases {
 		tc := testCase
 		t.Run(tc.Name, func(t *testing.T) {
-			err := tc.Task.Validate()
+			err := tc.Task.Validate(runtime.GOOS)
 			if tc.ExpectedErr == "" {
 				assert.NoError(t, err)
 			} else {
@@ -180,7 +181,7 @@ func TestShouldEnsureRegistryValueIsPresent(t *testing.T) {
 	_, _, err := winreg.RemoveValue(task.RegPath, task.Name)
 	require.NoError(t, err)
 
-	err = task.Validate()
+	err = task.Validate(runtime.GOOS)
 	require.NoError(t, err)
 
 	res := executor.Execute(ctx, task)
@@ -212,7 +213,7 @@ func TestShouldEnsureRegistryValueIsAbsent(t *testing.T) {
 	_, _, err := winreg.SetValue(task.RegPath, task.Name, task.Val, winreg.REG_SZ)
 	require.NoError(t, err)
 
-	err = task.Validate()
+	err = task.Validate(runtime.GOOS)
 	require.NoError(t, err)
 
 	res := executor.Execute(ctx, task)
@@ -243,7 +244,7 @@ func TestShouldEnsureRegistryKeyIsAbsent(t *testing.T) {
 	_, _, err := winreg.SetValue(task.RegPath, task.Name, task.Val, winreg.REG_SZ)
 	require.NoError(t, err)
 
-	err = task.Validate()
+	err = task.Validate(runtime.GOOS)
 	require.NoError(t, err)
 
 	res := executor.Execute(ctx, task)

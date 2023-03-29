@@ -36,7 +36,7 @@ func TestCmdRunTaskBuilder(t *testing.T) {
 			expectedTask: &CmdRunTask{
 				TypeName:   "someType",
 				Path:       "somePath",
-				NamedTask:  NamedTask{Name: "1"},
+				Named:      NamedTask{Name: "1"},
 				WorkingDir: "somedir",
 				User:       "someuser",
 				Shell:      "someshell",
@@ -66,7 +66,7 @@ func TestCmdRunTaskBuilder(t *testing.T) {
 				Path:     "somePathWithErrors",
 				Envs:     conv.KeyValues{},
 			},
-			expectedError: "key value array expected at 'somePathWithErrors' but got '123'",
+			expectedError: "key value array expected at 'somePathWithErrors' but got '123': env",
 		},
 		{
 			typeName: "someTypeWithErrors2",
@@ -81,7 +81,7 @@ func TestCmdRunTaskBuilder(t *testing.T) {
 				Path:     "somePathWithErrors2",
 				Envs:     conv.KeyValues{},
 			},
-			expectedError: `wrong key value element at 'somePathWithErrors2': '"one"'`,
+			expectedError: `wrong key value element at 'somePathWithErrors2': '"one"': env`,
 		},
 		{
 			typeName: "manyNamesType",
@@ -99,7 +99,7 @@ func TestCmdRunTaskBuilder(t *testing.T) {
 				Require: []string{
 					"one require field",
 				},
-				NamedTask: NamedTask{Names: []string{
+				Named: NamedTask{Names: []string{
 					"name one",
 					"name two",
 				}},
@@ -127,9 +127,9 @@ func TestCmdRunTaskBuilder(t *testing.T) {
 				}}},
 			},
 			expectedTask: &CmdRunTask{
-				TypeName:  "manyCreatesType",
-				Path:      "manyCreatesPath",
-				NamedTask: NamedTask{Name: "many creates command"},
+				TypeName: "manyCreatesType",
+				Path:     "manyCreatesPath",
+				Named:    NamedTask{Name: "many creates command"},
 				Creates: []string{
 					"create one",
 					"create two",
@@ -155,9 +155,9 @@ func TestCmdRunTaskBuilder(t *testing.T) {
 				yaml.MapSlice{yaml.MapItem{Key: UnlessField, Value: "unless one"}},
 			},
 			expectedTask: &CmdRunTask{
-				TypeName:  "oneUnlessValue",
-				Path:      "oneUnlessValuePath",
-				NamedTask: NamedTask{Name: "one unless value"},
+				TypeName: "oneUnlessValue",
+				Path:     "oneUnlessValuePath",
+				Named:    NamedTask{Name: "one unless value"},
 				Unless: []string{
 					"unless one",
 				},
@@ -175,9 +175,9 @@ func TestCmdRunTaskBuilder(t *testing.T) {
 				}}},
 			},
 			expectedTask: &CmdRunTask{
-				TypeName:  "manyUnlessValue",
-				Path:      "manyUnlessValuePath",
-				NamedTask: NamedTask{Name: "many unless value"},
+				TypeName: "manyUnlessValue",
+				Path:     "manyUnlessValuePath",
+				Named:    NamedTask{Name: "many unless value"},
 				Unless: []string{
 					"Unless one",
 					"Unless two",
@@ -218,10 +218,9 @@ func TestCmdRunTaskBuilder(t *testing.T) {
 			assert.Equal(t, tc.expectedTask.Path, actualCmdRunTask.Path)
 			assert.Equal(t, tc.expectedTask.WorkingDir, actualCmdRunTask.WorkingDir)
 			assert.Equal(t, tc.expectedTask.Creates, actualCmdRunTask.Creates)
-			assert.Equal(t, tc.expectedTask.Name, actualCmdRunTask.Name)
+			assert.Equal(t, tc.expectedTask.Named, actualCmdRunTask.Named)
 			assert.Equal(t, tc.expectedTask.TypeName, actualCmdRunTask.TypeName)
 			assert.Equal(t, tc.expectedTask.Shell, actualCmdRunTask.Shell)
-			assert.Equal(t, tc.expectedTask.Names, actualCmdRunTask.Names)
 			assert.Equal(t, tc.expectedTask.Require, actualCmdRunTask.Require)
 			assert.Equal(t, tc.expectedTask.OnlyIf, actualCmdRunTask.OnlyIf)
 			assert.Equal(t, tc.expectedTask.Unless, actualCmdRunTask.Unless)

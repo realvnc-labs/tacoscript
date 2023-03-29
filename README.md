@@ -83,9 +83,14 @@ executed.
 
 - `cmd.run` Run shell commands and scripts [Read more](https://tacoscript.io/functions/commands/)
 - `file.managed` copy, manipulate, download and manage files [Read More](https://tacoscript.io/functions/file/)
+- `file.replace` remove packages via package manager [Read More](https://tacoscript.io/functions/file/#filereplace)
 - `pkg.installed` install packages via package manager [Read More](https://tacoscript.io/functions/packages/#pkginstalled)
 - `pkg.uptodate` update packages via package manager [Read More](https://tacoscript.io/functions/packages/#pkguptodate)
 - `pkg.removed` remove packages via package manager [Read More](https://tacoscript.io/functions/packages/#pkgremoved)
+- `win_reg.present` remove packages via package manager [Read More](https://tacoscript.io/functions/registry/#win_regpresent)
+- `win_reg.absent` remove packages via package manager [Read More](https://tacoscript.io/functions/registry/#win_regabsent)
+- `win_reg.absent_key` remove packages via package manager [Read More](https://tacoscript.io/functions/registry/#win_regabsent_key)
+- `realvnc_server.config_update` remove packages via package manager [Read More](https://tacoscript.io/functions/realvncserver/)
 
 [Read full documentation]
 

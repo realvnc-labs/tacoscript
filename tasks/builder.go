@@ -1,25 +1,37 @@
 package tasks
 
 import (
+	"errors"
 	"fmt"
-	"strings"
+	"reflect"
+
+	"github.com/sirupsen/logrus"
+	"gopkg.in/yaml.v2"
 
 	"github.com/realvnc-labs/tacoscript/conv"
 	"github.com/realvnc-labs/tacoscript/utils"
-	"gopkg.in/yaml.v2"
+)
+
+const (
+	UnsetKeyword = "!UNSET!"
 )
 
 type Builder interface {
-	Build(typeName, path string, context interface{}) (Task, error)
+	Build(typeName, path string, params interface{}) (Task, error)
 }
 
 type BuildRouter struct {
 	Builders map[string]Builder
 }
 
-type taskParamMapFn func(t Task, path string, val interface{}) error
+type taskFieldParseFn func(t Task, path string, val interface{}) error
 
-type taskParamsFnMap map[string]taskParamMapFn
+type taskField struct {
+	parseFn   taskFieldParseFn
+	fieldName string
+}
+
+type taskFieldsParserConfig map[string]taskField
 
 func NewBuilderRouter(builders map[string]Builder) BuildRouter {
 	return BuildRouter{
@@ -36,81 +48,162 @@ func (br BuildRouter) Build(typeName, path string, params interface{}) (Task, er
 	return builder.Build(typeName, path, params)
 }
 
-func Build(typeName, path string, params interface{}, task Task, fnMap taskParamsFnMap) (errs *utils.Errors) {
+func Build(
+	typeName, path string, inputFields interface{}, outputTask Task, taskFields taskFieldsParserConfig) (
+	errs *utils.Errors) {
+	logrus.Debugf("Parsing task %s, %s", typeName, path)
 	errs = &utils.Errors{}
 
-	for _, item := range params.([]interface{}) {
-		row := item.(yaml.MapSlice)[0]
-		key := row.Key.(string)
-		val := row.Value
-		mapFn, ok := fnMap[key]
-		if !ok {
+	var mapper FieldNameMapper
+	var tracker FieldStatusTracker
+
+	taskWithTracker, hasTracker := outputTask.(TaskWithFieldTracker)
+
+	if hasTracker {
+		// if TrackWithFieldTracker then the task is using the field name mapper and the status tracker
+		// so we need to initialize those.
+		combinedFieldTracker := newFieldCombinedTracker()
+		tracker = combinedFieldTracker
+		mapper = combinedFieldTracker
+		taskWithTracker.SetMapper(combinedFieldTracker)
+		taskWithTracker.SetTracker(combinedFieldTracker)
+	} else {
+		// if just a regular task then we only need a local mapper for the reflection based value parsing
+		mapper = newFieldNameMapper()
+	}
+
+	mapper.BuildFieldMap(outputTask)
+
+	outputTaskValues := reflect.Indirect(reflect.ValueOf(outputTask))
+
+	for _, inputItem := range inputFields.([]interface{}) {
+		row := inputItem.(yaml.MapSlice)[0]
+
+		inputKey := row.Key.(string)
+		inputVal := row.Value
+
+		fieldName := mapper.GetFieldName(inputKey)
+
+		if fieldName != "" {
+			if hasTracker {
+				tracker.SetFieldStatus(fieldName, FieldStatus{})
+
+				// when unsetting a field then no need to parse value etc. just mark to clear and then
+				// continue to the next field.
+				if inputVal == UnsetKeyword && !sharedField(inputKey) && taskWithTracker.IsChangeField(fieldName) {
+					err := tracker.SetClear(fieldName)
+					if err != nil {
+						errs.Add(errWithField(err, inputKey))
+					}
+					continue
+				}
+			}
+
+			outputFieldVal := outputTaskValues.FieldByName(fieldName)
+
+			// if empty field then we didn't find the field matching the name
+			if outputFieldVal == (reflect.Value{}) {
+				errs.Add(errWithField(errors.New("field not found in task struct"), inputKey))
+				continue
+			}
+
+			// if exists in the struct then we can use reflection to parse the value
+			err := updateField(outputFieldVal, inputVal)
+			if err != nil {
+				errs.Add(errWithField(err, inputKey))
+				continue
+			}
+
+			if hasTracker {
+				if !sharedField(inputKey) && taskWithTracker.IsChangeField(fieldName) {
+					err = tracker.SetHasNewValue(fieldName)
+					if err != nil {
+						errs.Add(errWithField(err, inputKey))
+						continue
+					}
+				}
+			}
+
 			continue
 		}
-		errs.Add(mapFn(task, path, val))
+
+		// didn't exist in the tracker so we'll be parsing manually
+		if taskFields != nil {
+			taskParam, ok := taskFields[inputKey]
+			if !ok {
+				continue
+			}
+
+			err := taskParam.parseFn(outputTask, path, inputVal)
+			if err != nil {
+				errs.Add(errWithField(err, inputKey))
+				continue
+			}
+		}
 	}
 
 	return errs
 }
 
-func parseCreatesField(val interface{}, path string) (createsItems []string, err error) {
-	createsItems = make([]string, 0)
-	switch typedVal := val.(type) {
-	case string:
-		createsItems = append(createsItems, typedVal)
-	default:
-		createsItems, err = conv.ConvertToValues(val, path)
+func errWithField(err error, field string) (updatedErr error) {
+	if err == nil {
+		return nil
 	}
-
-	return
+	return fmt.Errorf("%w: %s", err, field)
 }
 
-func parseRequireField(val interface{}, path string) (requireItems []string, err error) {
-	requireItems = make([]string, 0)
-	switch typedVal := val.(type) {
-	case string:
-		requireItems = append(requireItems, typedVal)
+func updateField(outputFieldVal reflect.Value, inputVal any) (err error) {
+	switch outputFieldVal.Kind() { //nolint:exhaustive // default handler
+	case reflect.Bool:
+		valBool, err := conv.ConvertToBool(inputVal)
+		if err != nil {
+			return err
+		}
+		outputFieldVal.SetBool(valBool)
+	case reflect.String:
+		outputFieldVal.SetString(fmt.Sprint(inputVal))
+	case reflect.Int:
+		valInt, err := conv.ConvertToInt(inputVal)
+		if err != nil {
+			return err
+		}
+		outputFieldVal.SetInt(int64(valInt))
+	case reflect.Slice:
+		switch inputVal.(type) {
+		case string:
+			setSliceWithSingleElement(outputFieldVal, inputVal)
+		default:
+			err = setSliceWithElements(outputFieldVal, inputVal)
+			if err != nil {
+				return err
+			}
+		}
 	default:
-		requireItems, err = conv.ConvertToValues(val, path)
+		return errors.New("field type not supported")
 	}
 
-	return
+	return nil
 }
 
-func parseOnlyIfField(val interface{}, path string) (onlyIf []string, err error) {
-	onlyIf = make([]string, 0)
-	switch typedVal := val.(type) {
-	case string:
-		onlyIf = append(onlyIf, typedVal)
-	default:
-		onlyIf, err = conv.ConvertToValues(val, path)
-	}
-
-	return onlyIf, err
+func setSliceWithSingleElement(outputFieldVal reflect.Value, inputVal any) {
+	newOutputSliceValue := reflect.MakeSlice(outputFieldVal.Type(), 0, 1)
+	inputItem := fmt.Sprint(inputVal)
+	newSliceValue := reflect.ValueOf(inputItem)
+	newOutputSliceValue = reflect.Append(newOutputSliceValue, newSliceValue)
+	outputFieldVal.Set(newOutputSliceValue)
 }
 
-func parseUnlessField(val interface{}, path string) (unless []string, err error) {
-	unless = make([]string, 0)
-	switch typedVal := val.(type) {
-	case string:
-		unless = append(unless, typedVal)
-	default:
-		unless, err = conv.ConvertToValues(val, path)
+func setSliceWithElements(outputFieldVal reflect.Value, inputVal any) (err error) {
+	inputItems, err := conv.ConvertToValues(inputVal)
+	if err != nil {
+		return err
 	}
-
-	return unless, err
-}
-
-func parseBoolField(val interface{}) bool {
-	boolStr := strings.TrimSpace(fmt.Sprint(val))
-	switch boolStr {
-	case "":
-		return false
-	case "0":
-		return false
-	case "false":
-		return false
-	default:
-		return true
+	newOutputSliceValue := reflect.MakeSlice(outputFieldVal.Type(), 0, len(inputItems))
+	for _, inputItem := range inputItems {
+		newSliceValue := reflect.ValueOf(inputItem)
+		newOutputSliceValue = reflect.Append(newOutputSliceValue, newSliceValue)
 	}
+	outputFieldVal.Set(newOutputSliceValue)
+
+	return nil
 }

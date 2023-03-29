@@ -6,11 +6,13 @@ import (
 	"os"
 	"testing"
 
+	"github.com/google/go-cmp/cmp"
+	"github.com/google/go-cmp/cmp/cmpopts"
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
 	"github.com/realvnc-labs/tacoscript/tasks"
 	"github.com/realvnc-labs/tacoscript/utils"
-	"github.com/stretchr/testify/assert"
 )
 
 func TestTaskBuilderFromRawYaml(t *testing.T) {
@@ -133,6 +135,6 @@ Funny file
 
 		require.NoError(t, err)
 
-		assert.EqualValues(t, tasks.Scripts{testCase.expectedScript}, scripts)
+		assert.True(t, cmp.Equal(tasks.Scripts{testCase.expectedScript}, scripts, cmpopts.IgnoreUnexported(tasks.FileManagedTask{})))
 	}
 }

@@ -164,12 +164,12 @@ func (pm PackageTaskManager) getPackageDiff(
 }
 
 func (pm PackageTaskManager) getAffectedPackagesStr(t *tasks.PkgTask) string {
-	packages := make([]string, 0, len(t.Names)+1)
-	if t.Name != "" {
-		packages = append(packages, t.Name)
+	packages := make([]string, 0, len(t.Named.Names)+1)
+	if t.Named.Name != "" {
+		packages = append(packages, t.Named.Name)
 	}
 
-	for _, pkg := range t.Names {
+	for _, pkg := range t.Named.Names {
 		if pkg != "" {
 			packages = append(packages, pkg)
 		}
@@ -188,7 +188,7 @@ func (pm PackageTaskManager) installPackages(
 
 	err = pm.run(ctx, t, res, mngtCmds.InstallCmds...)
 
-	return
+	return err
 }
 
 func (pm PackageTaskManager) uninstallPackages(
@@ -201,7 +201,7 @@ func (pm PackageTaskManager) uninstallPackages(
 
 	err = pm.run(ctx, t, res, mngtCmds.UninstallCmds...)
 
-	return
+	return err
 }
 
 func (pm PackageTaskManager) updatePackages(
@@ -214,7 +214,7 @@ func (pm PackageTaskManager) updatePackages(
 
 	err = pm.run(ctx, t, res, mngtCmds.UpgradeCmds...)
 
-	return
+	return err
 }
 
 func (pm PackageTaskManager) updatePkgManagerIfNeeded(

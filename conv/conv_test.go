@@ -7,6 +7,36 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+func TestShouldConvertToInt(t *testing.T) {
+	cases := []struct {
+		name          string
+		inputStr      string
+		expectedValue int
+		expectedErr   error
+	}{
+		{
+			name:        "error when not a number",
+			inputStr:    "not going to be an int",
+			expectedErr: conv.ErrNotANumber,
+		},
+		{
+			name:          "no error",
+			inputStr:      "100",
+			expectedValue: 100,
+		},
+	}
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			val, err := conv.ConvertToInt(tc.inputStr)
+			if tc.expectedErr != nil {
+				assert.ErrorIs(t, err, tc.expectedErr)
+			} else {
+				assert.Equal(t, tc.expectedValue, val)
+			}
+		})
+	}
+}
+
 func TestShouldConvertFileSizeToUInt64(t *testing.T) {
 	cases := []struct {
 		name          string

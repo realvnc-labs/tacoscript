@@ -23,92 +23,31 @@ const DefaultFileMode = 0744
 type FileManagedTaskBuilder struct {
 }
 
-var FileManagedTaskParamsFnMap = taskParamsFnMap{
-	NameField: func(task Task, path string, val interface{}) error {
-		t := task.(*FileManagedTask)
-		t.Name = fmt.Sprint(val)
-		return nil
+var FileManagedTaskParamsFnMap = taskFieldsParserConfig{
+	ModeField: {
+		parseFn: func(task Task, path string, val interface{}) error {
+			var err error
+			t := task.(*FileManagedTask)
+			t.Mode, err = conv.ConvertToFileMode(val)
+			return err
+		},
+		fieldName: "Mode",
 	},
-	UserField: func(task Task, path string, val interface{}) error {
-		t := task.(*FileManagedTask)
-		t.User = fmt.Sprint(val)
-		return nil
+	SourceField: {
+		parseFn: func(task Task, path string, val interface{}) error {
+			t := task.(*FileManagedTask)
+			t.Source = utils.ParseLocation(fmt.Sprint(val))
+			return nil
+		},
+		fieldName: "Source",
 	},
-	SkipVerifyField: func(task Task, path string, val interface{}) error {
-		t := task.(*FileManagedTask)
-		t.SkipVerify = conv.ConvertToBool(val)
-		return nil
-	},
-	SourceField: func(task Task, path string, val interface{}) error {
-		t := task.(*FileManagedTask)
-		t.Source = utils.ParseLocation(fmt.Sprint(val))
-		return nil
-	},
-	SourceHashField: func(task Task, path string, val interface{}) error {
-		t := task.(*FileManagedTask)
-		t.SourceHash = fmt.Sprint(val)
-		return nil
-	},
-	MakeDirsField: func(task Task, path string, val interface{}) error {
-		t := task.(*FileManagedTask)
-		t.MakeDirs = conv.ConvertToBool(val)
-		return nil
-	},
-	GroupField: func(task Task, path string, val interface{}) error {
-		t := task.(*FileManagedTask)
-		t.Group = fmt.Sprint(val)
-		return nil
-	},
-	ModeField: func(task Task, path string, val interface{}) error {
-		var err error
-		t := task.(*FileManagedTask)
-		t.Mode, err = conv.ConvertToFileMode(val)
-		return err
-	},
-	EncodingField: func(task Task, path string, val interface{}) error {
-		t := task.(*FileManagedTask)
-		t.Encoding = fmt.Sprint(val)
-		return nil
-	},
-	ContentsField: func(task Task, path string, val interface{}) error {
-		t := task.(*FileManagedTask)
-		t.Contents = parseContentsField(val)
-		return nil
-	},
-	ReplaceField: func(task Task, path string, val interface{}) error {
-		t := task.(*FileManagedTask)
-		t.Replace = conv.ConvertToBool(val)
-		return nil
-	},
-	RequireField: func(task Task, path string, val interface{}) error {
-		var err error
-		t := task.(*FileManagedTask)
-		t.Require, err = parseRequireField(val, path)
-		return err
-	},
-	CreatesField: func(task Task, path string, val interface{}) error {
-		var err error
-		t := task.(*FileManagedTask)
-		t.Creates, err = parseCreatesField(val, path)
-		return err
-	},
-	OnlyIfField: func(task Task, path string, val interface{}) error {
-		var err error
-		t := task.(*FileManagedTask)
-		t.OnlyIf, err = parseOnlyIfField(val, path)
-		return err
-	},
-	UnlessField: func(task Task, path string, val interface{}) error {
-		var err error
-		t := task.(*FileManagedTask)
-		t.Unless, err = parseUnlessField(val, path)
-		return err
-	},
-
-	ShellField: func(task Task, path string, val interface{}) error {
-		t := task.(*FileManagedTask)
-		t.Shell = fmt.Sprint(val)
-		return nil
+	ContentsField: {
+		parseFn: func(task Task, path string, val interface{}) error {
+			t := task.(*FileManagedTask)
+			t.Contents = parseContentsField(val)
+			return nil
+		},
+		fieldName: "Contents",
 	},
 }
 
@@ -136,26 +75,27 @@ func parseContentsField(val interface{}) sql.NullString {
 }
 
 type FileManagedTask struct {
-	MakeDirs     bool
-	Replace      bool
-	SkipVerify   bool
-	SkipTLSCheck bool
-	Mode         os.FileMode
-	TypeName     string
-	Path         string
-	Name         string
-	SourceHash   string
-	Contents     sql.NullString
-	User         string
-	Group        string
-	Encoding     string
-	Source       utils.Location
-	Creates      []string
-	OnlyIf       []string
-	Unless       []string
-	Require      []string
+	TypeName string
+	Path     string
+	Mode     os.FileMode
+	Contents sql.NullString
+	Source   utils.Location
 
-	Shell string
+	Name         string   `taco:"name"`
+	MakeDirs     bool     `taco:"makedirs"`
+	Replace      bool     `taco:"replace"`
+	SkipVerify   bool     `taco:"skip_verify"`
+	SkipTLSCheck bool     `taco:"???"`
+	SourceHash   string   `taco:"source_hash"`
+	User         string   `taco:"user"`
+	Group        string   `taco:"group"`
+	Encoding     string   `taco:"encoding"`
+	Creates      []string `taco:"creates"`
+	OnlyIf       []string `taco:"onlyif"`
+	Unless       []string `taco:"unless"`
+	Require      []string `taco:"require"`
+
+	Shell string `taco:"shell"`
 
 	// was managed file updated?
 	Updated bool
@@ -169,7 +109,7 @@ func (t *FileManagedTask) GetRequirements() []string {
 	return t.Require
 }
 
-func (t *FileManagedTask) Validate() error {
+func (t *FileManagedTask) Validate(goos string) error {
 	errs := &utils.Errors{}
 
 	err1 := ValidateRequired(t.Name, t.Path+"."+NameField)

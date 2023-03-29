@@ -26,6 +26,12 @@ type KeyValue struct {
 	Value string
 }
 
+var (
+	ErrNotANumber           = errors.New("value is not a number")
+	ErrFileSizeInvalidUnits = errors.New("file size has invalid units")
+	ErrBadBool              = errors.New("failed to parse bool value")
+)
+
 func (kv KeyValue) ToEqualSignString() string {
 	return fmt.Sprintf("%s=%s", kv.Key, kv.Value)
 }
@@ -57,10 +63,10 @@ func ConvertToKeyValues(val interface{}, path string) (KeyValues, error) {
 	return res, nil
 }
 
-func ConvertToValues(val interface{}, path string) ([]string, error) {
+func ConvertToValues(val interface{}) ([]string, error) {
 	rawValues, ok := val.([]interface{})
 	if !ok {
-		return []string{}, fmt.Errorf("values array expected at '%s' but got '%s'", path, ConvertSourceToJSONStrIfPossible(val))
+		return []string{}, fmt.Errorf("values array expected")
 	}
 
 	res := make([]string, 0, len(rawValues))
@@ -72,25 +78,43 @@ func ConvertToValues(val interface{}, path string) ([]string, error) {
 	return res, nil
 }
 
-func ConvertToBool(val interface{}) bool {
+func ConvertToInt(val interface{}) (num int, err error) {
+	valStr := fmt.Sprint(val)
+	if !isNumber(valStr) {
+		return 0, ErrNotANumber
+	}
+
+	num, err = strconv.Atoi(valStr)
+	if err != nil {
+		return 0, err
+	}
+
+	return num, nil
+}
+
+func ConvertToBool(val interface{}) (bool, error) {
 	boolVal, ok := val.(bool)
 	if ok {
-		return boolVal
+		return boolVal, nil
 	}
 
 	boolValStr := fmt.Sprint(val)
 
 	switch boolValStr {
 	case "":
-		return false
+		return false, nil
 	case "false":
-		return false
+		return false, nil
+	case "true":
+		return true, nil
 	case "0":
-		return false
+		return false, nil
+	case "1":
+		return true, nil
 	case "null":
-		return false
+		return false, nil
 	default:
-		return true
+		return false, ErrBadBool
 	}
 }
 
@@ -108,11 +132,6 @@ func ConvertToFileMode(val interface{}) (os.FileMode, error) {
 
 	return os.FileMode(i64), nil
 }
-
-var (
-	ErrNotANumber           = errors.New("file size is not a number")
-	ErrFileSizeInvalidUnits = errors.New("file size has invalid units")
-)
 
 func ConvertToFileSize(val interface{}) (convertedVal uint64, err error) {
 	valStr := fmt.Sprint(val)

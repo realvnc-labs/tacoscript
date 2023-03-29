@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"os/exec"
+	"runtime"
 	"testing"
 
 	appExec "github.com/realvnc-labs/tacoscript/exec"
@@ -46,7 +47,7 @@ func TestPkgTaskValidation(t *testing.T) {
 		{
 			Name: "valid_task_name",
 			Task: PkgTask{
-				NamedTask:  NamedTask{Name: "some name"},
+				Named:      NamedTask{Name: "some name"},
 				ActionType: ActionUninstall,
 			},
 			ExpectedError: "",
@@ -54,7 +55,7 @@ func TestPkgTaskValidation(t *testing.T) {
 		{
 			Name: "valid_task_names",
 			Task: PkgTask{
-				NamedTask:  NamedTask{Names: []string{"some name1", "some name 2"}},
+				Named:      NamedTask{Names: []string{"some name1", "some name 2"}},
 				ActionType: ActionInstall,
 			},
 			ExpectedError: "",
@@ -64,7 +65,7 @@ func TestPkgTaskValidation(t *testing.T) {
 			Task: PkgTask{
 				TypeName:   "unknown type name",
 				Path:       "somepath",
-				NamedTask:  NamedTask{Name: "some name"},
+				Named:      NamedTask{Name: "some name"},
 				ActionType: 0,
 			},
 			ExpectedError: "unknown pkg task type: unknown type name",
@@ -74,7 +75,7 @@ func TestPkgTaskValidation(t *testing.T) {
 	for _, testCase := range testCases {
 		tc := testCase
 		t.Run(tc.Name, func(t *testing.T) {
-			err := tc.Task.Validate()
+			err := tc.Task.Validate(runtime.GOOS)
 			if tc.ExpectedError == "" {
 				assert.NoError(t, err)
 			} else {
@@ -132,7 +133,7 @@ func TestPkgTaskExecution(t *testing.T) {
 				ActionType: ActionInstall,
 				TypeName:   PkgInstalled,
 				Path:       "one name path",
-				NamedTask:  NamedTask{Name: "vim"},
+				Named:      NamedTask{Name: "vim"},
 			},
 			ExpectedResult: ExecutionResult{
 				IsSkipped: false,
@@ -151,8 +152,8 @@ func TestPkgTaskExecution(t *testing.T) {
 		{
 			Name: "executing one onlyif condition with success",
 			Task: &PkgTask{
-				NamedTask: NamedTask{Name: "cmd lala"},
-				OnlyIf:    []string{"check before lala"},
+				Named:  NamedTask{Name: "cmd lala"},
+				OnlyIf: []string{"check before lala"},
 			},
 			ExpectedResult: ExecutionResult{
 				IsSkipped: false,
@@ -180,8 +181,8 @@ func TestPkgTaskExecution(t *testing.T) {
 		{
 			Name: "executing one onlyif condition with skip execution",
 			Task: &PkgTask{
-				NamedTask: NamedTask{Name: "cmd with OnlyIf skipped"},
-				OnlyIf:    []string{"check OnlyIf error"},
+				Named:  NamedTask{Name: "cmd with OnlyIf skipped"},
+				OnlyIf: []string{"check OnlyIf error"},
 			},
 			ExpectedResult: ExecutionResult{
 				IsSkipped: true,
@@ -198,8 +199,8 @@ func TestPkgTaskExecution(t *testing.T) {
 		{
 			Name: "executing one unless condition with success",
 			Task: &PkgTask{
-				NamedTask: NamedTask{Name: "cmd stop"},
-				Unless:    []string{"run unless stop"},
+				Named:  NamedTask{Name: "cmd stop"},
+				Unless: []string{"run unless stop"},
 			},
 			ExpectedResult: ExecutionResult{
 				IsSkipped: false,
@@ -217,8 +218,8 @@ func TestPkgTaskExecution(t *testing.T) {
 		{
 			Name: "executing one unless condition with failure",
 			Task: &PkgTask{
-				NamedTask: NamedTask{Name: "cmd with unless failure"},
-				Unless:    []string{"check unless failure"},
+				Named:  NamedTask{Name: "cmd with unless failure"},
+				Unless: []string{"check unless failure"},
 			},
 			ExpectedResult: ExecutionResult{
 				IsSkipped: true,

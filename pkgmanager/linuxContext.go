@@ -55,7 +55,7 @@ func BuildManagementCmdsProviders() ([]ManagementCmdsProvider, error) {
 type AptCmdsProvider struct{}
 
 func (ecb AptCmdsProvider) GetManagementCmds(t *tasks.PkgTask) (*ManagementCmds, error) {
-	rawCmds := t.GetNames()
+	rawCmds := t.Named.GetNames()
 	rawInstallCmds := buildInstallCmds(rawCmds, t.Version)
 
 	return &ManagementCmds{
@@ -71,7 +71,7 @@ func (ecb AptCmdsProvider) GetManagementCmds(t *tasks.PkgTask) (*ManagementCmds,
 type AptGetCmdsProvider struct{}
 
 func (ecb AptGetCmdsProvider) GetManagementCmds(t *tasks.PkgTask) (*ManagementCmds, error) {
-	rawCmds := t.GetNames()
+	rawCmds := t.Named.GetNames()
 	rawInstallCmds := buildInstallCmds(rawCmds, t.Version)
 
 	return &ManagementCmds{
@@ -87,7 +87,7 @@ func (ecb AptGetCmdsProvider) GetManagementCmds(t *tasks.PkgTask) (*ManagementCm
 type YumCmdsProvider struct{}
 
 func (ecb YumCmdsProvider) GetManagementCmds(t *tasks.PkgTask) (*ManagementCmds, error) {
-	rawCmds := t.GetNames()
+	rawCmds := t.Named.GetNames()
 	rawInstallCmds := buildInstallCmds(rawCmds, t.Version)
 
 	return &ManagementCmds{
@@ -103,7 +103,7 @@ func (ecb YumCmdsProvider) GetManagementCmds(t *tasks.PkgTask) (*ManagementCmds,
 type DnfCmdsProvider struct{}
 
 func (ecb DnfCmdsProvider) GetManagementCmds(t *tasks.PkgTask) (*ManagementCmds, error) {
-	rawCmds := t.GetNames()
+	rawCmds := t.Named.GetNames()
 	rawInstallCmds := buildInstallCmds(rawCmds, t.Version)
 
 	return &ManagementCmds{

@@ -18,7 +18,7 @@ type MockedOsPackageManagerCmdProvider struct {
 }
 
 func (ecb MockedOsPackageManagerCmdProvider) GetManagementCmds(t *tasks.PkgTask) (*ManagementCmds, error) {
-	rawCmds := t.GetNames()
+	rawCmds := t.Named.GetNames()
 
 	versionStr := ""
 	if t.Version != "" {
@@ -56,7 +56,7 @@ func TestTaskExecution(t *testing.T) {
 			},
 			Task: &tasks.PkgTask{
 				ActionType: tasks.ActionInstall,
-				NamedTask:  tasks.NamedTask{Name: "vim"},
+				Named:      tasks.NamedTask{Name: "vim"},
 				Path:       "somePath",
 				Shell:      "sh",
 			},
@@ -74,7 +74,7 @@ func TestTaskExecution(t *testing.T) {
 			},
 			Task: &tasks.PkgTask{
 				ActionType: tasks.ActionInstall,
-				NamedTask:  tasks.NamedTask{Name: "vim"},
+				Named:      tasks.NamedTask{Name: "vim"},
 				Version:    "1.1.0",
 			},
 			ExpectedOutput: "some stderr",
@@ -87,7 +87,7 @@ func TestTaskExecution(t *testing.T) {
 			},
 			Task: &tasks.PkgTask{
 				ActionType: tasks.ActionInstall,
-				NamedTask:  tasks.NamedTask{Names: []string{"vim", "nano"}},
+				Named:      tasks.NamedTask{Names: []string{"vim", "nano"}},
 			},
 			ExpectedCmds: []string{"mpmb --version", "mpmb list", "mpmb install vim nano", "mpmb list"},
 		},
@@ -98,7 +98,7 @@ func TestTaskExecution(t *testing.T) {
 			},
 			Task: &tasks.PkgTask{
 				ActionType: tasks.ActionUninstall,
-				NamedTask:  tasks.NamedTask{Names: []string{"vim", "nano"}, Name: "mc"},
+				Named:      tasks.NamedTask{Names: []string{"vim", "nano"}, Name: "mc"},
 			},
 			ExpectedCmds: []string{"mpmb --version", "mpmb list", "mpmb uninstall mc vim nano", "mpmb list"},
 		},
@@ -109,7 +109,7 @@ func TestTaskExecution(t *testing.T) {
 			},
 			Task: &tasks.PkgTask{
 				ActionType: tasks.ActionUpdate,
-				NamedTask:  tasks.NamedTask{Names: []string{"vim", "nano"}},
+				Named:      tasks.NamedTask{Names: []string{"vim", "nano"}},
 			},
 			ExpectedCmds: []string{"mpmb --version", "mpmb list", "mpmb update vim nano", "mpmb list"},
 		},
@@ -121,7 +121,7 @@ func TestTaskExecution(t *testing.T) {
 			},
 			Task: &tasks.PkgTask{
 				ActionType: tasks.ActionInstall,
-				NamedTask:  tasks.NamedTask{Names: []string{"vim", "nano"}},
+				Named:      tasks.NamedTask{Names: []string{"vim", "nano"}},
 			},
 			ExpectedCmds:   []string{"mpmb --version"},
 			ExpectedErrStr: "cannot find a supported package manager on the host, tried package manager commands: mpmb --version: non existing pkg manager",
@@ -134,7 +134,7 @@ func TestTaskExecution(t *testing.T) {
 			Task: &tasks.PkgTask{
 				ShouldRefresh: true,
 				ActionType:    tasks.ActionUpdate,
-				NamedTask:     tasks.NamedTask{Names: []string{"vim", "nano"}},
+				Named:         tasks.NamedTask{Names: []string{"vim", "nano"}},
 			},
 			ExpectedCmds: []string{"mpmb --version", "mpmb upgrade", "mpmb list", "mpmb update vim nano", "mpmb list"},
 		},
