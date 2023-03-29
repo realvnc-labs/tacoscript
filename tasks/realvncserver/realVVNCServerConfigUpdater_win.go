@@ -17,13 +17,14 @@ import (
 )
 
 const (
-	DefaultWindowsExecPath = `C:\Program Files\RealVNC\VNC Server`
-	DefaultWindowsExecName = `vncserver.exe`
+	DefaultWindowsExec = `C:\Program Files\RealVNC\VNC Server\vncserver.exe`
 )
 
 var (
 	HKLMBaseKey = `HKLM:\SOFTWARE\RealVNC\vncserver`
 	HKCUBaseKey = `HKCU:\Software\RealVNC\vncserver`
+	// TODO: (rs): Remove this when we re-introduce User and Virtual server modes.
+	TestBaseKey = `HKCU:\Software\RealVNCTest\vncserver`
 )
 
 func (rvste *RvstExecutor) applyConfigChanges(rvst *RvsTask) (addedCount int, updatedCount int, err error) {
@@ -84,13 +85,19 @@ func (rvste *RvstExecutor) ReloadConfig(rvst *RvsTask) (err error) {
 	cmd = exec.Command("powershell", cmdLine)
 
 	var outBuf bytes.Buffer
+	var errBuf bytes.Buffer
 	cmd.Stdout = &outBuf
+	cmd.Stderr = &errBuf
 
 	cmdRunner := tacoexec.OSApi{}
 	err = cmdRunner.Run(cmd)
 	if err != nil {
+		logrus.Debugf(`command output = %s`, outBuf.String())
+		logrus.Debugf(`err output = %s`, errBuf.String())
 		return fmt.Errorf("failed reloading vnc server configuration: %w", err)
 	}
+
+	logrus.Debugf(`config reloaded successfully`)
 
 	return nil
 }
@@ -100,17 +107,26 @@ func getBaseKeyForServerMode(serverMode string) (baseKey string) {
 	if serverMode == UserServerMode {
 		baseKey = HKCUBaseKey
 	}
+	if serverMode == TestServerMode {
+		baseKey = TestBaseKey
+	}
 	return baseKey
 }
 
 func (rvste *RvstExecutor) makeReloadPSCmdLine(rvst *RvsTask) (cmdLine string) {
-	baseCmdLine := `Start-Process -FilePath '%s\%s' -WindowStyle Hidden  -ArgumentList '%s'`
+	baseCmdLine := `Start-Process -FilePath '%s' -WindowStyle Hidden  -ArgumentList '%s'`
 	argumentList := `service -reload`
 
 	if rvst.ServerMode == UserServerMode {
 		argumentList = `-reload`
 	}
 
-	cmdLine = fmt.Sprintf(baseCmdLine, DefaultWindowsExecPath, DefaultWindowsExecName, argumentList)
+	cmd := DefaultWindowsExec
+	if rvst.ReloadExecPath != "" {
+		cmd = rvst.ReloadExecPath
+		logrus.Debugf(`user specified reload_exec_path = %s`, cmd)
+	}
+
+	cmdLine = fmt.Sprintf(baseCmdLine, cmd, argumentList)
 	return cmdLine
 }

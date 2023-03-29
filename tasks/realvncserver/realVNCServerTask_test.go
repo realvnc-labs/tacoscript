@@ -42,7 +42,7 @@ func TestShouldPerformSimpleConfigParamUpdate(t *testing.T) {
 	task := &RvsTask{
 		Path:       "realvnc-server-1",
 		Encryption: "AlwaysOn",
-		ServerMode: "User",
+		ServerMode: "Service",
 		Mapper:     tracker,
 		Tracker:    tracker,
 	}

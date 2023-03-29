@@ -21,11 +21,9 @@ import (
 )
 
 const (
-	DefaultMacExecPath           = `/Library/vnc`
-	DefaultMacExecName           = `vncserver`
-	DefaultLinuxExecPath         = `/usr/bin`
-	DefaultLinuxExecCmd          = `vncserver-x11`
-	DefaultLinuxLicenseReloadCmd = `vnclicense`
+	DefaultMacConfigReloadCmd    = `/Library/vnc/vncserver`
+	DefaultLinuxConfigReloadCmd  = `/usr/bin/vncserver-x11`
+	DefaultLinuxLicenseReloadCmd = `/usr/bin/vnclicense`
 
 	DefaultConfigFilePermissions = 0644
 )
@@ -278,6 +276,7 @@ func commitChanges(rvst *RvsTask, outputBuffer *bytes.Buffer) (err error) {
 		return err
 	}
 
+	// TODO: (rs): what about file owners? need to consider Windows too.
 	err = os.Chmod(configFilename, perms)
 	if err != nil {
 		return err
@@ -307,26 +306,33 @@ func (rvste *RvstExecutor) ReloadConfig(rvst *RvsTask) (err error) {
 		return fmt.Errorf("failed reloading vnc server configuration: %w", err)
 	}
 
+	logrus.Debugf("config reloaded successfully")
+
 	return nil
 }
 
 func makeReloadCmdLine(rvst *RvsTask, goos string) (cmd string, params []string) {
-	baseCmdLine := `%s/%s`
 	argumentList := []string{`-service`, `-reload`}
-	if rvst.ServerMode == UserServerMode {
-		argumentList = []string{`-reload`}
+
+	if rvst.ReloadExecPath == "" {
+		if goos == "darwin" {
+			cmd = DefaultMacConfigReloadCmd
+		} else {
+			// linux only
+			if rvst.UseVNCLicenseReload {
+				cmd = DefaultLinuxLicenseReloadCmd
+			} else {
+				cmd = DefaultLinuxConfigReloadCmd
+			}
+		}
+	} else {
+		cmd = rvst.ReloadExecPath
+		logrus.Debugf(`user specified reload_exec_path = %s`, cmd)
 	}
 
-	if goos == "darwin" {
-		cmd = fmt.Sprintf(baseCmdLine, DefaultMacExecPath, DefaultMacExecName)
-	} else {
-		// linux only
-		if rvst.UseVNCLicenseReload {
-			cmd = fmt.Sprintf(baseCmdLine, DefaultLinuxExecPath, DefaultLinuxLicenseReloadCmd)
-			argumentList = []string{`-reload`}
-		} else {
-			cmd = fmt.Sprintf(baseCmdLine, DefaultLinuxExecPath, DefaultLinuxExecCmd)
-		}
+	if rvst.ServerMode == UserServerMode ||
+		goos != "darwin" && rvst.UseVNCLicenseReload {
+		argumentList = []string{`-reload`}
 	}
 
 	return cmd, argumentList
