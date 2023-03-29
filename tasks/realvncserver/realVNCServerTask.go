@@ -21,11 +21,15 @@ const (
 	ServiceServerMode = "Service"
 	UserServerMode    = "User"
 	VirtualServerMode = "Virtual"
+	// TODO: (rs): this is hack to get around no admin user when running github actions on windows.
+	// it can be removed when we re-introduce User server mode as the e2e tests can use that instead
+	// of Service server mode. will only work with windows.
+	TestServerMode = "Test"
 )
 
 var (
 	// these fields don't change the realvnc server config. they are only used by the task.
-	RvstNoChangeFields = []string{"ConfigFile", "ServerMode", "ExecPath", "ExecCmd", "SkipReload"}
+	RvstNoChangeFields = []string{"ConfigFile", "ServerMode", "ReloadExecPath", "ExecCmd", "SkipReload"}
 )
 
 type RvsTask struct {
@@ -47,8 +51,7 @@ type RvsTask struct {
 
 	ConfigFile          string `taco:"config_file"` // config file path for non-windows
 	ServerMode          string `taco:"server_mode"` // server mode for windows (registry keys)
-	ExecPath            string `taco:"exec_path"`
-	ExecCmd             string `taco:"exec_cmd"`
+	ReloadExecPath      string `taco:"reload_exec_path"`
 	SkipReload          bool   `taco:"skip_reload"`
 	UseVNCLicenseReload bool   `taco:"use_vnclicense_reload"`
 
