@@ -29,7 +29,7 @@ const (
 
 var (
 	// these fields don't change the realvnc server config. they are only used by the task.
-	RvstNoChangeFields = []string{"ConfigFile", "ServerMode", "ReloadExecPath", "ExecCmd", "SkipReload"}
+	RvstNoChangeFields = []string{"ConfigFile", "ServerMode", "ReloadExecPath", "SkipReload", "UseVNCLicenseReload", "Backup", "SkipBackup"}
 )
 
 type RvsTask struct {
