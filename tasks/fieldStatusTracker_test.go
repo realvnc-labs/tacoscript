@@ -9,9 +9,9 @@ import (
 )
 
 type TestTaskWithCombinedNameMapperAndChangeTracker struct {
-	Field1 string `taco:"field_1"`
-	Field2 string `taco:"field_2"`
-	Field3 string `taco:"field_3"`
+	Field1 string `taco:"field_1,true"`
+	Field2 string `taco:"field_2,true"`
+	Field3 string `taco:"field_3,false"`
 
 	Require []string `taco:"require"`
 
@@ -25,21 +25,8 @@ type TestTaskWithCombinedNameMapperAndChangeTracker struct {
 	tracker FieldStatusTracker
 }
 
-var (
-	TestNoChangeFields = []string{"Field3"}
-)
-
 func (t *TestTaskWithCombinedNameMapperAndChangeTracker) GetTracker() (tracker FieldStatusTracker) {
 	return t.tracker
-}
-
-func (t *TestTaskWithCombinedNameMapperAndChangeTracker) IsChangeField(fieldName string) (excluded bool) {
-	for _, noChangeField := range TestNoChangeFields {
-		if fieldName == noChangeField {
-			return false
-		}
-	}
-	return true
 }
 
 func (t *TestTaskWithCombinedNameMapperAndChangeTracker) GetTypeName() string {
@@ -99,6 +86,12 @@ func TestShouldBuildFieldMapForTask(t *testing.T) {
 	assert.Equal(t, "OnlyIf", m.GetFieldName("onlyif"))
 	assert.Equal(t, "Unless", m.GetFieldName("unless"))
 	assert.Equal(t, "Shell", m.GetFieldName("shell"))
+
+	assert.True(t, tracker.IsTracked("Field1"))
+	assert.True(t, tracker.IsTracked("Field2"))
+	assert.False(t, tracker.IsTracked("Field3"))
+	assert.False(t, tracker.IsTracked("Creates"))
+	assert.False(t, tracker.IsTracked("Onlyif"))
 }
 
 func TestShouldSetGetFieldStatus(t *testing.T) {
@@ -107,12 +100,13 @@ func TestShouldSetGetFieldStatus(t *testing.T) {
 		tracker: tracker,
 	}
 
-	task.tracker.SetFieldStatus("Field1", FieldStatus{HasNewValue: true, ChangeApplied: true, Clear: true})
+	task.tracker.SetFieldStatus("Field1", FieldStatus{HasNewValue: true, ChangeApplied: true, Clear: true, Tracked: true})
 	status, found := task.tracker.GetFieldStatus("Field1")
 	assert.True(t, found)
 	assert.Equal(t, true, status.HasNewValue)
 	assert.Equal(t, true, status.ChangeApplied)
 	assert.Equal(t, true, status.Clear)
+	assert.Equal(t, true, status.Tracked)
 }
 
 func TestShouldFailGetFieldStatus(t *testing.T) {
@@ -175,17 +169,18 @@ func TestShouldSetChangeApplied(t *testing.T) {
 	assert.True(t, status.ChangeApplied)
 }
 
-func TestShouldKnowIfFieldIsNotChangeField(t *testing.T) {
+func TestShouldSetTracked(t *testing.T) {
 	tracker := NewFieldCombinedTracker()
 	task := &TestTaskWithCombinedNameMapperAndChangeTracker{
 		tracker: tracker,
 	}
 
-	task.tracker.SetFieldStatus("Field2", FieldStatus{HasNewValue: false, ChangeApplied: false, Clear: false})
-	task.tracker.SetFieldStatus("Field3", FieldStatus{HasNewValue: false, ChangeApplied: false, Clear: false})
+	task.tracker.SetFieldStatus("Field2", FieldStatus{HasNewValue: false, ChangeApplied: false, Clear: false, Tracked: false})
 
-	isChangeField := task.IsChangeField("Field2")
-	assert.True(t, isChangeField)
-	isChangeField = task.IsChangeField("Field3")
-	assert.False(t, isChangeField)
+	err := task.tracker.SetTracked("Field2")
+	require.NoError(t, err)
+
+	status, found := task.tracker.GetFieldStatus("Field2")
+	assert.True(t, found)
+	assert.True(t, status.Tracked)
 }

@@ -37,7 +37,7 @@ func TestRealVNCServerTaskBuilder(t *testing.T) {
 				yaml.MapSlice{yaml.MapItem{Key: tasks.CaptureMethodField, Value: "1"}},
 
 				yaml.MapSlice{yaml.MapItem{Key: tasks.ConfigFileField, Value: "/tmp/config_file.conf"}},
-				yaml.MapSlice{yaml.MapItem{Key: tasks.ServerModeField, Value: "service"}},
+				yaml.MapSlice{yaml.MapItem{Key: tasks.ServerModeField, Value: "Service"}},
 
 				yaml.MapSlice{yaml.MapItem{Key: tasks.ReloadExecPathField, Value: "test/path/exe_cmd"}},
 				yaml.MapSlice{yaml.MapItem{Key: tasks.SkipReloadField, Value: true}},
@@ -144,7 +144,7 @@ func TestRealVNCServerTaskBuilderWithUnsets(t *testing.T) {
 				yaml.MapSlice{yaml.MapItem{Key: tasks.LogField, Value: "*:file:10,Connections:file:100"}},
 				yaml.MapSlice{yaml.MapItem{Key: tasks.CaptureMethodField, Value: "1"}},
 				yaml.MapSlice{yaml.MapItem{Key: tasks.ConfigFileField, Value: "/tmp/config_file.conf"}},
-				yaml.MapSlice{yaml.MapItem{Key: tasks.ServerModeField, Value: "service"}},
+				yaml.MapSlice{yaml.MapItem{Key: tasks.ServerModeField, Value: "Service"}},
 
 				yaml.MapSlice{yaml.MapItem{Key: tasks.CreatesField, Value: "/tmp/creates-file.txt"}},
 				yaml.MapSlice{yaml.MapItem{Key: tasks.OnlyIfField, Value: "/tmp/onlyif-file.txt"}},
@@ -228,8 +228,14 @@ func assertRealVNCServerTaskEquals(t *testing.T, expectedTask, actualTask *realv
 	assert.Equal(t, expectedTask.IdleTimeout, actualTask.IdleTimeout)
 	assert.Equal(t, expectedTask.Log, actualTask.Log)
 	assert.Equal(t, expectedTask.CaptureMethod, actualTask.CaptureMethod)
-	assert.Equal(t, expectedTask.ConfigFile, actualTask.ConfigFile)
 
+	assert.Equal(t, expectedTask.ConfigFile, actualTask.ConfigFile)
+	assert.Equal(t, expectedTask.ServerMode, actualTask.ServerMode)
+	assert.Equal(t, expectedTask.ReloadExecPath, actualTask.ReloadExecPath)
+	assert.Equal(t, expectedTask.SkipReload, actualTask.SkipReload)
+	assert.Equal(t, expectedTask.UseVNCLicenseReload, actualTask.UseVNCLicenseReload)
+	assert.Equal(t, expectedTask.Backup, actualTask.Backup)
+	assert.Equal(t, expectedTask.SkipBackup, actualTask.SkipBackup)
 	assert.Equal(t, expectedTask.Require, actualTask.Require)
 
 	assert.Equal(t, expectedTask.Creates, actualTask.Creates)

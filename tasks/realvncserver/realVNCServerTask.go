@@ -27,27 +27,26 @@ const (
 	TestServerMode = "Test"
 )
 
-var (
-	// these fields don't change the realvnc server config. they are only used by the task.
-	RvstNoChangeFields = []string{"ConfigFile", "ServerMode", "ReloadExecPath", "SkipReload", "UseVNCLicenseReload", "Backup", "SkipBackup"}
-)
-
 type RvsTask struct {
 	TypeName string // TaskType
 	Path     string // TaskName
 
-	Encryption          string `taco:"encryption"`
-	Authentication      string `taco:"authentication"`
-	Permissions         string `taco:"permissions"` // multiple key:value pairs delimited by commas
-	QueryConnect        bool   `taco:"query_connect"`
-	QueryOnlyIfLoggedOn bool   `taco:"query_only_if_logged_on"`
-	QueryConnectTimeout int    `taco:"query_connect_timeout"` // seconds
-	BlankScreen         bool   `taco:"blank_screen"`
-	ConnNotifyTimeout   int    `taco:"conn_notify_timeout"` // seconds
-	ConnNotifyAlways    bool   `taco:"conn_notify_always"`
-	IdleTimeout         int    `taco:"idle_timeout"` // seconds
-	Log                 string `taco:"log"`
-	CaptureMethod       int    `taco:"capture_method"`
+	// the RvsTask uses the field status tracking capability (the second field of the tag) to indicate
+	// whether a field is a realvnc server parameter or not. if set to true then it is a config parameter
+	// and it will be used to update the realvnc server config. if not tracked, then it means the field
+	// is used for the task itself and is NOT a realvnc config param.
+	Encryption          string `taco:"encryption,true"`
+	Authentication      string `taco:"authentication,true"`
+	Permissions         string `taco:"permissions,true"` // multiple key:value pairs delimited by commas
+	QueryConnect        bool   `taco:"query_connect,true"`
+	QueryOnlyIfLoggedOn bool   `taco:"query_only_if_logged_on,true"`
+	QueryConnectTimeout int    `taco:"query_connect_timeout,true"` // seconds
+	BlankScreen         bool   `taco:"blank_screen,true"`
+	ConnNotifyTimeout   int    `taco:"conn_notify_timeout,true"` // seconds
+	ConnNotifyAlways    bool   `taco:"conn_notify_always,true"`
+	IdleTimeout         int    `taco:"idle_timeout,true"` // seconds
+	Log                 string `taco:"log,true"`
+	CaptureMethod       int    `taco:"capture_method,true"`
 
 	ConfigFile          string `taco:"config_file"` // config file path for non-windows
 	ServerMode          string `taco:"server_mode"` // server mode for windows (registry keys)
@@ -87,15 +86,6 @@ func (t *RvsTask) SetMapper(mapper tasks.FieldNameMapper) {
 
 func (t *RvsTask) SetTracker(tracker tasks.FieldStatusTracker) {
 	t.Tracker = tracker
-}
-
-func (t *RvsTask) IsChangeField(fieldName string) (excluded bool) {
-	for _, noChangeField := range RvstNoChangeFields {
-		if fieldName == noChangeField {
-			return false
-		}
-	}
-	return true
 }
 
 func (t *RvsTask) GetTypeName() string {

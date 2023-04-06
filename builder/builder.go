@@ -79,11 +79,9 @@ func Build(
 
 		if fieldName != "" {
 			if hasTracker {
-				tracker.SetFieldStatus(fieldName, tasks.FieldStatus{})
-
 				// when unsetting a field then no need to parse value etc. just mark to clear and then
-				// continue to the next field.
-				if inputVal == UnsetKeyword && !tasks.SharedField(inputKey) && taskWithTracker.IsChangeField(fieldName) {
+				// continue to the next field. Currently it is only possible to clear tracked fields.
+				if inputVal == UnsetKeyword && !tasks.SharedField(inputKey) && tracker.IsTracked(fieldName) {
 					err := tracker.SetClear(fieldName)
 					if err != nil {
 						errs.Add(errWithField(err, inputKey))
@@ -108,7 +106,8 @@ func Build(
 			}
 
 			if hasTracker {
-				if !tasks.SharedField(inputKey) && taskWithTracker.IsChangeField(fieldName) {
+				// Currently it is only possible to mark tracked fields as containing new values.
+				if !tasks.SharedField(inputKey) && tracker.IsTracked(fieldName) {
 					err = tracker.SetHasNewValue(fieldName)
 					if err != nil {
 						errs.Add(errWithField(err, inputKey))

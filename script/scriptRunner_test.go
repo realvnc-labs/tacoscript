@@ -47,10 +47,6 @@ func (tm *TaskMock) GetCreatesFilesList() []string {
 	return tm.Creates
 }
 
-func (tm *TaskMock) IsChangeField(inputKey string) (excluded bool) {
-	return false
-}
-
 type ExecutorMock struct {
 	ExecResult executionresult.ExecutionResult
 	InputTasks []tasks.CoreTask
