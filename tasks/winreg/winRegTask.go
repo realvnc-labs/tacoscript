@@ -18,14 +18,14 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
-type WinRegActionType int
+type ActionType int
 
 const (
 	TaskTypeWinRegPresent   = "win_reg.present"
 	TaskTypeWinRegAbsent    = "win_reg.absent"
 	TaskTypeWinRegAbsentKey = "win_reg.absent_key"
 
-	ActionWinRegPresent WinRegActionType = iota + 1
+	ActionWinRegPresent ActionType = iota + 1
 	ActionWinRegAbsent
 	ActionWinRegAbsentKey
 )
@@ -33,7 +33,7 @@ const (
 var ErrUnknownWinRegAction = errors.New("unknown action")
 
 type WrTask struct {
-	ActionType WinRegActionType
+	ActionType ActionType
 	TypeName   string
 	Path       string
 
