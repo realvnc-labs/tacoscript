@@ -14,7 +14,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"github.com/realvnc-labs/tacoscript/tasks"
+	"github.com/realvnc-labs/tacoscript/tasks/fieldstatus"
 	"github.com/realvnc-labs/tacoscript/utils"
 )
 
@@ -59,21 +59,20 @@ func TestShouldUpdateSimpleConfigFileParam(t *testing.T) {
 		Reloader: &mockConfigReloader{},
 	}
 
-	tracker := &tasks.FieldNameStatusTracker{
-		NameMap: WithNameMap("encryption", "Encryption"),
-		StatusMap: tasks.FieldStatusMap{
-			"Encryption": tasks.FieldStatus{
+	tracker := fieldstatus.NewFieldNameStatusTrackerWithMapAndStatus(
+		WithNameMap("encryption", "Encryption"),
+		fieldstatus.StatusMap{
+			"Encryption": fieldstatus.FieldStatus{
 				HasNewValue: true,
 			},
-		},
-	}
+		})
 
 	task := &RvsTask{
-		Path:       "realvnc-server-1",
-		ConfigFile: "../../realvnc/test/realvncserver-config.conf",
-		Encryption: "AlwaysOn",
-		Mapper:     tracker,
-		Tracker:    tracker,
+		Path:         "realvnc-server-1",
+		ConfigFile:   "../../realvnc/test/realvncserver-config.conf",
+		Encryption:   "AlwaysOn",
+		fieldMapper:  tracker,
+		fieldTracker: tracker,
 	}
 
 	err := task.Validate(runtime.GOOS)
@@ -107,23 +106,23 @@ func TestShouldAddSimpleConfigFileParam(t *testing.T) {
 		Reloader: &mockConfigReloader{},
 	}
 
-	tracker := &tasks.FieldNameStatusTracker{
-		NameMap: WithNameMap("blank_screen", "BlankScreen"),
-		StatusMap: tasks.FieldStatusMap{
-			"BlankScreen": tasks.FieldStatus{
+	tracker := fieldstatus.NewFieldNameStatusTrackerWithMapAndStatus(
+		WithNameMap("blank_screen", "BlankScreen"),
+		fieldstatus.StatusMap{
+			"BlankScreen": fieldstatus.FieldStatus{
 				HasNewValue: true,
 			},
-		},
-	}
+		})
 
 	task := &RvsTask{
 		Path:        "realvnc-server-1",
 		ConfigFile:  "../../realvnc/test/realvncserver-config.conf",
 		SkipBackup:  true,
 		BlankScreen: true,
-		Mapper:      tracker,
-		Tracker:     tracker,
 	}
+
+	task.SetMapper(tracker)
+	task.SetTracker(tracker)
 
 	err := task.Validate(runtime.GOOS)
 	require.NoError(t, err)
@@ -160,23 +159,23 @@ func TestShouldAddSimpleConfigWhenNoExistingConfigFile(t *testing.T) {
 	newConfigFilename := "../../realvnc/test/realvncserver-config-new.conf"
 	defer os.Remove(newConfigFilename)
 
-	tracker := &tasks.FieldNameStatusTracker{
-		NameMap: WithNameMap("idle_timeout", "IdleTimeout"),
-		StatusMap: tasks.FieldStatusMap{
-			"IdleTimeout": tasks.FieldStatus{
+	tracker := fieldstatus.NewFieldNameStatusTrackerWithMapAndStatus(
+		WithNameMap("idle_timeout", "IdleTimeout"),
+		fieldstatus.StatusMap{
+			"IdleTimeout": fieldstatus.FieldStatus{
 				HasNewValue: true,
 			},
-		},
-	}
+		})
 
 	task := &RvsTask{
 		Path:        "realvnc-server-1",
 		ConfigFile:  newConfigFilename,
 		IdleTimeout: 3600,
 		SkipBackup:  false,
-		Mapper:      tracker,
-		Tracker:     tracker,
 	}
+
+	task.SetMapper(tracker)
+	task.SetTracker(tracker)
 
 	err = task.Validate(runtime.GOOS)
 	require.NoError(t, err)
@@ -212,23 +211,23 @@ func TestShouldRemoveSimpleConfigFileParam(t *testing.T) {
 		Reloader: &mockConfigReloader{},
 	}
 
-	tracker := &tasks.FieldNameStatusTracker{
-		NameMap: WithNameMap("encryption", "Encryption"),
-		StatusMap: tasks.FieldStatusMap{
-			"Encryption": tasks.FieldStatus{
+	tracker := fieldstatus.NewFieldNameStatusTrackerWithMapAndStatus(
+		WithNameMap("encryption", "Encryption"),
+		fieldstatus.StatusMap{
+			"Encryption": fieldstatus.FieldStatus{
 				HasNewValue: true,
 				Clear:       true,
 			},
-		},
-	}
+		})
 
 	task := &RvsTask{
 		Path:       "realvnc-server-1",
 		ConfigFile: "../../realvnc/test/realvncserver-config.conf",
 		Encryption: "!UNSET!",
-		Mapper:     tracker,
-		Tracker:    tracker,
 	}
+
+	task.SetMapper(tracker)
+	task.SetTracker(tracker)
 
 	err := task.Validate(runtime.GOOS)
 	require.NoError(t, err)

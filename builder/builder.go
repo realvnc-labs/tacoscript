@@ -11,6 +11,8 @@ import (
 	"github.com/realvnc-labs/tacoscript/builder/parser"
 	"github.com/realvnc-labs/tacoscript/conv"
 	"github.com/realvnc-labs/tacoscript/tasks"
+	"github.com/realvnc-labs/tacoscript/tasks/fieldstatus"
+	"github.com/realvnc-labs/tacoscript/tasks/fieldstatus/statusbuilder"
 	"github.com/realvnc-labs/tacoscript/utils"
 )
 
@@ -47,25 +49,26 @@ func Build(
 	logrus.Debugf("Parsing task %s, %s", typeName, path)
 	errs = &utils.Errors{}
 
-	var mapper tasks.FieldNameMapper
-	var tracker tasks.FieldStatusTracker
+	var mapper fieldstatus.NameMapper
+	var tracker fieldstatus.Tracker
 
 	taskWithTracker, hasTracker := outputTask.(tasks.TaskWithFieldTracker)
 
 	if hasTracker {
 		// if TrackWithFieldTracker then the task is using the field name mapper and the status tracker
 		// so we need to initialize those.
-		combinedFieldTracker := tasks.NewFieldCombinedTracker()
-		tracker = combinedFieldTracker
+		combinedFieldTracker := fieldstatus.NewFieldNameStatusTracker()
 		mapper = combinedFieldTracker
+		tracker = combinedFieldTracker
 		taskWithTracker.SetMapper(combinedFieldTracker)
 		taskWithTracker.SetTracker(combinedFieldTracker)
 	} else {
 		// if just a regular task then we only need a local mapper for the reflection based value parsing
-		mapper = tasks.NewFieldNameMapper()
+		fieldMapper := fieldstatus.NewFieldNameMapper()
+		mapper = fieldMapper
 	}
 
-	mapper.BuildFieldMap(outputTask)
+	statusbuilder.Build(outputTask, mapper, tracker)
 
 	outputTaskValues := reflect.Indirect(reflect.ValueOf(outputTask))
 

@@ -13,7 +13,7 @@ import (
 
 	tacoexec "github.com/realvnc-labs/tacoscript/exec"
 	"github.com/realvnc-labs/tacoscript/reg"
-	"github.com/realvnc-labs/tacoscript/tasks"
+	"github.com/realvnc-labs/tacoscript/tasks/fieldstatus"
 )
 
 const (
@@ -30,7 +30,7 @@ var (
 func (rvste *RvstExecutor) applyConfigChanges(rvst *RvsTask) (addedCount int, updatedCount int, err error) {
 	baseKey := getBaseKeyForServerMode(rvst.ServerMode)
 
-	err = rvst.Tracker.WithNewValues(func(fieldName string, fs tasks.FieldStatus) (err error) {
+	err = rvst.fieldTracker.WithNewValues(func(fieldName string, fs fieldstatus.FieldStatus) (err error) {
 		regPath := fieldName
 		regValue, err := rvst.getFieldValueAsString(fieldName)
 		if err != nil {
@@ -62,7 +62,7 @@ func (rvste *RvstExecutor) applyConfigChanges(rvst *RvsTask) (addedCount int, up
 			}
 		}
 
-		err = rvst.Tracker.SetChangeApplied(fieldName)
+		err = rvst.fieldTracker.SetChangeApplied(fieldName)
 		if err != nil {
 			return err
 		}

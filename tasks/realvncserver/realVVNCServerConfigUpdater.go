@@ -16,7 +16,7 @@ import (
 
 	tacoexec "github.com/realvnc-labs/tacoscript/exec"
 	"github.com/realvnc-labs/tacoscript/realvnc"
-	"github.com/realvnc-labs/tacoscript/tasks"
+	"github.com/realvnc-labs/tacoscript/tasks/fieldstatus"
 	"github.com/realvnc-labs/tacoscript/utils"
 )
 
@@ -117,7 +117,7 @@ func (rvste *RvstExecutor) updateExistingValues(rvst *RvsTask, configValues *rea
 
 		fieldName := existingConfigValue.Name
 
-		fieldStatus, found := rvst.Tracker.GetFieldStatus(fieldName)
+		fieldStatus, found := rvst.fieldTracker.GetFieldStatus(fieldName)
 		if err != nil {
 			return 0, fmt.Errorf("error while finding field %s: %v", fieldName, err)
 		}
@@ -164,7 +164,7 @@ func (rvste *RvstExecutor) updateExistingValues(rvst *RvsTask, configValues *rea
 			logrus.Debugf(`removed %s`, fieldName)
 		}
 
-		err = rvst.Tracker.SetChangeApplied(fieldName)
+		err = rvst.fieldTracker.SetChangeApplied(fieldName)
 		if err != nil {
 			return 0, fmt.Errorf("failed to update change status %s: %v", fieldName, err)
 		}
@@ -183,7 +183,7 @@ func (rvste *RvstExecutor) addNewValues(rvst *RvsTask, configValues *realvnc.Con
 
 	logrus.Debugf("checking for new config values")
 
-	err = rvst.Tracker.WithNewValues(func(fieldName string, fs tasks.FieldStatus) (err error) {
+	err = rvst.fieldTracker.WithNewValues(func(fieldName string, fs fieldstatus.FieldStatus) (err error) {
 		// ignore fields where the change has been applied already (aka updating/cleared fields)
 		if fs.ChangeApplied || fs.Clear {
 			return nil

@@ -102,8 +102,8 @@ func (t *RvsTask) Validate(goos string) error {
 }
 
 func (t *RvsTask) shouldValidate(fieldKey string) (should bool) {
-	fieldName := t.Mapper.GetFieldName(fieldKey)
-	return t.Tracker.HasNewValue(fieldName) && !t.Tracker.ShouldClear(fieldName)
+	fieldName := t.fieldMapper.GetFieldName(fieldKey)
+	return t.fieldTracker.HasNewValue(fieldName) && !t.fieldTracker.ShouldClear(fieldName)
 }
 
 func (t *RvsTask) ValidateConfigFileField(goos string) error {

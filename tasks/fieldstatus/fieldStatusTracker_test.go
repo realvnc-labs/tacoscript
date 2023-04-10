@@ -1,9 +1,11 @@
-package tasks
+package fieldstatus_test
 
 import (
 	"fmt"
 	"testing"
 
+	"github.com/realvnc-labs/tacoscript/tasks/fieldstatus"
+	"github.com/realvnc-labs/tacoscript/tasks/fieldstatus/statusbuilder"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -21,12 +23,8 @@ type TestTaskWithCombinedNameMapperAndChangeTracker struct {
 
 	Shell string `taco:"shell"`
 
-	mapper  FieldNameMapper
-	tracker FieldStatusTracker
-}
-
-func (t *TestTaskWithCombinedNameMapperAndChangeTracker) GetTracker() (tracker FieldStatusTracker) {
-	return t.tracker
+	mapper  fieldstatus.NameMapper
+	tracker fieldstatus.Tracker
 }
 
 func (t *TestTaskWithCombinedNameMapperAndChangeTracker) GetTypeName() string {
@@ -57,9 +55,9 @@ func (t *TestTaskWithCombinedNameMapperAndChangeTracker) GetCreatesFilesList() [
 	return t.Creates
 }
 
-func (t *TestTaskWithCombinedNameMapperAndChangeTracker) GetMapper() (mapper FieldNameMapper) {
+func (t *TestTaskWithCombinedNameMapperAndChangeTracker) GetMapper() (mapper fieldstatus.NameMapper) {
 	if t.mapper == nil {
-		t.mapper = NewFieldCombinedTracker()
+		t.mapper = fieldstatus.NewFieldNameStatusTracker()
 	}
 	return t.mapper
 }
@@ -69,13 +67,14 @@ func (t *TestTaskWithCombinedNameMapperAndChangeTracker) Validate(goos string) e
 }
 
 func TestShouldBuildFieldMapForTask(t *testing.T) {
-	tracker := NewFieldCombinedTracker()
+	tracker := fieldstatus.NewFieldNameStatusTracker()
 	task := &TestTaskWithCombinedNameMapperAndChangeTracker{
 		mapper:  tracker,
 		tracker: tracker,
 	}
 
-	task.mapper.BuildFieldMap(task)
+	statusbuilder.Build(task, tracker, tracker)
+
 	m := task.mapper
 
 	assert.Equal(t, "Field1", m.GetFieldName("field_1"))
@@ -95,12 +94,12 @@ func TestShouldBuildFieldMapForTask(t *testing.T) {
 }
 
 func TestShouldSetGetFieldStatus(t *testing.T) {
-	tracker := NewFieldCombinedTracker()
+	tracker := fieldstatus.NewFieldNameStatusTracker()
 	task := &TestTaskWithCombinedNameMapperAndChangeTracker{
 		tracker: tracker,
 	}
 
-	task.tracker.SetFieldStatus("Field1", FieldStatus{HasNewValue: true, ChangeApplied: true, Clear: true, Tracked: true})
+	task.tracker.SetFieldStatus("Field1", fieldstatus.FieldStatus{HasNewValue: true, ChangeApplied: true, Clear: true, Tracked: true})
 	status, found := task.tracker.GetFieldStatus("Field1")
 	assert.True(t, found)
 	assert.Equal(t, true, status.HasNewValue)
@@ -110,7 +109,7 @@ func TestShouldSetGetFieldStatus(t *testing.T) {
 }
 
 func TestShouldFailGetFieldStatus(t *testing.T) {
-	tracker := NewFieldCombinedTracker()
+	tracker := fieldstatus.NewFieldNameStatusTracker()
 	task := &TestTaskWithCombinedNameMapperAndChangeTracker{
 		tracker: tracker,
 	}
@@ -120,12 +119,12 @@ func TestShouldFailGetFieldStatus(t *testing.T) {
 }
 
 func TestShouldHandleHasNewValue(t *testing.T) {
-	tracker := NewFieldCombinedTracker()
+	tracker := fieldstatus.NewFieldNameStatusTracker()
 	task := &TestTaskWithCombinedNameMapperAndChangeTracker{
 		tracker: tracker,
 	}
 
-	task.tracker.SetFieldStatus("Field1", FieldStatus{HasNewValue: false, ChangeApplied: false, Clear: false})
+	task.tracker.SetFieldStatus("Field1", fieldstatus.FieldStatus{HasNewValue: false, ChangeApplied: false, Clear: false})
 
 	err := task.tracker.SetHasNewValue("Field1")
 	require.NoError(t, err)
@@ -135,12 +134,12 @@ func TestShouldHandleHasNewValue(t *testing.T) {
 }
 
 func TestShouldHandleClearChange(t *testing.T) {
-	tracker := NewFieldCombinedTracker()
+	tracker := fieldstatus.NewFieldNameStatusTracker()
 	task := &TestTaskWithCombinedNameMapperAndChangeTracker{
 		tracker: tracker,
 	}
 
-	task.tracker.SetFieldStatus("Field2", FieldStatus{HasNewValue: false, ChangeApplied: false, Clear: false})
+	task.tracker.SetFieldStatus("Field2", fieldstatus.FieldStatus{HasNewValue: false, ChangeApplied: false, Clear: false})
 
 	err := task.tracker.SetClear("Field2")
 	require.NoError(t, err)
@@ -154,12 +153,12 @@ func TestShouldHandleClearChange(t *testing.T) {
 }
 
 func TestShouldSetChangeApplied(t *testing.T) {
-	tracker := NewFieldCombinedTracker()
+	tracker := fieldstatus.NewFieldNameStatusTracker()
 	task := &TestTaskWithCombinedNameMapperAndChangeTracker{
 		tracker: tracker,
 	}
 
-	task.tracker.SetFieldStatus("Field2", FieldStatus{HasNewValue: false, ChangeApplied: false, Clear: false})
+	task.tracker.SetFieldStatus("Field2", fieldstatus.FieldStatus{HasNewValue: false, ChangeApplied: false, Clear: false})
 
 	err := task.tracker.SetChangeApplied("Field2")
 	require.NoError(t, err)
@@ -170,12 +169,12 @@ func TestShouldSetChangeApplied(t *testing.T) {
 }
 
 func TestShouldSetTracked(t *testing.T) {
-	tracker := NewFieldCombinedTracker()
+	tracker := fieldstatus.NewFieldNameStatusTracker()
 	task := &TestTaskWithCombinedNameMapperAndChangeTracker{
 		tracker: tracker,
 	}
 
-	task.tracker.SetFieldStatus("Field2", FieldStatus{HasNewValue: false, ChangeApplied: false, Clear: false, Tracked: false})
+	task.tracker.SetFieldStatus("Field2", fieldstatus.FieldStatus{HasNewValue: false, ChangeApplied: false, Clear: false, Tracked: false})
 
 	err := task.tracker.SetTracked("Field2")
 	require.NoError(t, err)

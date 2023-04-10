@@ -13,6 +13,7 @@ import (
 	tacoexec "github.com/realvnc-labs/tacoscript/exec"
 	"github.com/realvnc-labs/tacoscript/tasks"
 	"github.com/realvnc-labs/tacoscript/tasks/executionresult"
+	"github.com/realvnc-labs/tacoscript/tasks/fieldstatus"
 )
 
 const (
@@ -65,10 +66,10 @@ type RvsTask struct {
 
 	Shell string `taco:"shell"`
 
-	Mapper  tasks.FieldNameMapper
-	Tracker tasks.FieldStatusTracker
+	fieldMapper  fieldstatus.NameMapper
+	fieldTracker fieldstatus.Tracker
 
-	// was replace file updated?
+	// was the config updated?
 	Updated bool
 }
 
@@ -80,12 +81,12 @@ var (
 	_ tasks.TaskWithFieldTracker = new(RvsTask)
 )
 
-func (t *RvsTask) SetMapper(mapper tasks.FieldNameMapper) {
-	t.Mapper = mapper
+func (t *RvsTask) SetMapper(mapper fieldstatus.NameMapper) {
+	t.fieldMapper = mapper
 }
 
-func (t *RvsTask) SetTracker(tracker tasks.FieldStatusTracker) {
-	t.Tracker = tracker
+func (t *RvsTask) SetTracker(tracker fieldstatus.Tracker) {
+	t.fieldTracker = tracker
 }
 
 func (t *RvsTask) GetTypeName() string {

@@ -1,5 +1,7 @@
 package tasks
 
+import "github.com/realvnc-labs/tacoscript/tasks/fieldstatus"
+
 type Scripts []Script
 
 type Script struct {
@@ -21,6 +23,6 @@ type CoreTask interface {
 // New interfaces will be required if there's a requirement for allowing access to only one or
 // the other.
 type TaskWithFieldTracker interface {
-	SetMapper(mapper FieldNameMapper)
-	SetTracker(tracker FieldStatusTracker)
+	SetMapper(mapper fieldstatus.NameMapper)
+	SetTracker(tracker fieldstatus.Tracker)
 }

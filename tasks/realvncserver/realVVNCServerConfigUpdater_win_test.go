@@ -12,7 +12,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/realvnc-labs/tacoscript/reg"
-	"github.com/realvnc-labs/tacoscript/tasks"
+	"github.com/realvnc-labs/tacoscript/tasks/fieldstatus"
 	"github.com/realvnc-labs/tacoscript/utils"
 )
 
@@ -53,10 +53,10 @@ func TestShouldSetSimpleConfigRegistryParam(t *testing.T) {
 		Path:       "realvnc-server-1",
 		ServerMode: "Service",
 		Encryption: "AlwaysOff",
-
-		Mapper:  tracker,
-		Tracker: tracker,
 	}
+
+	task.SetMapper(tracker)
+	task.SetTracker(tracker)
 
 	err := task.Validate(runtime.GOOS)
 	require.NoError(t, err)
@@ -91,10 +91,10 @@ func TestShouldUpdateSimpleConfigRegistryParam(t *testing.T) {
 		Path:       "realvnc-server-1",
 		ServerMode: "Service",
 		Encryption: "AlwaysOff",
-
-		Mapper:  tracker,
-		Tracker: tracker,
 	}
+
+	setupTask.SetMapper(tracker)
+	setupTask.SetTracker(tracker)
 
 	err := setupTask.Validate(runtime.GOOS)
 	require.NoError(t, err)
@@ -107,10 +107,10 @@ func TestShouldUpdateSimpleConfigRegistryParam(t *testing.T) {
 		Path:       "realvnc-server-2",
 		ServerMode: "Service",
 		Encryption: "PreferOn",
-
-		Mapper:  tracker,
-		Tracker: tracker,
 	}
+
+	task.SetMapper(tracker)
+	task.SetTracker(tracker)
 
 	err = task.Validate(runtime.GOOS)
 	require.NoError(t, err)
@@ -139,26 +139,25 @@ func TestShouldClearSimpleConfigRegistryParam(t *testing.T) {
 		Reloader: &mockConfigReloader{},
 	}
 
-	tracker := &tasks.FieldNameStatusTracker{
-		NameMap: tasks.FieldNameMap{
+	tracker := fieldstatus.NewFieldNameStatusTrackerWithMapAndStatus(
+		fieldstatus.NameMap{
 			"blank_screen": "BlankScreen",
 		},
-		StatusMap: tasks.FieldStatusMap{
-			"BlankScreen": tasks.FieldStatus{
+		fieldstatus.StatusMap{
+			"BlankScreen": fieldstatus.FieldStatus{
 				HasNewValue: true,
 				Clear:       false,
 			},
-		},
-	}
+		})
 
 	setupTask := &RvsTask{
 		Path:        "realvnc-server-1",
 		ServerMode:  "Service",
 		BlankScreen: true,
-
-		Mapper:  tracker,
-		Tracker: tracker,
 	}
+
+	setupTask.SetMapper(tracker)
+	setupTask.SetTracker(tracker)
 
 	err := setupTask.Validate(runtime.GOOS)
 	require.NoError(t, err)
@@ -167,26 +166,25 @@ func TestShouldClearSimpleConfigRegistryParam(t *testing.T) {
 	require.NoError(t, res.Err)
 	require.True(t, setupTask.Updated)
 
-	tracker = &tasks.FieldNameStatusTracker{
-		NameMap: tasks.FieldNameMap{
+	tracker = fieldstatus.NewFieldNameStatusTrackerWithMapAndStatus(
+		fieldstatus.NameMap{
 			"blank_screen": "BlankScreen",
 		},
-		StatusMap: tasks.FieldStatusMap{
-			"BlankScreen": tasks.FieldStatus{
+		fieldstatus.StatusMap{
+			"BlankScreen": fieldstatus.FieldStatus{
 				HasNewValue: true,
 				Clear:       true,
 			},
-		},
-	}
+		})
 
 	clearTask := &RvsTask{
 		Path:        "realvnc-server-1",
 		ServerMode:  "Service",
 		BlankScreen: false,
-
-		Mapper:  tracker,
-		Tracker: tracker,
 	}
+
+	clearTask.SetMapper(tracker)
+	clearTask.SetTracker(tracker)
 
 	err = clearTask.Validate(runtime.GOOS)
 	require.NoError(t, err)

@@ -5,7 +5,7 @@ import (
 	"runtime"
 	"testing"
 
-	"github.com/realvnc-labs/tacoscript/tasks"
+	"github.com/realvnc-labs/tacoscript/tasks/fieldstatus"
 	"github.com/realvnc-labs/tacoscript/utils"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -30,22 +30,22 @@ func TestShouldPerformSimpleConfigParamUpdate(t *testing.T) {
 		Reloader: &mockConfigReloader{},
 	}
 
-	tracker := &tasks.FieldNameStatusTracker{
-		NameMap: WithNameMap("encryption", "Encryption"),
-		StatusMap: tasks.FieldStatusMap{
-			"Encryption": tasks.FieldStatus{
+	tracker := fieldstatus.NewFieldNameStatusTrackerWithMapAndStatus(
+		WithNameMap("encryption", "Encryption"),
+		fieldstatus.StatusMap{
+			"Encryption": fieldstatus.FieldStatus{
 				HasNewValue: true,
 			},
-		},
-	}
+		})
 
 	task := &RvsTask{
 		Path:       "realvnc-server-1",
 		Encryption: "AlwaysOn",
 		ServerMode: "Service",
-		Mapper:     tracker,
-		Tracker:    tracker,
 	}
+
+	task.SetMapper(tracker)
+	task.SetTracker(tracker)
 
 	if runtime.GOOS != "windows" {
 		task.ConfigFile = "../../realvnc/test/realvncserver-config.conf"
