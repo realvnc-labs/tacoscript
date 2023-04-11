@@ -1,4 +1,4 @@
-package builder
+package pkgbuilder
 
 import (
 	"fmt"
@@ -10,7 +10,7 @@ import (
 	"github.com/realvnc-labs/tacoscript/tasks/pkgtask"
 )
 
-type PkgTaskBuilder struct {
+type TaskBuilder struct {
 }
 
 var pkgTaskParamsFnMap = parser.TaskFieldsParserConfig{
@@ -35,7 +35,7 @@ var pkgTaskParamsFnMap = parser.TaskFieldsParserConfig{
 	},
 }
 
-func (fmtb PkgTaskBuilder) Build(typeName, path string, params interface{}) (tasks.CoreTask, error) {
+func (tb TaskBuilder) Build(typeName, path string, params interface{}) (tasks.CoreTask, error) {
 	task := &pkgtask.PTask{
 		TypeName: typeName,
 		Path:     path,

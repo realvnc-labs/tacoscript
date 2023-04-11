@@ -1,4 +1,4 @@
-package builder
+package frtbuilder
 
 import (
 	"testing"
@@ -10,7 +10,7 @@ import (
 	"gopkg.in/yaml.v2"
 )
 
-func TestFileReplaceTaskBuilder(t *testing.T) {
+func TestTaskBuilder(t *testing.T) {
 	testCases := []struct {
 		typeName      string
 		path          string
@@ -65,7 +65,7 @@ func TestFileReplaceTaskBuilder(t *testing.T) {
 	for _, testCase := range testCases {
 		tc := testCase
 		t.Run(tc.typeName, func(t *testing.T) {
-			taskBuilder := FileReplaceTaskBuilder{}
+			taskBuilder := TaskBuilder{}
 			task, err := taskBuilder.Build(
 				tc.typeName,
 				tc.path,

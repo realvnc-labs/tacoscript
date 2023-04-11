@@ -8,17 +8,17 @@ import (
 	"github.com/realvnc-labs/tacoscript/exec"
 	"github.com/realvnc-labs/tacoscript/pkgmanager"
 	"github.com/realvnc-labs/tacoscript/tasks/cmdrun"
-	cmdrunbuilder "github.com/realvnc-labs/tacoscript/tasks/cmdrun/builder"
+	"github.com/realvnc-labs/tacoscript/tasks/cmdrun/crtbuilder"
 	"github.com/realvnc-labs/tacoscript/tasks/filemanaged"
-	filemanagedbuilder "github.com/realvnc-labs/tacoscript/tasks/filemanaged/builder"
+	"github.com/realvnc-labs/tacoscript/tasks/filemanaged/fmtbuilder"
 	"github.com/realvnc-labs/tacoscript/tasks/filereplace"
-	filereplacebuilder "github.com/realvnc-labs/tacoscript/tasks/filereplace/builder"
+	"github.com/realvnc-labs/tacoscript/tasks/filereplace/frtbuilder"
 	"github.com/realvnc-labs/tacoscript/tasks/pkgtask"
-	pkgtaskbuilder "github.com/realvnc-labs/tacoscript/tasks/pkgtask/builder"
+	"github.com/realvnc-labs/tacoscript/tasks/pkgtask/pkgbuilder"
 	"github.com/realvnc-labs/tacoscript/tasks/realvncserver"
-	realvncserverbuilder "github.com/realvnc-labs/tacoscript/tasks/realvncserver/builder"
+	"github.com/realvnc-labs/tacoscript/tasks/realvncserver/rvstbuilder"
 	"github.com/realvnc-labs/tacoscript/tasks/winreg"
-	winregbuilder "github.com/realvnc-labs/tacoscript/tasks/winreg/builder"
+	"github.com/realvnc-labs/tacoscript/tasks/winreg/wrtbuilder"
 	"github.com/realvnc-labs/tacoscript/utils"
 
 	"github.com/realvnc-labs/tacoscript/tasks"
@@ -33,16 +33,16 @@ func RunScript(scriptPath string, abortOnError bool, output io.Writer) error {
 	parser := Builder{
 		DataProvider: fileDataProvider,
 		TaskBuilder: builder.NewBuilderRouter(map[string]builder.Builder{
-			cmdrun.TaskTypeCmdRun:               &cmdrunbuilder.CmdRunTaskBuilder{},
-			filemanaged.TaskTypeFileManaged:     &filemanagedbuilder.FileManagedTaskBuilder{},
-			filereplace.TaskTypeFileReplace:     &filereplacebuilder.FileReplaceTaskBuilder{},
-			realvncserver.TaskTypeRealVNCServer: &realvncserverbuilder.RealVNCServerTaskBuilder{},
-			pkgtask.TaskTypePkgInstalled:        &pkgtaskbuilder.PkgTaskBuilder{},
-			pkgtask.TaskTypePkgRemoved:          &pkgtaskbuilder.PkgTaskBuilder{},
-			pkgtask.TaskTypePkgUpgraded:         &pkgtaskbuilder.PkgTaskBuilder{},
-			winreg.TaskTypeWinRegPresent:        &winregbuilder.WinRegTaskBuilder{},
-			winreg.TaskTypeWinRegAbsent:         &winregbuilder.WinRegTaskBuilder{},
-			winreg.TaskTypeWinRegAbsentKey:      &winregbuilder.WinRegTaskBuilder{},
+			cmdrun.TaskTypeCmdRun:               &crtbuilder.TaskBuilder{},
+			filemanaged.TaskTypeFileManaged:     &fmtbuilder.TaskBuilder{},
+			filereplace.TaskTypeFileReplace:     &frtbuilder.TaskBuilder{},
+			realvncserver.TaskTypeRealVNCServer: &rvstbuilder.TaskBuilder{},
+			pkgtask.TaskTypePkgInstalled:        &pkgbuilder.TaskBuilder{},
+			pkgtask.TaskTypePkgRemoved:          &pkgbuilder.TaskBuilder{},
+			pkgtask.TaskTypePkgUpgraded:         &pkgbuilder.TaskBuilder{},
+			winreg.TaskTypeWinRegPresent:        &wrtbuilder.TaskBuilder{},
+			winreg.TaskTypeWinRegAbsent:         &wrtbuilder.TaskBuilder{},
+			winreg.TaskTypeWinRegAbsentKey:      &wrtbuilder.TaskBuilder{},
 		}),
 		TemplateVariablesProvider: utils.OSDataProvider{},
 	}

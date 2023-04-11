@@ -1,4 +1,4 @@
-package builder
+package rvstbuilder
 
 import (
 	"testing"
@@ -11,7 +11,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestRealVNCServerTaskBuilder(t *testing.T) {
+func TestTaskBuilder(t *testing.T) {
 	testCases := []struct {
 		typeName      string
 		path          string
@@ -96,7 +96,7 @@ func TestRealVNCServerTaskBuilder(t *testing.T) {
 	for _, testCase := range testCases {
 		tc := testCase
 		t.Run(tc.typeName, func(t *testing.T) {
-			taskBuilder := RealVNCServerTaskBuilder{}
+			taskBuilder := TaskBuilder{}
 			task, err := taskBuilder.Build(
 				tc.typeName,
 				tc.path,
@@ -117,7 +117,7 @@ func TestRealVNCServerTaskBuilder(t *testing.T) {
 	}
 }
 
-func TestRealVNCServerTaskBuilderWithUnsets(t *testing.T) {
+func TestTaskBuilderWithUnsets(t *testing.T) {
 	testCases := []struct {
 		name          string
 		typeName      string
@@ -192,7 +192,7 @@ func TestRealVNCServerTaskBuilderWithUnsets(t *testing.T) {
 	for _, testCase := range testCases {
 		tc := testCase
 		t.Run(tc.name, func(t *testing.T) {
-			taskBuilder := RealVNCServerTaskBuilder{}
+			taskBuilder := TaskBuilder{}
 			task, err := taskBuilder.Build(
 				tc.typeName,
 				tc.path,

@@ -1,4 +1,4 @@
-package builder
+package crtbuilder
 
 import (
 	"strings"
@@ -13,7 +13,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestCmdRunTaskBuilder(t *testing.T) {
+func TestTaskBuilder(t *testing.T) {
 	testCases := []struct {
 		typeName      string
 		path          string
@@ -193,7 +193,7 @@ func TestCmdRunTaskBuilder(t *testing.T) {
 	for _, testCase := range testCases {
 		tc := testCase
 		t.Run(tc.typeName, func(t *testing.T) {
-			cmdBuilder := CmdRunTaskBuilder{}
+			cmdBuilder := TaskBuilder{}
 			actualTask, err := cmdBuilder.Build(
 				tc.typeName,
 				tc.path,

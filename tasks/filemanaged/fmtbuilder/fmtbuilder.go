@@ -1,4 +1,4 @@
-package builder
+package fmtbuilder
 
 import (
 	"database/sql"
@@ -12,7 +12,7 @@ import (
 	"github.com/realvnc-labs/tacoscript/utils"
 )
 
-type FileManagedTaskBuilder struct {
+type TaskBuilder struct {
 }
 
 var FileManagedTaskParamsFnMap = parser.TaskFieldsParserConfig{
@@ -43,7 +43,7 @@ var FileManagedTaskParamsFnMap = parser.TaskFieldsParserConfig{
 	},
 }
 
-func (fmtb FileManagedTaskBuilder) Build(typeName, path string, params interface{}) (tasks.CoreTask, error) {
+func (tb TaskBuilder) Build(typeName, path string, params interface{}) (tasks.CoreTask, error) {
 	task := &filemanaged.FmTask{
 		TypeName: typeName,
 		Path:     path,

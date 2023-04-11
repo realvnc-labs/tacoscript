@@ -13,7 +13,7 @@ import (
 
 	"github.com/realvnc-labs/tacoscript/tasks"
 	"github.com/realvnc-labs/tacoscript/tasks/realvncserver"
-	"github.com/realvnc-labs/tacoscript/tasks/realvncserver/builder"
+	"github.com/realvnc-labs/tacoscript/tasks/realvncserver/rvstbuilder"
 	"gopkg.in/yaml.v2"
 
 	"github.com/stretchr/testify/assert"
@@ -405,7 +405,7 @@ func TestShouldHandleBackups(t *testing.T) {
 			defer os.Remove(tc.targetConfigFile)
 
 			// convert task values into an actual task
-			taskBuilder := builder.RealVNCServerTaskBuilder{}
+			taskBuilder := rvstbuilder.TaskBuilder{}
 			task, err := taskBuilder.Build(
 				realvncserver.TaskTypeRealVNCServer,
 				"MyPath",

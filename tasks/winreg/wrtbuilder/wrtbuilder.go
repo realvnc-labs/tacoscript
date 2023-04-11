@@ -1,4 +1,4 @@
-package builder
+package wrtbuilder
 
 import (
 	builder "github.com/realvnc-labs/tacoscript/builder"
@@ -6,10 +6,10 @@ import (
 	"github.com/realvnc-labs/tacoscript/tasks/winreg"
 )
 
-type WinRegTaskBuilder struct {
+type TaskBuilder struct {
 }
 
-func (wrtb WinRegTaskBuilder) Build(typeName, path string, params interface{}) (tasks.CoreTask, error) {
+func (tb TaskBuilder) Build(typeName, path string, params interface{}) (tasks.CoreTask, error) {
 	task := &winreg.WrTask{
 		TypeName: typeName,
 		Path:     path,

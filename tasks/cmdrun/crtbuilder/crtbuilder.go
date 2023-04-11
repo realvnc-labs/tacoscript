@@ -1,4 +1,4 @@
-package builder
+package crtbuilder
 
 import (
 	"fmt"
@@ -10,7 +10,7 @@ import (
 	"github.com/realvnc-labs/tacoscript/tasks/cmdrun"
 )
 
-type CmdRunTaskBuilder struct {
+type TaskBuilder struct {
 }
 
 var cmdRunTaskParamsFnMap = parser.TaskFieldsParserConfig{
@@ -42,7 +42,7 @@ var cmdRunTaskParamsFnMap = parser.TaskFieldsParserConfig{
 	},
 }
 
-func (crtb CmdRunTaskBuilder) Build(typeName, path string, params interface{}) (t tasks.CoreTask, err error) {
+func (tb TaskBuilder) Build(typeName, path string, params interface{}) (t tasks.CoreTask, err error) {
 	task := &cmdrun.CrTask{
 		TypeName: typeName,
 		Path:     path,

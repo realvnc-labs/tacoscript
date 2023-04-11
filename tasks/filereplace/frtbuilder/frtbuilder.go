@@ -1,4 +1,4 @@
-package builder
+package frtbuilder
 
 import (
 	builder "github.com/realvnc-labs/tacoscript/builder"
@@ -6,10 +6,10 @@ import (
 	"github.com/realvnc-labs/tacoscript/tasks/filereplace"
 )
 
-type FileReplaceTaskBuilder struct {
+type TaskBuilder struct {
 }
 
-func (frtb FileReplaceTaskBuilder) Build(typeName, path string, params interface{}) (t tasks.CoreTask, err error) {
+func (tb TaskBuilder) Build(typeName, path string, params interface{}) (t tasks.CoreTask, err error) {
 	task := &filereplace.FrTask{
 		TypeName: typeName,
 		Path:     path,

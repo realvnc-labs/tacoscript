@@ -1,4 +1,4 @@
-package builder
+package rvstbuilder
 
 import (
 	builder "github.com/realvnc-labs/tacoscript/builder"
@@ -7,10 +7,10 @@ import (
 	"github.com/realvnc-labs/tacoscript/tasks/realvncserver"
 )
 
-type RealVNCServerTaskBuilder struct {
+type TaskBuilder struct {
 }
 
-func (tb RealVNCServerTaskBuilder) Build(typeName, path string, fields interface{}) (t tasks.CoreTask, err error) {
+func (tb TaskBuilder) Build(typeName, path string, fields interface{}) (t tasks.CoreTask, err error) {
 	tracker := fieldstatus.NewFieldNameStatusTracker()
 	task := &realvncserver.RvsTask{
 		TypeName: typeName,

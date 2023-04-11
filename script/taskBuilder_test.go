@@ -14,7 +14,7 @@ import (
 	"github.com/realvnc-labs/tacoscript/builder"
 	"github.com/realvnc-labs/tacoscript/tasks"
 	"github.com/realvnc-labs/tacoscript/tasks/filemanaged"
-	filemanagedbuilder "github.com/realvnc-labs/tacoscript/tasks/filemanaged/builder"
+	"github.com/realvnc-labs/tacoscript/tasks/filemanaged/fmtbuilder"
 	"github.com/realvnc-labs/tacoscript/utils"
 )
 
@@ -125,7 +125,7 @@ Funny file
 		parser := Builder{
 			DataProvider: dataProviderMock,
 			TaskBuilder: builder.NewBuilderRouter(map[string]builder.Builder{
-				filemanaged.TaskTypeFileManaged: filemanagedbuilder.FileManagedTaskBuilder{},
+				filemanaged.TaskTypeFileManaged: fmtbuilder.TaskBuilder{},
 			}),
 			TemplateVariablesProvider: TemplateVariablesProviderMock{},
 		}
