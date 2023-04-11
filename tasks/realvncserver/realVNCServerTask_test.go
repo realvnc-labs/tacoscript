@@ -1,4 +1,4 @@
-package realvncserver
+package realvncserver_test
 
 import (
 	"context"
@@ -6,6 +6,7 @@ import (
 	"testing"
 
 	"github.com/realvnc-labs/tacoscript/tasks/fieldstatus"
+	"github.com/realvnc-labs/tacoscript/tasks/realvncserver"
 	"github.com/realvnc-labs/tacoscript/utils"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -14,7 +15,7 @@ import (
 type mockConfigReloader struct {
 }
 
-func (rl *mockConfigReloader) Reload(rvst *RvsTask) (err error) {
+func (rl *mockConfigReloader) Reload(rvst *realvncserver.RvsTask) (err error) {
 	return nil
 }
 
@@ -24,7 +25,7 @@ func TestShouldPerformSimpleConfigParamUpdate(t *testing.T) {
 
 	ctx := context.Background()
 
-	executor := &RvstExecutor{
+	executor := &realvncserver.RvstExecutor{
 		FsManager: &utils.FsManager{},
 
 		Reloader: &mockConfigReloader{},
@@ -38,7 +39,7 @@ func TestShouldPerformSimpleConfigParamUpdate(t *testing.T) {
 			},
 		})
 
-	task := &RvsTask{
+	task := &realvncserver.RvsTask{
 		Path:       "realvnc-server-1",
 		Encryption: "AlwaysOn",
 		ServerMode: "Service",

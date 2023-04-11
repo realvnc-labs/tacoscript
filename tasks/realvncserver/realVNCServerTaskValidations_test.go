@@ -1,4 +1,4 @@
-package realvncserver
+package realvncserver_test
 
 import (
 	"fmt"
@@ -7,6 +7,7 @@ import (
 
 	"github.com/realvnc-labs/tacoscript/tasks"
 	"github.com/realvnc-labs/tacoscript/tasks/fieldstatus"
+	"github.com/realvnc-labs/tacoscript/tasks/realvncserver"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -27,7 +28,7 @@ func newTrackerWithSingleFieldStatus(fieldKey string, fieldName string) (tracker
 	return tracker
 }
 
-func initMapperTracker(task *RvsTask) {
+func initMapperTracker(task *realvncserver.RvsTask) {
 	tracker := newTrackerWithSingleFieldStatus("encryption", "Encryption")
 	task.SetMapper(tracker)
 	task.SetTracker(tracker)
@@ -36,19 +37,19 @@ func initMapperTracker(task *RvsTask) {
 func TestRealVNCNameFieldValidations(t *testing.T) {
 	testCases := []struct {
 		name          string
-		task          RvsTask
+		task          realvncserver.RvsTask
 		expectedError string
 	}{
 		{
 			name: "valid name value",
-			task: RvsTask{
+			task: realvncserver.RvsTask{
 				Path:       "MyTask",
 				ConfigFile: "/tmp/config.conf",
 			},
 		},
 		{
 			name: "invalid path value",
-			task: RvsTask{
+			task: realvncserver.RvsTask{
 				// Path: "MyTask",
 				ConfigFile: "/tmp/config.conf",
 			},
@@ -81,14 +82,14 @@ func TestRealVNCConfigFileBaseFieldValidations(t *testing.T) {
 	}
 	testCases := []struct {
 		name               string
-		task               RvsTask
+		task               realvncserver.RvsTask
 		goos               string
 		expectedErrorMsg   string
 		expectedConfigFile string
 	}{
 		{
 			name: "valid config_file value",
-			task: RvsTask{
+			task: realvncserver.RvsTask{
 				Path:       "MyTask",
 				ConfigFile: "/config/file/name/here",
 			},
@@ -97,19 +98,19 @@ func TestRealVNCConfigFileBaseFieldValidations(t *testing.T) {
 		},
 		{
 			name: "when no config file, use service server mode config file",
-			task: RvsTask{
+			task: realvncserver.RvsTask{
 				Path: "MyTask",
 			},
 			goos:               "any",
-			expectedConfigFile: DefaultServiceServerModeConfigFile,
+			expectedConfigFile: realvncserver.DefaultServiceServerModeConfigFile,
 		},
 		{
-			task: RvsTask{
+			task: realvncserver.RvsTask{
 				Path:       "MyTask",
-				ServerMode: ServiceServerMode,
+				ServerMode: realvncserver.ServiceServerMode,
 			},
 			goos:               "any",
-			expectedConfigFile: DefaultServiceServerModeConfigFile,
+			expectedConfigFile: realvncserver.DefaultServiceServerModeConfigFile,
 		},
 	}
 
@@ -147,47 +148,47 @@ func TestRealVNCConfigFileExtendedFieldValidations(t *testing.T) {
 	}
 	testCases := []struct {
 		name               string
-		task               RvsTask
+		task               realvncserver.RvsTask
 		goos               string
 		expectedErrorMsg   string
 		expectedConfigFile string
 	}{
 		{
 			name: "default path when user server mode",
-			task: RvsTask{
+			task: realvncserver.RvsTask{
 				Path:       "MyTask",
-				ServerMode: UserServerMode,
+				ServerMode: realvncserver.UserServerMode,
 			},
 			goos:               "any",
-			expectedConfigFile: DefaultUserServerModeConfigFile,
+			expectedConfigFile: realvncserver.DefaultUserServerModeConfigFile,
 		},
 		{
 			name: "default path when virtual server mode",
-			task: RvsTask{
+			task: realvncserver.RvsTask{
 				Path:       "MyTask",
-				ServerMode: VirtualServerMode,
+				ServerMode: realvncserver.VirtualServerMode,
 			},
 			goos:               "linux",
-			expectedConfigFile: DefaultVirtualServerModeConfigFile,
+			expectedConfigFile: realvncserver.DefaultVirtualServerModeConfigFile,
 		},
 		{
 			name: "error when virtual server mode and darwin",
-			task: RvsTask{
+			task: realvncserver.RvsTask{
 				Path:       "MyTask",
-				ServerMode: VirtualServerMode,
+				ServerMode: realvncserver.VirtualServerMode,
 			},
 			goos:               "darwin",
-			expectedConfigFile: DefaultVirtualServerModeConfigFile,
-			expectedErrorMsg:   ErrServerModeCannotBeVirtualWhenNotLinuxMsg,
+			expectedConfigFile: realvncserver.DefaultVirtualServerModeConfigFile,
+			expectedErrorMsg:   realvncserver.ErrServerModeCannotBeVirtualWhenNotLinuxMsg,
 		},
 		{
 			name: "error when virtual server mode and windows",
-			task: RvsTask{
+			task: realvncserver.RvsTask{
 				Path:       "MyTask",
-				ServerMode: VirtualServerMode,
+				ServerMode: realvncserver.VirtualServerMode,
 			},
 			goos:             "windows",
-			expectedErrorMsg: ErrServerModeCannotBeVirtualWhenNotLinuxMsg,
+			expectedErrorMsg: realvncserver.ErrServerModeCannotBeVirtualWhenNotLinuxMsg,
 		},
 	}
 
@@ -222,22 +223,22 @@ func TestShouldSetUseVNCLicenseReloadWhenVirtualServiceMode(t *testing.T) {
 
 	cases := []struct {
 		name                  string
-		task                  RvsTask
+		task                  realvncserver.RvsTask
 		goos                  string
 		expectedLicenseReload bool
 	}{
 		{
 			name: "virtual mode license reload linux",
-			task: RvsTask{
+			task: realvncserver.RvsTask{
 				Path:       "MyTask",
-				ServerMode: VirtualServerMode,
+				ServerMode: realvncserver.VirtualServerMode,
 			},
 			goos:                  "linux",
 			expectedLicenseReload: true,
 		},
 		{
 			name: "no license reload darwin",
-			task: RvsTask{
+			task: realvncserver.RvsTask{
 				Path: "MyTask",
 			},
 			goos:                  "darwin",
@@ -245,7 +246,7 @@ func TestShouldSetUseVNCLicenseReloadWhenVirtualServiceMode(t *testing.T) {
 		},
 		{
 			name: "no license reload windows",
-			task: RvsTask{
+			task: realvncserver.RvsTask{
 				Path: "MyTask",
 			},
 			goos:                  "windows",
@@ -269,7 +270,7 @@ func TestShouldNotSetUseVNCLicenseReloadWhenNotVirtualServiceMode(t *testing.T) 
 	// TODO: (rs): remove this Skip when support for user and virtual server modes is reintroduced.
 	t.Skip()
 
-	task := RvsTask{
+	task := realvncserver.RvsTask{
 		Path: "MyTask",
 	}
 
@@ -285,24 +286,24 @@ func TestShouldErrorWhenVirtualServerModeAndNotLinux(t *testing.T) {
 	// TODO: (rs): remove this Skip when support for user and virtual server modes is reintroduced.
 	t.Skip()
 
-	task := &RvsTask{
+	task := &realvncserver.RvsTask{
 		Path:       "MyTask",
-		ServerMode: VirtualServerMode,
+		ServerMode: realvncserver.VirtualServerMode,
 	}
 
 	err := task.ValidateServerModeField("windows")
-	require.ErrorContains(t, err, ErrServerModeCannotBeVirtualWhenNotLinuxMsg)
+	require.ErrorContains(t, err, realvncserver.ErrServerModeCannotBeVirtualWhenNotLinuxMsg)
 	err = task.ValidateServerModeField("darwin")
-	require.ErrorContains(t, err, ErrServerModeCannotBeVirtualWhenNotLinuxMsg)
+	require.ErrorContains(t, err, realvncserver.ErrServerModeCannotBeVirtualWhenNotLinuxMsg)
 }
 
 func TestShouldNotErrorWhenVirtualServerModeAndLinux(t *testing.T) {
 	// TODO: (rs): remove this Skip when support for user and virtual server modes is reintroduced.
 	t.Skip()
 
-	task := &RvsTask{
+	task := &realvncserver.RvsTask{
 		Path:       "MyTask",
-		ServerMode: VirtualServerMode,
+		ServerMode: realvncserver.VirtualServerMode,
 	}
 
 	err := task.ValidateServerModeField("linux")
@@ -312,12 +313,12 @@ func TestShouldNotErrorWhenVirtualServerModeAndLinux(t *testing.T) {
 func TestRealVNCServerEncryptionFieldValidations(t *testing.T) {
 	testCases := []struct {
 		name          string
-		task          RvsTask
+		task          realvncserver.RvsTask
 		expectedError string
 	}{
 		{
 			name: "valid encryption value",
-			task: RvsTask{
+			task: realvncserver.RvsTask{
 				Path:       "MyTask",
 				ConfigFile: "/config/file/name/here",
 				Encryption: "AlwaysOn",
@@ -325,21 +326,21 @@ func TestRealVNCServerEncryptionFieldValidations(t *testing.T) {
 		},
 		{
 			name: "invalid encryption value",
-			task: RvsTask{
+			task: realvncserver.RvsTask{
 				Path:       "MyTask",
 				ConfigFile: "/config/file/name/here",
 				Encryption: "randomvalue",
 			},
-			expectedError: ErrInvalidEncryptionValueMsg,
+			expectedError: realvncserver.ErrInvalidEncryptionValueMsg,
 		},
 		{
 			name: "invalid encryption value",
-			task: RvsTask{
+			task: realvncserver.RvsTask{
 				Path:       "MyTask",
 				ConfigFile: "/config/file/name/here",
 				Encryption: "AlwaysOn   # this comment is an error",
 			},
-			expectedError: ErrInvalidEncryptionValueMsg,
+			expectedError: realvncserver.ErrInvalidEncryptionValueMsg,
 		},
 	}
 
@@ -365,21 +366,21 @@ func TestRealVNCServerEncryptionFieldValidations(t *testing.T) {
 func TestRealVNCServerAuthenticationFieldValidations(t *testing.T) {
 	testCases := []struct {
 		name          string
-		task          RvsTask
+		task          realvncserver.RvsTask
 		expectedError string
 	}{
 		{
 			name: "invalid authentication value",
-			task: RvsTask{
+			task: realvncserver.RvsTask{
 				Path:           "MyTask",
 				ConfigFile:     "/config/file/name/here",
 				Authentication: "invalidValue",
 			},
-			expectedError: ErrInvalidAuthenticationValueMsg,
+			expectedError: realvncserver.ErrInvalidAuthenticationValueMsg,
 		},
 		{
 			name: "valid authentication value",
-			task: RvsTask{
+			task: realvncserver.RvsTask{
 				Path:           "MyTask",
 				ConfigFile:     "/config/file/name/here",
 				Authentication: "SingleSignOn+Radius,SystemAuth+Radius",
@@ -387,7 +388,7 @@ func TestRealVNCServerAuthenticationFieldValidations(t *testing.T) {
 		},
 		{
 			name: "SingleSignOn   +Radius   ,  SystemAuth+  Radius",
-			task: RvsTask{
+			task: realvncserver.RvsTask{
 				Path:           "MyTask",
 				ConfigFile:     "/config/file/name/here",
 				Authentication: "SingleSignOn   +Radius   ,  SystemAuth+  Radius",
@@ -395,30 +396,30 @@ func TestRealVNCServerAuthenticationFieldValidations(t *testing.T) {
 		},
 		{
 			name: "missing additional authentication",
-			task: RvsTask{
+			task: realvncserver.RvsTask{
 				Path:           "MyTask",
 				ConfigFile:     "/config/file/name/here",
 				Authentication: "SingleSignOn+Radius,",
 			},
-			expectedError: ErrInvalidAuthenticationValueMsg,
+			expectedError: realvncserver.ErrInvalidAuthenticationValueMsg,
 		},
 		{
 			name: "missing additional authentication scheme",
-			task: RvsTask{
+			task: realvncserver.RvsTask{
 				Path:           "MyTask",
 				ConfigFile:     "/config/file/name/here",
 				Authentication: "SingleSignOn+",
 			},
-			expectedError: ErrInvalidAuthenticationValueMsg,
+			expectedError: realvncserver.ErrInvalidAuthenticationValueMsg,
 		},
 		{
 			name: "contains illegal comment",
-			task: RvsTask{
+			task: realvncserver.RvsTask{
 				Path:           "MyTask",
 				ConfigFile:     "/config/file/name/here",
 				Authentication: "SingleSignOn    # not allowed comment",
 			},
-			expectedError: ErrInvalidAuthenticationValueMsg,
+			expectedError: realvncserver.ErrInvalidAuthenticationValueMsg,
 		},
 	}
 
@@ -446,21 +447,21 @@ func TestRealVNCServerAuthenticationFieldValidations(t *testing.T) {
 func TestRealVNCServerPermissionsFieldValidations(t *testing.T) {
 	testCases := []struct {
 		name          string
-		task          RvsTask
+		task          realvncserver.RvsTask
 		expectedError string
 	}{
 		{
 			name: "invalid permissions value",
-			task: RvsTask{
+			task: realvncserver.RvsTask{
 				Path:        "MyTask",
 				ConfigFile:  "/config/file/name/here",
 				Permissions: "invalidValue",
 			},
-			expectedError: ErrInvalidPermisssionsMsg,
+			expectedError: realvncserver.ErrInvalidPermisssionsMsg,
 		},
 		{
 			name: "valid permissions value",
-			task: RvsTask{
+			task: realvncserver.RvsTask{
 				Path:        "MyTask",
 				ConfigFile:  "/config/file/name/here",
 				Permissions: "superuser:f,%vncusers:d,johndoe:v,janedoe:skp-t!r",
@@ -468,7 +469,7 @@ func TestRealVNCServerPermissionsFieldValidations(t *testing.T) {
 		},
 		{
 			name: "valid permissions value - user with no permissions",
-			task: RvsTask{
+			task: realvncserver.RvsTask{
 				Path:        "MyTask",
 				ConfigFile:  "/config/file/name/here",
 				Permissions: "superuser:,%vncusers:d,johndoe:v,janedoe:skp-t!r",
@@ -476,7 +477,7 @@ func TestRealVNCServerPermissionsFieldValidations(t *testing.T) {
 		},
 		{
 			name: "permissions with whitespace",
-			task: RvsTask{
+			task: realvncserver.RvsTask{
 				Path:        "MyTask",
 				ConfigFile:  "/config/file/name/here",
 				Permissions: "superuser :f, %vncusers :d , johndoe:v, janedoe:skp-t!r",
@@ -484,30 +485,30 @@ func TestRealVNCServerPermissionsFieldValidations(t *testing.T) {
 		},
 		{
 			name: "missing additional permissions",
-			task: RvsTask{
+			task: realvncserver.RvsTask{
 				Path:        "MyTask",
 				ConfigFile:  "/config/file/name/here",
 				Permissions: "superuser :f, ",
 			},
-			expectedError: ErrInvalidPermisssionsMsg,
+			expectedError: realvncserver.ErrInvalidPermisssionsMsg,
 		},
 		{
 			name: "invalid permissions character",
-			task: RvsTask{
+			task: realvncserver.RvsTask{
 				Path:        "MyTask",
 				ConfigFile:  "/config/file/name/here",
 				Permissions: "superuser :fx, ",
 			},
-			expectedError: ErrInvalidPermisssionsMsg,
+			expectedError: realvncserver.ErrInvalidPermisssionsMsg,
 		},
 		{
 			name: "invalid permissions character - has space",
-			task: RvsTask{
+			task: realvncserver.RvsTask{
 				Path:        "MyTask",
 				ConfigFile:  "/config/file/name/here",
 				Permissions: "superuser :f x",
 			},
-			expectedError: ErrInvalidPermisssionsMsg,
+			expectedError: realvncserver.ErrInvalidPermisssionsMsg,
 		},
 	}
 
@@ -534,21 +535,21 @@ func TestRealVNCServerPermissionsFieldValidations(t *testing.T) {
 func TestRealVNCServerLogsFieldValidations(t *testing.T) {
 	testCases := []struct {
 		name          string
-		task          RvsTask
+		task          realvncserver.RvsTask
 		expectedError string
 	}{
 		{
 			name: "invalid value",
-			task: RvsTask{
+			task: realvncserver.RvsTask{
 				Path:       "MyTask",
 				ConfigFile: "/config/file/name/here",
 				Log:        "invalidValue",
 			},
-			expectedError: ErrInvalidLogsValueMsg,
+			expectedError: realvncserver.ErrInvalidLogsValueMsg,
 		},
 		{
 			name: "valid value",
-			task: RvsTask{
+			task: realvncserver.RvsTask{
 				Path:       "MyTask",
 				ConfigFile: "/config/file/name/here",
 				Log:        "*:file:10,Connections:file:100",
@@ -556,75 +557,75 @@ func TestRealVNCServerLogsFieldValidations(t *testing.T) {
 		},
 		{
 			name: "missing log area",
-			task: RvsTask{
+			task: realvncserver.RvsTask{
 				Path:       "MyTask",
 				ConfigFile: "/config/file/name/here",
 				Log:        ":file:10,Connections:file:100",
 			},
-			expectedError: ErrInvalidLogsValueMsg,
+			expectedError: realvncserver.ErrInvalidLogsValueMsg,
 		},
 		{
 			name: "missing log target",
-			task: RvsTask{
+			task: realvncserver.RvsTask{
 				Path:       "MyTask",
 				ConfigFile: "/config/file/name/here",
 				Log:        "*::10,Connections:file:100",
 			},
-			expectedError: ErrInvalidLogsValueMsg,
+			expectedError: realvncserver.ErrInvalidLogsValueMsg,
 		},
 		{
 			name: "missing log level",
-			task: RvsTask{
+			task: realvncserver.RvsTask{
 				Path:       "MyTask",
 				ConfigFile: "/config/file/name/here",
 				Log:        "*:stderr:,Connections:file:100",
 			},
-			expectedError: ErrInvalidLogsValueMsg,
+			expectedError: realvncserver.ErrInvalidLogsValueMsg,
 		},
 		{
 			name: "incomplete value 1",
-			task: RvsTask{
+			task: realvncserver.RvsTask{
 				Path:       "MyTask",
 				ConfigFile: "/config/file/name/here",
 				Log:        "*:stderr:10,",
 			},
-			expectedError: ErrInvalidLogsValueMsg,
+			expectedError: realvncserver.ErrInvalidLogsValueMsg,
 		},
 		{
 			name: "incomplete value 2",
-			task: RvsTask{
+			task: realvncserver.RvsTask{
 				Path:       "MyTask",
 				ConfigFile: "/config/file/name/here",
 				Log:        ",*:stderr:10",
 			},
-			expectedError: ErrInvalidLogsValueMsg,
+			expectedError: realvncserver.ErrInvalidLogsValueMsg,
 		},
 		{
 			name: "invalid log level - value not permitted",
-			task: RvsTask{
+			task: realvncserver.RvsTask{
 				Path:       "MyTask",
 				ConfigFile: "/config/file/name/here",
 				Log:        "*:stderr:11",
 			},
-			expectedError: ErrInvalidLogsValueMsg,
+			expectedError: realvncserver.ErrInvalidLogsValueMsg,
 		},
 		{
 			name: "invalid log level - too high",
-			task: RvsTask{
+			task: realvncserver.RvsTask{
 				Path:       "MyTask",
 				ConfigFile: "/config/file/name/here",
 				Log:        "*:stderr:1000",
 			},
-			expectedError: ErrInvalidLogsValueMsg,
+			expectedError: realvncserver.ErrInvalidLogsValueMsg,
 		},
 		{
 			name: "invalid log level - too low",
-			task: RvsTask{
+			task: realvncserver.RvsTask{
 				Path:       "MyTask",
 				ConfigFile: "/config/file/name/here",
 				Log:        "*:stderr:-100",
 			},
-			expectedError: ErrInvalidLogsValueMsg,
+			expectedError: realvncserver.ErrInvalidLogsValueMsg,
 		},
 	}
 
@@ -652,12 +653,12 @@ func TestRealVNCServerLogsFieldValidations(t *testing.T) {
 func TestRealVNCServerCaptureMethodFieldValidations(t *testing.T) {
 	testCases := []struct {
 		name          string
-		task          RvsTask
+		task          realvncserver.RvsTask
 		expectedError string
 	}{
 		{
 			name: "valid value",
-			task: RvsTask{
+			task: realvncserver.RvsTask{
 				Path:          "MyTask",
 				ConfigFile:    "/config/file/name/here",
 				CaptureMethod: 1,
@@ -665,21 +666,21 @@ func TestRealVNCServerCaptureMethodFieldValidations(t *testing.T) {
 		},
 		{
 			name: "negative",
-			task: RvsTask{
+			task: realvncserver.RvsTask{
 				Path:          "MyTask",
 				ConfigFile:    "/config/file/name/here",
 				CaptureMethod: -1,
 			},
-			expectedError: ErrInvalidCaptureMethodValueMsg,
+			expectedError: realvncserver.ErrInvalidCaptureMethodValueMsg,
 		},
 		{
 			name: "too high",
-			task: RvsTask{
+			task: realvncserver.RvsTask{
 				Path:          "MyTask",
 				ConfigFile:    "/config/file/name/here",
 				CaptureMethod: 100,
 			},
-			expectedError: ErrInvalidCaptureMethodValueMsg,
+			expectedError: realvncserver.ErrInvalidCaptureMethodValueMsg,
 		},
 	}
 
@@ -705,7 +706,7 @@ func TestRealVNCServerCaptureMethodFieldValidations(t *testing.T) {
 }
 
 func TestShouldSetDefaultBackupExtension(t *testing.T) {
-	task := &RvsTask{
+	task := &realvncserver.RvsTask{
 		Path:       "MyTask",
 		ConfigFile: "/config/file/name/here",
 	}
@@ -721,7 +722,7 @@ func TestShouldSetDefaultBackupExtension(t *testing.T) {
 }
 
 func TestShouldSetBackupExtension(t *testing.T) {
-	task := &RvsTask{
+	task := &realvncserver.RvsTask{
 		Path:       "MyTask",
 		ConfigFile: "/config/file/name/here",
 		Backup:     "orig",

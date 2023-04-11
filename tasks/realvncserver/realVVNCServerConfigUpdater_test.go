@@ -1,7 +1,7 @@
 //go:build !windows
 // +build !windows
 
-package realvncserver
+package realvncserver_test
 
 import (
 	"context"
@@ -10,6 +10,11 @@ import (
 	"os"
 	"runtime"
 	"testing"
+
+	"github.com/realvnc-labs/tacoscript/tasks"
+	"github.com/realvnc-labs/tacoscript/tasks/realvncserver"
+	"github.com/realvnc-labs/tacoscript/tasks/realvncserver/builder"
+	"gopkg.in/yaml.v2"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -53,7 +58,7 @@ func TestShouldUpdateSimpleConfigFileParam(t *testing.T) {
 
 	ctx := context.Background()
 
-	executor := &RvstExecutor{
+	executor := &realvncserver.RvstExecutor{
 		FsManager: &utils.FsManager{},
 
 		Reloader: &mockConfigReloader{},
@@ -67,13 +72,14 @@ func TestShouldUpdateSimpleConfigFileParam(t *testing.T) {
 			},
 		})
 
-	task := &RvsTask{
-		Path:         "realvnc-server-1",
-		ConfigFile:   "../../realvnc/test/realvncserver-config.conf",
-		Encryption:   "AlwaysOn",
-		fieldMapper:  tracker,
-		fieldTracker: tracker,
+	task := &realvncserver.RvsTask{
+		Path:       "realvnc-server-1",
+		ConfigFile: "../../realvnc/test/realvncserver-config.conf",
+		Encryption: "AlwaysOn",
 	}
+
+	task.SetMapper(tracker)
+	task.SetTracker(tracker)
 
 	err := task.Validate(runtime.GOOS)
 	require.NoError(t, err)
@@ -100,7 +106,7 @@ func TestShouldAddSimpleConfigFileParam(t *testing.T) {
 
 	ctx := context.Background()
 
-	executor := &RvstExecutor{
+	executor := &realvncserver.RvstExecutor{
 		FsManager: &utils.FsManager{},
 
 		Reloader: &mockConfigReloader{},
@@ -114,7 +120,7 @@ func TestShouldAddSimpleConfigFileParam(t *testing.T) {
 			},
 		})
 
-	task := &RvsTask{
+	task := &realvncserver.RvsTask{
 		Path:        "realvnc-server-1",
 		ConfigFile:  "../../realvnc/test/realvncserver-config.conf",
 		SkipBackup:  true,
@@ -145,7 +151,7 @@ func TestShouldAddSimpleConfigFileParam(t *testing.T) {
 func TestShouldAddSimpleConfigWhenNoExistingConfigFile(t *testing.T) {
 	ctx := context.Background()
 
-	executor := &RvstExecutor{
+	executor := &realvncserver.RvstExecutor{
 		FsManager: &utils.FsManager{},
 
 		Reloader: &mockConfigReloader{},
@@ -167,7 +173,7 @@ func TestShouldAddSimpleConfigWhenNoExistingConfigFile(t *testing.T) {
 			},
 		})
 
-	task := &RvsTask{
+	task := &realvncserver.RvsTask{
 		Path:        "realvnc-server-1",
 		ConfigFile:  newConfigFilename,
 		IdleTimeout: 3600,
@@ -193,7 +199,7 @@ func TestShouldAddSimpleConfigWhenNoExistingConfigFile(t *testing.T) {
 
 	info, err := os.Stat(task.ConfigFile)
 	require.NoError(t, err)
-	assert.Equal(t, fs.FileMode(DefaultConfigFilePermissions), info.Mode().Perm())
+	assert.Equal(t, fs.FileMode(realvncserver.DefaultConfigFilePermissions), info.Mode().Perm())
 
 	_, err = os.ReadFile(utils.GetBackupFilename(task.ConfigFile, "bak"))
 	require.ErrorContains(t, err, "no such file")
@@ -205,7 +211,7 @@ func TestShouldRemoveSimpleConfigFileParam(t *testing.T) {
 
 	ctx := context.Background()
 
-	executor := &RvstExecutor{
+	executor := &realvncserver.RvstExecutor{
 		FsManager: &utils.FsManager{},
 
 		Reloader: &mockConfigReloader{},
@@ -220,7 +226,7 @@ func TestShouldRemoveSimpleConfigFileParam(t *testing.T) {
 			},
 		})
 
-	task := &RvsTask{
+	task := &realvncserver.RvsTask{
 		Path:       "realvnc-server-1",
 		ConfigFile: "../../realvnc/test/realvncserver-config.conf",
 		Encryption: "!UNSET!",
@@ -248,16 +254,16 @@ func TestShouldRemoveSimpleConfigFileParam(t *testing.T) {
 func TestShouldMakeReloadCmdLine(t *testing.T) {
 	cases := []struct {
 		name            string
-		task            RvsTask
+		task            realvncserver.RvsTask
 		goos            string
 		expectedCmdLine string
 		expectedParams  []string
 	}{
 		{
 			name: "linux service server mode",
-			task: RvsTask{
+			task: realvncserver.RvsTask{
 				Path:       "MyTask",
-				ServerMode: ServiceServerMode,
+				ServerMode: realvncserver.ServiceServerMode,
 			},
 			goos:            "linux",
 			expectedCmdLine: "/usr/bin/vncserver-x11",
@@ -265,9 +271,9 @@ func TestShouldMakeReloadCmdLine(t *testing.T) {
 		},
 		{
 			name: "linux user server mode",
-			task: RvsTask{
+			task: realvncserver.RvsTask{
 				Path:       "MyTask",
-				ServerMode: UserServerMode,
+				ServerMode: realvncserver.UserServerMode,
 			},
 			goos:            "linux",
 			expectedCmdLine: "/usr/bin/vncserver-x11",
@@ -275,9 +281,9 @@ func TestShouldMakeReloadCmdLine(t *testing.T) {
 		},
 		{
 			name: "linux virtual server mode",
-			task: RvsTask{
+			task: realvncserver.RvsTask{
 				Path:       "MyTask",
-				ServerMode: VirtualServerMode,
+				ServerMode: realvncserver.VirtualServerMode,
 			},
 			goos:            "linux",
 			expectedCmdLine: "/usr/bin/vnclicense",
@@ -285,9 +291,9 @@ func TestShouldMakeReloadCmdLine(t *testing.T) {
 		},
 		{
 			name: "user specified",
-			task: RvsTask{
+			task: realvncserver.RvsTask{
 				Path:           "MyTask",
-				ServerMode:     ServiceServerMode,
+				ServerMode:     realvncserver.ServiceServerMode,
 				ReloadExecPath: "/my/path/vncserver-x11",
 			},
 			goos:            "linux",
@@ -308,13 +314,140 @@ func TestShouldMakeReloadCmdLine(t *testing.T) {
 			// TODO: (rs): no need to set the flag once validations are re-introduced with the additional
 			// server modes.
 
-			if task.ServerMode == VirtualServerMode {
+			if task.ServerMode == realvncserver.VirtualServerMode {
 				task.UseVNCLicenseReload = true
 			}
 
-			cmdLine, params := makeReloadCmdLine(&task, tc.goos)
+			cmdLine, params := realvncserver.MakeReloadCmdLine(&task, tc.goos)
 			assert.Equal(t, tc.expectedCmdLine, cmdLine)
 			assert.Equal(t, tc.expectedParams, params)
 		})
 	}
+}
+
+const targetConfigFilename = "./testconfig.conf"
+
+func TestShouldHandleBackups(t *testing.T) {
+	cases := []struct {
+		name               string
+		values             []interface{}
+		sourceConfigFile   string
+		targetConfigFile   string
+		expectedBackupFile string
+	}{
+		{
+			name:             "regular backup",
+			sourceConfigFile: origTestConfigFilename,
+			targetConfigFile: targetConfigFilename,
+			values: []interface{}{
+				yaml.MapSlice{yaml.MapItem{Key: tasks.ConfigFileField, Value: targetConfigFilename}},
+				yaml.MapSlice{yaml.MapItem{Key: tasks.ServerModeField, Value: "Service"}},
+				yaml.MapSlice{yaml.MapItem{Key: tasks.SkipReloadField, Value: true}},
+
+				yaml.MapSlice{yaml.MapItem{Key: tasks.EncryptionField, Value: "AlwaysOn"}},
+				yaml.MapSlice{yaml.MapItem{Key: tasks.BlankScreenField, Value: "true"}},
+			},
+			expectedBackupFile: targetConfigFilename + ".bak",
+		},
+		{
+			name:             "alt backup",
+			sourceConfigFile: origTestConfigFilename,
+			targetConfigFile: targetConfigFilename,
+			values: []interface{}{
+				yaml.MapSlice{yaml.MapItem{Key: tasks.ConfigFileField, Value: targetConfigFilename}},
+				yaml.MapSlice{yaml.MapItem{Key: tasks.ServerModeField, Value: "Service"}},
+				yaml.MapSlice{yaml.MapItem{Key: tasks.SkipReloadField, Value: true}},
+
+				yaml.MapSlice{yaml.MapItem{Key: tasks.EncryptionField, Value: "AlwaysOn"}},
+				yaml.MapSlice{yaml.MapItem{Key: tasks.BlankScreenField, Value: "true"}},
+
+				yaml.MapSlice{yaml.MapItem{Key: tasks.BackupExtensionField, Value: "orig"}},
+			},
+			expectedBackupFile: targetConfigFilename + ".orig",
+		},
+		{
+			name:             "no backup",
+			sourceConfigFile: origTestConfigFilename,
+			targetConfigFile: targetConfigFilename,
+			values: []interface{}{
+				yaml.MapSlice{yaml.MapItem{Key: tasks.ConfigFileField, Value: targetConfigFilename}},
+				yaml.MapSlice{yaml.MapItem{Key: tasks.ServerModeField, Value: "Service"}},
+				yaml.MapSlice{yaml.MapItem{Key: tasks.SkipReloadField, Value: true}},
+
+				yaml.MapSlice{yaml.MapItem{Key: tasks.EncryptionField, Value: "AlwaysOn"}},
+				yaml.MapSlice{yaml.MapItem{Key: tasks.BlankScreenField, Value: "true"}},
+
+				yaml.MapSlice{yaml.MapItem{Key: tasks.SkipBackupField, Value: true}},
+				yaml.MapSlice{yaml.MapItem{Key: tasks.BackupExtensionField, Value: "orig"}},
+			},
+		},
+		{
+			name:             "no changes, so no backup",
+			sourceConfigFile: origTestConfigFilename,
+			targetConfigFile: targetConfigFilename,
+			values: []interface{}{
+				yaml.MapSlice{yaml.MapItem{Key: tasks.ConfigFileField, Value: targetConfigFilename}},
+				yaml.MapSlice{yaml.MapItem{Key: tasks.ServerModeField, Value: "Service"}},
+				yaml.MapSlice{yaml.MapItem{Key: tasks.SkipReloadField, Value: true}},
+			},
+			// note: this backup file shouldn't exist, but we need the name for the check
+			expectedBackupFile: targetConfigFilename + ".bak",
+		},
+	}
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			ctx := context.Background()
+			executor := &realvncserver.RvstExecutor{
+				FsManager: &utils.FsManager{},
+			}
+
+			configFileContents := makeDummyConfigFile(t, tc.sourceConfigFile, tc.targetConfigFile)
+			defer os.Remove(tc.targetConfigFile)
+
+			// convert task values into an actual task
+			taskBuilder := builder.RealVNCServerTaskBuilder{}
+			task, err := taskBuilder.Build(
+				realvncserver.TaskTypeRealVNCServer,
+				"MyPath",
+				tc.values,
+			)
+			require.NoError(t, err)
+
+			rvsTask, ok := task.(*realvncserver.RvsTask)
+			require.True(t, ok)
+
+			err = rvsTask.Validate(runtime.GOOS)
+			require.NoError(t, err)
+
+			if tc.expectedBackupFile != "" {
+				defer os.Remove(tc.expectedBackupFile)
+			}
+
+			res := executor.Execute(ctx, rvsTask)
+			require.NoError(t, res.Err)
+			if rvsTask.Updated {
+				backupContents, err := os.ReadFile(tc.expectedBackupFile)
+				if rvsTask.SkipBackup {
+					assert.ErrorIs(t, err, os.ErrNotExist)
+				} else {
+					assert.NoError(t, err)
+					assert.Equal(t, configFileContents, backupContents)
+				}
+			} else {
+				_, err := os.Stat(tc.expectedBackupFile)
+				assert.ErrorIs(t, err, os.ErrNotExist)
+			}
+		})
+	}
+}
+
+func makeDummyConfigFile(t *testing.T, sourceConfigFile string, targetConfigFile string) (contents []byte) {
+	t.Helper()
+	contents, err := os.ReadFile(sourceConfigFile)
+	require.NoError(t, err)
+
+	err = os.WriteFile(targetConfigFile, contents, 0600)
+	require.NoError(t, err)
+
+	return contents
 }

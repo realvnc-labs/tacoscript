@@ -1,7 +1,7 @@
 //go:build windows
 // +build windows
 
-package realvncserver
+package realvncserver_test
 
 import (
 	"context"
@@ -13,6 +13,7 @@ import (
 
 	"github.com/realvnc-labs/tacoscript/reg"
 	"github.com/realvnc-labs/tacoscript/tasks/fieldstatus"
+	"github.com/realvnc-labs/tacoscript/tasks/realvncserver"
 	"github.com/realvnc-labs/tacoscript/utils"
 )
 
@@ -21,9 +22,9 @@ var testRealVNCBaseKey string
 
 func testSetup(t *testing.T) {
 	// setup test registry key. assumes Service server mode.
-	origHKLMBaseKey = HKLMBaseKey
+	origHKLMBaseKey = realvncserver.HKLMBaseKey
 	testRealVNCBaseKey = `HKCU:\Software\RealVNCTest`
-	HKLMBaseKey = testRealVNCBaseKey + `\vncserver`
+	realvncserver.HKLMBaseKey = testRealVNCBaseKey + `\vncserver`
 }
 
 func testTeardown(t *testing.T) {
@@ -31,7 +32,7 @@ func testTeardown(t *testing.T) {
 	// remove test key and restore base key
 	defer func() {
 		_ = reg.DeleteKeyRecursive(testRealVNCBaseKey)
-		HKLMBaseKey = origHKLMBaseKey
+		realvncserver.HKLMBaseKey = origHKLMBaseKey
 	}()
 }
 
@@ -41,7 +42,7 @@ func TestShouldSetSimpleConfigRegistryParam(t *testing.T) {
 
 	ctx := context.Background()
 
-	executor := &RvstExecutor{
+	executor := &realvncserver.RvstExecutor{
 		FsManager: &utils.FsManager{},
 
 		Reloader: &mockConfigReloader{},
@@ -49,7 +50,7 @@ func TestShouldSetSimpleConfigRegistryParam(t *testing.T) {
 
 	tracker := newTrackerWithSingleFieldStatus("encryption", "Encryption")
 
-	task := &RvsTask{
+	task := &realvncserver.RvsTask{
 		Path:       "realvnc-server-1",
 		ServerMode: "Service",
 		Encryption: "AlwaysOff",
@@ -67,7 +68,7 @@ func TestShouldSetSimpleConfigRegistryParam(t *testing.T) {
 
 	assert.Equal(t, "1 config value change(s) applied", res.Changes["count"])
 
-	found, regVal, err := reg.GetValue(HKLMBaseKey, "Encryption", reg.REG_SZ)
+	found, regVal, err := reg.GetValue(realvncserver.HKLMBaseKey, "Encryption", reg.REG_SZ)
 	require.NoError(t, err)
 	assert.True(t, found)
 	assert.Equal(t, "AlwaysOff", regVal)
@@ -79,7 +80,7 @@ func TestShouldUpdateSimpleConfigRegistryParam(t *testing.T) {
 
 	ctx := context.Background()
 
-	executor := &RvstExecutor{
+	executor := &realvncserver.RvstExecutor{
 		FsManager: &utils.FsManager{},
 
 		Reloader: &mockConfigReloader{},
@@ -87,7 +88,7 @@ func TestShouldUpdateSimpleConfigRegistryParam(t *testing.T) {
 
 	tracker := newTrackerWithSingleFieldStatus("encryption", "Encryption")
 
-	setupTask := &RvsTask{
+	setupTask := &realvncserver.RvsTask{
 		Path:       "realvnc-server-1",
 		ServerMode: "Service",
 		Encryption: "AlwaysOff",
@@ -103,7 +104,7 @@ func TestShouldUpdateSimpleConfigRegistryParam(t *testing.T) {
 	require.NoError(t, res.Err)
 	require.True(t, setupTask.Updated)
 
-	task := &RvsTask{
+	task := &realvncserver.RvsTask{
 		Path:       "realvnc-server-2",
 		ServerMode: "Service",
 		Encryption: "PreferOn",
@@ -121,7 +122,7 @@ func TestShouldUpdateSimpleConfigRegistryParam(t *testing.T) {
 
 	assert.Equal(t, "1 config value change(s) applied", res.Changes["count"])
 
-	found, regVal, err := reg.GetValue(HKLMBaseKey, "Encryption", reg.REG_SZ)
+	found, regVal, err := reg.GetValue(realvncserver.HKLMBaseKey, "Encryption", reg.REG_SZ)
 	require.NoError(t, err)
 	assert.True(t, found)
 	assert.Equal(t, "PreferOn", regVal)
@@ -133,7 +134,7 @@ func TestShouldClearSimpleConfigRegistryParam(t *testing.T) {
 
 	ctx := context.Background()
 
-	executor := &RvstExecutor{
+	executor := &realvncserver.RvstExecutor{
 		FsManager: &utils.FsManager{},
 
 		Reloader: &mockConfigReloader{},
@@ -150,7 +151,7 @@ func TestShouldClearSimpleConfigRegistryParam(t *testing.T) {
 			},
 		})
 
-	setupTask := &RvsTask{
+	setupTask := &realvncserver.RvsTask{
 		Path:        "realvnc-server-1",
 		ServerMode:  "Service",
 		BlankScreen: true,
@@ -177,7 +178,7 @@ func TestShouldClearSimpleConfigRegistryParam(t *testing.T) {
 			},
 		})
 
-	clearTask := &RvsTask{
+	clearTask := &realvncserver.RvsTask{
 		Path:        "realvnc-server-1",
 		ServerMode:  "Service",
 		BlankScreen: false,
@@ -195,7 +196,7 @@ func TestShouldClearSimpleConfigRegistryParam(t *testing.T) {
 
 	assert.Equal(t, "1 config value change(s) applied", res.Changes["count"])
 
-	found, _, err := reg.GetValue(HKLMBaseKey, "BlankScreen", reg.REG_SZ)
+	found, _, err := reg.GetValue(realvncserver.HKLMBaseKey, "BlankScreen", reg.REG_SZ)
 	require.NoError(t, err)
 	assert.False(t, found)
 }

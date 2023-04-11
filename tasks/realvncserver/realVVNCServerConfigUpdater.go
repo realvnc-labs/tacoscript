@@ -39,9 +39,11 @@ func (rvste *RvstExecutor) applyConfigChanges(rvst *RvsTask) (addedCount int, up
 		return 0, 0, err
 	}
 
-	err = commitChanges(rvst, outputBuffer)
-	if err != nil {
-		return 0, 0, err
+	if addedCount > 0 || updatedCount > 0 {
+		err = commitChanges(rvst, outputBuffer)
+		if err != nil {
+			return 0, 0, err
+		}
 	}
 
 	return addedCount, updatedCount, nil
@@ -289,7 +291,7 @@ func commitChanges(rvst *RvsTask, outputBuffer *bytes.Buffer) (err error) {
 func (rvste *RvstExecutor) ReloadConfig(rvst *RvsTask) (err error) {
 	var cmd *exec.Cmd
 
-	execCmd, params := makeReloadCmdLine(rvst, runtime.GOOS)
+	execCmd, params := MakeReloadCmdLine(rvst, runtime.GOOS)
 
 	cmd = exec.Command(execCmd, params...)
 
@@ -311,7 +313,7 @@ func (rvste *RvstExecutor) ReloadConfig(rvst *RvsTask) (err error) {
 	return nil
 }
 
-func makeReloadCmdLine(rvst *RvsTask, goos string) (cmd string, params []string) {
+func MakeReloadCmdLine(rvst *RvsTask, goos string) (cmd string, params []string) {
 	argumentList := []string{`-service`, `-reload`}
 
 	if rvst.ReloadExecPath == "" {
