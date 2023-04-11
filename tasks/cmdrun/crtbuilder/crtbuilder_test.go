@@ -7,7 +7,7 @@ import (
 	"github.com/realvnc-labs/tacoscript/conv"
 	"github.com/realvnc-labs/tacoscript/tasks"
 	"github.com/realvnc-labs/tacoscript/tasks/cmdrun"
-	"github.com/realvnc-labs/tacoscript/tasks/namedtask"
+	"github.com/realvnc-labs/tacoscript/tasks/shared/names"
 	"gopkg.in/yaml.v2"
 
 	"github.com/stretchr/testify/assert"
@@ -39,7 +39,7 @@ func TestTaskBuilder(t *testing.T) {
 			expectedTask: &cmdrun.CrTask{
 				TypeName:   "someType",
 				Path:       "somePath",
-				Named:      namedtask.NamedTask{Name: "1"},
+				Named:      names.TaskNames{Name: "1"},
 				WorkingDir: "somedir",
 				User:       "someuser",
 				Shell:      "someshell",
@@ -102,7 +102,7 @@ func TestTaskBuilder(t *testing.T) {
 				Require: []string{
 					"one require field",
 				},
-				Named: namedtask.NamedTask{Names: []string{
+				Named: names.TaskNames{Names: []string{
 					"name one",
 					"name two",
 				}},
@@ -132,7 +132,7 @@ func TestTaskBuilder(t *testing.T) {
 			expectedTask: &cmdrun.CrTask{
 				TypeName: "manyCreatesType",
 				Path:     "manyCreatesPath",
-				Named:    namedtask.NamedTask{Name: "many creates command"},
+				Named:    names.TaskNames{Name: "many creates command"},
 				Creates: []string{
 					"create one",
 					"create two",
@@ -160,7 +160,7 @@ func TestTaskBuilder(t *testing.T) {
 			expectedTask: &cmdrun.CrTask{
 				TypeName: "oneUnlessValue",
 				Path:     "oneUnlessValuePath",
-				Named:    namedtask.NamedTask{Name: "one unless value"},
+				Named:    names.TaskNames{Name: "one unless value"},
 				Unless: []string{
 					"unless one",
 				},
@@ -180,7 +180,7 @@ func TestTaskBuilder(t *testing.T) {
 			expectedTask: &cmdrun.CrTask{
 				TypeName: "manyUnlessValue",
 				Path:     "manyUnlessValuePath",
-				Named:    namedtask.NamedTask{Name: "many unless value"},
+				Named:    names.TaskNames{Name: "many unless value"},
 				Unless: []string{
 					"Unless one",
 					"Unless two",

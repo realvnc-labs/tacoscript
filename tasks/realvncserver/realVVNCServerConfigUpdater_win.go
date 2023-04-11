@@ -13,7 +13,7 @@ import (
 
 	tacoexec "github.com/realvnc-labs/tacoscript/exec"
 	"github.com/realvnc-labs/tacoscript/reg"
-	"github.com/realvnc-labs/tacoscript/tasks/fieldstatus"
+	"github.com/realvnc-labs/tacoscript/tasks/shared/fieldstatus"
 )
 
 const (

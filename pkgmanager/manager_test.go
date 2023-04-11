@@ -9,8 +9,8 @@ import (
 	"testing"
 
 	"github.com/realvnc-labs/tacoscript/exec"
-	"github.com/realvnc-labs/tacoscript/tasks/namedtask"
 	"github.com/realvnc-labs/tacoscript/tasks/pkgtask"
+	"github.com/realvnc-labs/tacoscript/tasks/shared/names"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -57,7 +57,7 @@ func TestTaskExecution(t *testing.T) {
 			},
 			InputTask: &pkgtask.PTask{
 				ActionType: pkgtask.ActionInstall,
-				Named:      namedtask.NamedTask{Name: "vim"},
+				Named:      names.TaskNames{Name: "vim"},
 				Path:       "somePath",
 				Shell:      "sh",
 			},
@@ -75,7 +75,7 @@ func TestTaskExecution(t *testing.T) {
 			},
 			InputTask: &pkgtask.PTask{
 				ActionType: pkgtask.ActionInstall,
-				Named:      namedtask.NamedTask{Name: "vim"},
+				Named:      names.TaskNames{Name: "vim"},
 				Version:    "1.1.0",
 			},
 			ExpectedOutput: "some stderr",
@@ -88,7 +88,7 @@ func TestTaskExecution(t *testing.T) {
 			},
 			InputTask: &pkgtask.PTask{
 				ActionType: pkgtask.ActionInstall,
-				Named:      namedtask.NamedTask{Names: []string{"vim", "nano"}},
+				Named:      names.TaskNames{Names: []string{"vim", "nano"}},
 			},
 			ExpectedCmds: []string{"mpmb --version", "mpmb list", "mpmb install vim nano", "mpmb list"},
 		},
@@ -99,7 +99,7 @@ func TestTaskExecution(t *testing.T) {
 			},
 			InputTask: &pkgtask.PTask{
 				ActionType: pkgtask.ActionUninstall,
-				Named:      namedtask.NamedTask{Names: []string{"vim", "nano"}, Name: "mc"},
+				Named:      names.TaskNames{Names: []string{"vim", "nano"}, Name: "mc"},
 			},
 			ExpectedCmds: []string{"mpmb --version", "mpmb list", "mpmb uninstall mc vim nano", "mpmb list"},
 		},
@@ -110,7 +110,7 @@ func TestTaskExecution(t *testing.T) {
 			},
 			InputTask: &pkgtask.PTask{
 				ActionType: pkgtask.ActionUpdate,
-				Named:      namedtask.NamedTask{Names: []string{"vim", "nano"}},
+				Named:      names.TaskNames{Names: []string{"vim", "nano"}},
 			},
 			ExpectedCmds: []string{"mpmb --version", "mpmb list", "mpmb update vim nano", "mpmb list"},
 		},
@@ -122,7 +122,7 @@ func TestTaskExecution(t *testing.T) {
 			},
 			InputTask: &pkgtask.PTask{
 				ActionType: pkgtask.ActionInstall,
-				Named:      namedtask.NamedTask{Names: []string{"vim", "nano"}},
+				Named:      names.TaskNames{Names: []string{"vim", "nano"}},
 			},
 			ExpectedCmds:   []string{"mpmb --version"},
 			ExpectedErrStr: "cannot find a supported package manager on the host, tried package manager commands: mpmb --version: non existing pkg manager",
@@ -135,7 +135,7 @@ func TestTaskExecution(t *testing.T) {
 			InputTask: &pkgtask.PTask{
 				ShouldRefresh: true,
 				ActionType:    pkgtask.ActionUpdate,
-				Named:         namedtask.NamedTask{Names: []string{"vim", "nano"}},
+				Named:         names.TaskNames{Names: []string{"vim", "nano"}},
 			},
 			ExpectedCmds: []string{"mpmb --version", "mpmb upgrade", "mpmb list", "mpmb update vim nano", "mpmb list"},
 		},

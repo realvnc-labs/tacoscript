@@ -9,8 +9,8 @@ import (
 
 	tacoexec "github.com/realvnc-labs/tacoscript/exec"
 	"github.com/realvnc-labs/tacoscript/tasks"
-	"github.com/realvnc-labs/tacoscript/tasks/executionresult"
-	"github.com/realvnc-labs/tacoscript/tasks/namedtask"
+	"github.com/realvnc-labs/tacoscript/tasks/shared/executionresult"
+	"github.com/realvnc-labs/tacoscript/tasks/shared/names"
 
 	"github.com/realvnc-labs/tacoscript/utils"
 
@@ -33,7 +33,7 @@ type PTask struct {
 	ActionType PkgActionType
 	TypeName   string
 	Path       string
-	Named      namedtask.NamedTask
+	Named      names.TaskNames
 
 	Shell         string   `taco:"shell"`
 	Version       string   `taco:"version"`

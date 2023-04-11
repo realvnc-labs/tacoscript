@@ -11,7 +11,7 @@ import (
 	tacoexec "github.com/realvnc-labs/tacoscript/exec"
 	"github.com/realvnc-labs/tacoscript/reg"
 	"github.com/realvnc-labs/tacoscript/tasks"
-	"github.com/realvnc-labs/tacoscript/tasks/executionresult"
+	"github.com/realvnc-labs/tacoscript/tasks/shared/executionresult"
 
 	"github.com/realvnc-labs/tacoscript/utils"
 

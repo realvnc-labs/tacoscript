@@ -7,7 +7,7 @@ import (
 	"github.com/stretchr/testify/assert"
 
 	"github.com/realvnc-labs/tacoscript/tasks"
-	"github.com/realvnc-labs/tacoscript/tasks/executionresult"
+	"github.com/realvnc-labs/tacoscript/tasks/shared/executionresult"
 )
 
 type RequirementsTaskMock struct {

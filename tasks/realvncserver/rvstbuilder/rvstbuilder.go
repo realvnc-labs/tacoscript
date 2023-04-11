@@ -3,8 +3,8 @@ package rvstbuilder
 import (
 	builder "github.com/realvnc-labs/tacoscript/builder"
 	"github.com/realvnc-labs/tacoscript/tasks"
-	"github.com/realvnc-labs/tacoscript/tasks/fieldstatus"
 	"github.com/realvnc-labs/tacoscript/tasks/realvncserver"
+	"github.com/realvnc-labs/tacoscript/tasks/shared/fieldstatus"
 )
 
 type TaskBuilder struct {

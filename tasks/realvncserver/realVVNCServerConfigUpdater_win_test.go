@@ -12,8 +12,8 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/realvnc-labs/tacoscript/reg"
-	"github.com/realvnc-labs/tacoscript/tasks/fieldstatus"
 	"github.com/realvnc-labs/tacoscript/tasks/realvncserver"
+	"github.com/realvnc-labs/tacoscript/tasks/shared/fieldstatus"
 	"github.com/realvnc-labs/tacoscript/utils"
 )
 

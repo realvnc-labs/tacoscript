@@ -6,8 +6,8 @@ import (
 	"testing"
 
 	"github.com/realvnc-labs/tacoscript/tasks"
-	"github.com/realvnc-labs/tacoscript/tasks/fieldstatus"
 	"github.com/realvnc-labs/tacoscript/tasks/realvncserver"
+	"github.com/realvnc-labs/tacoscript/tasks/shared/fieldstatus"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )

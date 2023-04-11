@@ -12,8 +12,8 @@ import (
 
 	"github.com/realvnc-labs/tacoscript/apptest"
 	"github.com/realvnc-labs/tacoscript/conv"
-	"github.com/realvnc-labs/tacoscript/tasks/executionresult"
-	"github.com/realvnc-labs/tacoscript/tasks/namedtask"
+	"github.com/realvnc-labs/tacoscript/tasks/shared/executionresult"
+	"github.com/realvnc-labs/tacoscript/tasks/shared/names"
 
 	appExec "github.com/realvnc-labs/tacoscript/exec"
 )
@@ -30,7 +30,7 @@ func TestTaskExecution(t *testing.T) {
 			Name: "test one name command with 2 envs",
 			InputTask: &CrTask{
 				Path:       "somepath",
-				Named:      namedtask.NamedTask{Name: "some test command"},
+				Named:      names.TaskNames{Name: "some test command"},
 				WorkingDir: "/tmp/dev",
 				User:       "user",
 				Shell:      "zsh",
@@ -60,7 +60,7 @@ func TestTaskExecution(t *testing.T) {
 			Name: "test skip command if file exists",
 			InputTask: &CrTask{
 				User:    "some user",
-				Named:   namedtask.NamedTask{Name: "some parser command"},
+				Named:   names.TaskNames{Name: "some parser command"},
 				Creates: []string{"somefile.txt"},
 			},
 			ExpectedResult: executionresult.ExecutionResult{
@@ -77,7 +77,7 @@ func TestTaskExecution(t *testing.T) {
 		{
 			Name: "test setting user failure",
 			InputTask: &CrTask{
-				Named: namedtask.NamedTask{Name: "echo 12345"},
+				Named: names.TaskNames{Name: "echo 12345"},
 				User:  "some user",
 			},
 			ExpectedResult: executionresult.ExecutionResult{
@@ -93,7 +93,7 @@ func TestTaskExecution(t *testing.T) {
 		{
 			Name: "same cmd execution failure",
 			InputTask: &CrTask{
-				Named: namedtask.NamedTask{Name: "lpwd"},
+				Named: names.TaskNames{Name: "lpwd"},
 			},
 			ExpectedResult: executionresult.ExecutionResult{
 				IsSkipped: false,
@@ -108,7 +108,7 @@ func TestTaskExecution(t *testing.T) {
 			Name: "execute multiple names",
 			InputTask: &CrTask{
 				Path: "many names path",
-				Named: namedtask.NamedTask{Names: []string{
+				Named: names.TaskNames{Names: []string{
 					"many names cmd 1",
 					"many names cmd 2",
 					"many names cmd 3",
@@ -128,7 +128,7 @@ func TestTaskExecution(t *testing.T) {
 		{
 			Name: "test multiple create file conditions",
 			InputTask: &CrTask{
-				Named: namedtask.NamedTask{Name: "cmd with many MissingFilesConditions"},
+				Named: names.TaskNames{Name: "cmd with many MissingFilesConditions"},
 				Creates: []string{
 					"file.one",
 					"file.two",
@@ -146,7 +146,7 @@ func TestTaskExecution(t *testing.T) {
 		{
 			Name: "executing one onlyif condition with success",
 			InputTask: &CrTask{
-				Named:  namedtask.NamedTask{Name: "cmd lala"},
+				Named:  names.TaskNames{Name: "cmd lala"},
 				OnlyIf: []string{"check before lala"},
 			},
 			ExpectedResult: executionresult.ExecutionResult{
@@ -161,7 +161,7 @@ func TestTaskExecution(t *testing.T) {
 		{
 			Name: "executing one onlyif condition with failure",
 			InputTask: &CrTask{
-				Named:  namedtask.NamedTask{Name: "cmd with OnlyIf failure"},
+				Named:  names.TaskNames{Name: "cmd with OnlyIf failure"},
 				OnlyIf: []string{"check OnlyIf error"},
 			},
 			ExpectedResult: executionresult.ExecutionResult{
@@ -184,7 +184,7 @@ func TestTaskExecution(t *testing.T) {
 		{
 			Name: "executing multiple onlyif conditions with failure",
 			InputTask: &CrTask{
-				Named:  namedtask.NamedTask{Name: "cmd with multiple OnlyIf failure"},
+				Named:  names.TaskNames{Name: "cmd with multiple OnlyIf failure"},
 				OnlyIf: []string{"check OnlyIf success", "check OnlyIf failure"},
 			},
 			ExpectedResult: executionresult.ExecutionResult{
@@ -206,7 +206,7 @@ func TestTaskExecution(t *testing.T) {
 		{
 			Name: "executing multiple onlyif conditions with success",
 			InputTask: &CrTask{
-				Named:  namedtask.NamedTask{Name: "cmd with multiple OnlyIf success"},
+				Named:  names.TaskNames{Name: "cmd with multiple OnlyIf success"},
 				OnlyIf: []string{"check OnlyIf success 1", "check OnlyIf success 2"},
 			},
 			ExpectedResult: executionresult.ExecutionResult{
@@ -220,7 +220,7 @@ func TestTaskExecution(t *testing.T) {
 		{
 			Name: "executing onlyif validation error",
 			InputTask: &CrTask{
-				Named:  namedtask.NamedTask{Name: "cmd"},
+				Named:  names.TaskNames{Name: "cmd"},
 				OnlyIf: []string{"checking onlyif validation error"},
 				User:   "some user 123",
 			},
@@ -243,7 +243,7 @@ func TestTaskExecution(t *testing.T) {
 		{
 			Name: "executing one unless condition with success",
 			InputTask: &CrTask{
-				Named:  namedtask.NamedTask{Name: "cmd masa"},
+				Named:  names.TaskNames{Name: "cmd masa"},
 				Unless: []string{"run unless masa"},
 			},
 			ExpectedResult: executionresult.ExecutionResult{
@@ -265,7 +265,7 @@ func TestTaskExecution(t *testing.T) {
 		{
 			Name: "executing one unless condition with failure",
 			InputTask: &CrTask{
-				Named:  namedtask.NamedTask{Name: "cmd with unless failure"},
+				Named:  names.TaskNames{Name: "cmd with unless failure"},
 				Unless: []string{"check unless failure"},
 			},
 			ExpectedResult: executionresult.ExecutionResult{
@@ -279,7 +279,7 @@ func TestTaskExecution(t *testing.T) {
 		{
 			Name: "executing multiple unless conditions with all success",
 			InputTask: &CrTask{
-				Named:  namedtask.NamedTask{Name: "cmd with multiple unless success"},
+				Named:  names.TaskNames{Name: "cmd with multiple unless success"},
 				Unless: []string{"check unless one", "check unless two"},
 			},
 			ExpectedResult: executionresult.ExecutionResult{
@@ -293,7 +293,7 @@ func TestTaskExecution(t *testing.T) {
 		{
 			Name: "executing multiple unless conditions with at least one failure",
 			InputTask: &CrTask{
-				Named:  namedtask.NamedTask{Name: "cmd with multiple unless with at least one failure"},
+				Named:  names.TaskNames{Name: "cmd with multiple unless with at least one failure"},
 				Unless: []string{"check unless 1", "check unless 2"},
 			},
 			ExpectedResult: executionresult.ExecutionResult{
@@ -314,7 +314,7 @@ func TestTaskExecution(t *testing.T) {
 			Name: "executing unless validation error",
 			InputTask: &CrTask{
 				Unless: []string{"checking unless validation error"},
-				Named:  namedtask.NamedTask{Name: "executing unless validation error"},
+				Named:  names.TaskNames{Name: "executing unless validation error"},
 				User:   "some user 345",
 			},
 			RunnerMock: &appExec.SystemRunner{SystemAPI: &appExec.SystemAPIMock{
@@ -373,19 +373,19 @@ func TestCmdRunTaskValidation(t *testing.T) {
 	}{
 		{
 			InputTask: CrTask{
-				Named: namedtask.NamedTask{Names: []string{"one", "two"}},
+				Named: names.TaskNames{Names: []string{"one", "two"}},
 			},
 			ExpectedError: "",
 		},
 		{
 			InputTask: CrTask{
-				Named: namedtask.NamedTask{Name: "three"},
+				Named: names.TaskNames{Name: "three"},
 			},
 			ExpectedError: "",
 		},
 		{
 			InputTask: CrTask{
-				Named: namedtask.NamedTask{Names: []string{"five", "six"}, Name: "four"},
+				Named: names.TaskNames{Names: []string{"five", "six"}, Name: "four"},
 			},
 			ExpectedError: "",
 		},
@@ -395,7 +395,7 @@ func TestCmdRunTaskValidation(t *testing.T) {
 		},
 		{
 			InputTask: CrTask{
-				Named: namedtask.NamedTask{Names: []string{"", ""}},
+				Named: names.TaskNames{Names: []string{"", ""}},
 			},
 			ExpectedError: "empty required value at path '.name', empty required values at path '.names'",
 		},

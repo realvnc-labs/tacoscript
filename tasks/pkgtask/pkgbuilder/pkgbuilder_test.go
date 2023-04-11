@@ -4,8 +4,8 @@ import (
 	"testing"
 
 	"github.com/realvnc-labs/tacoscript/tasks"
-	"github.com/realvnc-labs/tacoscript/tasks/namedtask"
 	"github.com/realvnc-labs/tacoscript/tasks/pkgtask"
+	"github.com/realvnc-labs/tacoscript/tasks/shared/names"
 	"github.com/stretchr/testify/assert"
 	"gopkg.in/yaml.v2"
 )
@@ -44,7 +44,7 @@ func TestTaskBuilder(t *testing.T) {
 				ActionType:    pkgtask.ActionInstall,
 				TypeName:      pkgtask.TaskTypePkgInstalled,
 				Path:          "vim",
-				Named:         namedtask.NamedTask{Name: "vim"},
+				Named:         names.TaskNames{Name: "vim"},
 				Shell:         "cmd.exe",
 				Version:       "1.0.1",
 				ShouldRefresh: true,
@@ -75,7 +75,7 @@ func TestTaskBuilder(t *testing.T) {
 				ActionType:    pkgtask.ActionUpdate,
 				TypeName:      pkgtask.TaskTypePkgUpgraded,
 				Path:          "git",
-				Named:         namedtask.NamedTask{Name: "git"},
+				Named:         names.TaskNames{Name: "git"},
 				Version:       "2.0.2",
 				ShouldRefresh: false,
 			},
@@ -95,7 +95,7 @@ func TestTaskBuilder(t *testing.T) {
 				ActionType: pkgtask.ActionUninstall,
 				TypeName:   pkgtask.TaskTypePkgRemoved,
 				Path:       "nano",
-				Named: namedtask.NamedTask{Names: []string{
+				Named: names.TaskNames{Names: []string{
 					"nano",
 					"git",
 				}},

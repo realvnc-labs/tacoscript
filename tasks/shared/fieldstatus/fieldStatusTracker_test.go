@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/realvnc-labs/tacoscript/tasks/fieldstatus"
-	"github.com/realvnc-labs/tacoscript/tasks/fieldstatus/statusbuilder"
+	"github.com/realvnc-labs/tacoscript/tasks/shared/fieldstatus"
+	"github.com/realvnc-labs/tacoscript/tasks/shared/fieldstatus/statusbuilder"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )

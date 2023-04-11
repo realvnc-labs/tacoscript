@@ -13,11 +13,11 @@ import (
 	"github.com/realvnc-labs/tacoscript/exec"
 	"github.com/realvnc-labs/tacoscript/tasks"
 	"github.com/realvnc-labs/tacoscript/tasks/cmdrun"
-	"github.com/realvnc-labs/tacoscript/tasks/executionresult"
 	"github.com/realvnc-labs/tacoscript/tasks/filemanaged"
 	"github.com/realvnc-labs/tacoscript/tasks/filereplace"
 	"github.com/realvnc-labs/tacoscript/tasks/pkgtask"
 	"github.com/realvnc-labs/tacoscript/tasks/realvncserver"
+	"github.com/realvnc-labs/tacoscript/tasks/shared/executionresult"
 	"github.com/realvnc-labs/tacoscript/tasks/winreg"
 )
 

@@ -1,11 +1,11 @@
-package namedtask
+package names
 
-type NamedTask struct { // Targets
+type TaskNames struct { // Targets
 	Name  string
 	Names []string
 }
 
-func (nt *NamedTask) GetNames() []string {
+func (nt *TaskNames) GetNames() []string {
 	names := make([]string, 0, len(nt.Names)+1)
 	if nt.Name != "" {
 		names = append(names, nt.Name)

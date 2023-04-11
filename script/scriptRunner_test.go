@@ -6,7 +6,7 @@ import (
 	"testing"
 
 	"github.com/realvnc-labs/tacoscript/tasks"
-	"github.com/realvnc-labs/tacoscript/tasks/executionresult"
+	"github.com/realvnc-labs/tacoscript/tasks/shared/executionresult"
 	"github.com/stretchr/testify/assert"
 )
 

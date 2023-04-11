@@ -7,7 +7,7 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/realvnc-labs/tacoscript/tasks/executionresult"
+	"github.com/realvnc-labs/tacoscript/tasks/shared/executionresult"
 	"github.com/realvnc-labs/tacoscript/utils"
 	"gopkg.in/yaml.v2"
 

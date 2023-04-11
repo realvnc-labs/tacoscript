@@ -15,7 +15,7 @@ import (
 
 	"github.com/realvnc-labs/tacoscript/applog"
 	"github.com/realvnc-labs/tacoscript/tasks"
-	"github.com/realvnc-labs/tacoscript/tasks/executionresult"
+	"github.com/realvnc-labs/tacoscript/tasks/shared/executionresult"
 
 	log "github.com/sirupsen/logrus"
 

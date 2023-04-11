@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/realvnc-labs/tacoscript/tasks/executionresult"
+	"github.com/realvnc-labs/tacoscript/tasks/shared/executionresult"
 )
 
 type Executor interface {

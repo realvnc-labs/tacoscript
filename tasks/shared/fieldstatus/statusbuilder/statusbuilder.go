@@ -5,7 +5,7 @@ import (
 	"strings"
 
 	"github.com/realvnc-labs/tacoscript/tasks"
-	"github.com/realvnc-labs/tacoscript/tasks/fieldstatus"
+	"github.com/realvnc-labs/tacoscript/tasks/shared/fieldstatus"
 )
 
 const (
