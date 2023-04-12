@@ -33,7 +33,7 @@ type PackageTaskManager struct {
 	ManagementCmdsProviderBuildFunc func() ([]ManagementCmdsProvider, error)
 }
 
-func (pm PackageTaskManager) ExecuteTask(ctx context.Context, t *pkgtask.PTask) (res *pkgtask.PackageManagerExecutionResult, err error) {
+func (pm PackageTaskManager) ExecuteTask(ctx context.Context, t *pkgtask.PTask) (res *pkgtask.ExecutionResult, err error) {
 	managementCmdProviders, err := pm.ManagementCmdsProviderBuildFunc()
 	if err != nil {
 		return nil, err
@@ -44,7 +44,7 @@ func (pm PackageTaskManager) ExecuteTask(ctx context.Context, t *pkgtask.PTask) 
 		return
 	}
 
-	res = &pkgtask.PackageManagerExecutionResult{}
+	res = &pkgtask.ExecutionResult{}
 
 	var managementCmds *ManagementCmds
 	foundSupportedPackageManager := false
@@ -57,7 +57,7 @@ func (pm PackageTaskManager) ExecuteTask(ctx context.Context, t *pkgtask.PTask) 
 
 		logrus.Debugf("will execute version command %s to check if package manager is installed", managementCmds.VersionCmd)
 
-		versionResult := &pkgtask.PackageManagerExecutionResult{}
+		versionResult := &pkgtask.ExecutionResult{}
 		err = pm.run(ctx, t, versionResult, managementCmds.VersionCmd)
 		if err != nil {
 			triedCommands = append(triedCommands, fmt.Sprintf("%s: %v", managementCmds.VersionCmd, err))
@@ -106,7 +106,7 @@ func (pm PackageTaskManager) executePackageMethod(
 	ctx context.Context,
 	t *pkgtask.PTask,
 	managementCmds *ManagementCmds,
-	res *pkgtask.PackageManagerExecutionResult,
+	res *pkgtask.ExecutionResult,
 ) (err error) {
 	switch t.ActionType {
 	case pkgtask.ActionInstall:
@@ -182,7 +182,7 @@ func (pm PackageTaskManager) installPackages(
 	ctx context.Context,
 	t *pkgtask.PTask,
 	mngtCmds *ManagementCmds,
-	res *pkgtask.PackageManagerExecutionResult,
+	res *pkgtask.ExecutionResult,
 ) (err error) {
 	logrus.Debugf("will install packages by executing %s", conv.ConvertSourceToJSONStrIfPossible(mngtCmds.InstallCmds))
 
@@ -195,7 +195,7 @@ func (pm PackageTaskManager) uninstallPackages(
 	ctx context.Context,
 	t *pkgtask.PTask,
 	mngtCmds *ManagementCmds,
-	res *pkgtask.PackageManagerExecutionResult,
+	res *pkgtask.ExecutionResult,
 ) (err error) {
 	logrus.Debugf("will uninstall packages by executing %s", conv.ConvertSourceToJSONStrIfPossible(mngtCmds.UninstallCmds))
 
@@ -208,7 +208,7 @@ func (pm PackageTaskManager) updatePackages(
 	ctx context.Context,
 	t *pkgtask.PTask,
 	mngtCmds *ManagementCmds,
-	res *pkgtask.PackageManagerExecutionResult,
+	res *pkgtask.ExecutionResult,
 ) (err error) {
 	logrus.Debugf("will upgrade packages by executing %s", conv.ConvertSourceToJSONStrIfPossible(mngtCmds.UpgradeCmds))
 
@@ -226,7 +226,7 @@ func (pm PackageTaskManager) updatePkgManagerIfNeeded(
 		return
 	}
 
-	res := &pkgtask.PackageManagerExecutionResult{}
+	res := &pkgtask.ExecutionResult{}
 	logrus.Debugf("will update package manager: %s", mngtCmds.UpgradeCmd)
 	err = pm.run(ctx, t, res, mngtCmds.UpgradeCmd)
 	if err != nil {
@@ -244,7 +244,7 @@ func (pm PackageTaskManager) getPackagesList(
 ) (packagesList []string, err error) {
 	logrus.Debugf("will fetch packages list: %s", mngtCmds.ListCmd)
 
-	res := &pkgtask.PackageManagerExecutionResult{}
+	res := &pkgtask.ExecutionResult{}
 
 	err = pm.run(ctx, t, res, mngtCmds.ListCmd)
 	if err != nil {
@@ -264,7 +264,7 @@ func (pm PackageTaskManager) getPackagesList(
 func (pm PackageTaskManager) run(
 	ctx context.Context,
 	t *pkgtask.PTask,
-	res *pkgtask.PackageManagerExecutionResult,
+	res *pkgtask.ExecutionResult,
 	rawCmds ...string,
 ) (err error) {
 	var stdoutBuf, stderrBuf bytes.Buffer

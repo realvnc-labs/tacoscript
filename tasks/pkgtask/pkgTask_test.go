@@ -19,11 +19,11 @@ import (
 type PackageManagerMock struct {
 	givenCtx     context.Context
 	givenTask    *PTask
-	outputToGive *PackageManagerExecutionResult
+	outputToGive *ExecutionResult
 	errToGive    error
 }
 
-func (pmm *PackageManagerMock) ExecuteTask(ctx context.Context, t *PTask) (res *PackageManagerExecutionResult, err error) {
+func (pmm *PackageManagerMock) ExecuteTask(ctx context.Context, t *PTask) (res *ExecutionResult, err error) {
 	pmm.givenCtx = ctx
 	pmm.givenTask = t
 
@@ -148,7 +148,7 @@ func TestPkgTaskExecution(t *testing.T) {
 				Cmds: []*exec.Cmd{},
 			}},
 			PackageManagerMock: &PackageManagerMock{
-				outputToGive: &PackageManagerExecutionResult{
+				outputToGive: &ExecutionResult{
 					Output: "installation success",
 				},
 			},
@@ -173,7 +173,7 @@ func TestPkgTaskExecution(t *testing.T) {
 				Cmds: []*exec.Cmd{},
 			}},
 			PackageManagerMock: &PackageManagerMock{
-				outputToGive: &PackageManagerExecutionResult{
+				outputToGive: &ExecutionResult{
 					Output:  "installation success",
 					Comment: "some comment",
 					Changes: map[string]string{

@@ -92,7 +92,7 @@ func (pt *PTask) GetCreatesFilesList() []string {
 	return pt.Creates
 }
 
-type PackageManagerExecutionResult struct {
+type ExecutionResult struct {
 	Output  string
 	Comment string
 	Changes map[string]string
@@ -100,7 +100,7 @@ type PackageManagerExecutionResult struct {
 }
 
 type PackageManager interface {
-	ExecuteTask(ctx context.Context, t *PTask) (res *PackageManagerExecutionResult, err error)
+	ExecuteTask(ctx context.Context, t *PTask) (res *ExecutionResult, err error)
 }
 
 type PtExecutor struct {
