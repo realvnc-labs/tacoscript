@@ -40,6 +40,10 @@ func (br BuildRouter) Build(typeName, path string, params interface{}) (tasks.Co
 		return nil, fmt.Errorf("no builders registered for task type '%s'", typeName)
 	}
 
+	if params == nil {
+		return nil, fmt.Errorf("no params supplied for task type '%s'", typeName)
+	}
+
 	return builder.Build(typeName, path, params)
 }
 
