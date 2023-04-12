@@ -407,7 +407,7 @@ func TestShouldHandleBackups(t *testing.T) {
 			// convert task values into an actual task
 			taskBuilder := rvstbuilder.TaskBuilder{}
 			task, err := taskBuilder.Build(
-				realvncserver.TaskTypeRealVNCServer,
+				realvncserver.TaskTypeConfigUpdate,
 				"MyPath",
 				tc.values,
 			)

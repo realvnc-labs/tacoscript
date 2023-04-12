@@ -48,7 +48,7 @@ maintain-my-file:
 				ID: "maintain-my-file",
 				Tasks: []tasks.CoreTask{
 					&filemanaged.FmTask{
-						TypeName: filemanaged.TaskTypeFileManaged,
+						TypeName: filemanaged.TaskType,
 						Path:     "maintain-my-file.file.managed[1]",
 						Name:     "C:\\temp\\npp.7.8.8.Installer.x64.exe",
 						Source: utils.Location{
@@ -96,7 +96,7 @@ maintain-another-file:
 				ID: "maintain-another-file",
 				Tasks: []tasks.CoreTask{
 					&filemanaged.FmTask{
-						TypeName: filemanaged.TaskTypeFileManaged,
+						TypeName: filemanaged.TaskType,
 						Path:     "maintain-another-file.file.managed[1]",
 						Name:     "/tmp/my-file.txt",
 						Contents: sql.NullString{
@@ -125,7 +125,7 @@ Funny file
 		parser := Builder{
 			DataProvider: dataProviderMock,
 			TaskBuilder: builder.NewBuilderRouter(map[string]builder.Builder{
-				filemanaged.TaskTypeFileManaged: fmtbuilder.TaskBuilder{},
+				filemanaged.TaskType: fmtbuilder.TaskBuilder{},
 			}),
 			TemplateVariablesProvider: TemplateVariablesProviderMock{},
 		}

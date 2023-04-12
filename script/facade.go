@@ -33,16 +33,16 @@ func RunScript(scriptPath string, abortOnError bool, output io.Writer) error {
 	parser := Builder{
 		DataProvider: fileDataProvider,
 		TaskBuilder: builder.NewBuilderRouter(map[string]builder.Builder{
-			cmdrun.TaskTypeCmdRun:               &crtbuilder.TaskBuilder{},
-			filemanaged.TaskTypeFileManaged:     &fmtbuilder.TaskBuilder{},
-			filereplace.TaskTypeFileReplace:     &frtbuilder.TaskBuilder{},
-			realvncserver.TaskTypeRealVNCServer: &rvstbuilder.TaskBuilder{},
-			pkgtask.TaskTypePkgInstalled:        &pkgbuilder.TaskBuilder{},
-			pkgtask.TaskTypePkgRemoved:          &pkgbuilder.TaskBuilder{},
-			pkgtask.TaskTypePkgUpgraded:         &pkgbuilder.TaskBuilder{},
-			winreg.TaskTypeWinRegPresent:        &wrtbuilder.TaskBuilder{},
-			winreg.TaskTypeWinRegAbsent:         &wrtbuilder.TaskBuilder{},
-			winreg.TaskTypeWinRegAbsentKey:      &wrtbuilder.TaskBuilder{},
+			cmdrun.TaskType:                    &crtbuilder.TaskBuilder{},
+			filemanaged.TaskType:               &fmtbuilder.TaskBuilder{},
+			filereplace.TaskType:               &frtbuilder.TaskBuilder{},
+			realvncserver.TaskTypeConfigUpdate: &rvstbuilder.TaskBuilder{},
+			pkgtask.TaskTypePkgInstalled:       &pkgbuilder.TaskBuilder{},
+			pkgtask.TaskTypePkgRemoved:         &pkgbuilder.TaskBuilder{},
+			pkgtask.TaskTypePkgUpgraded:        &pkgbuilder.TaskBuilder{},
+			winreg.TaskTypeWinRegPresent:       &wrtbuilder.TaskBuilder{},
+			winreg.TaskTypeWinRegAbsent:        &wrtbuilder.TaskBuilder{},
+			winreg.TaskTypeWinRegAbsentKey:     &wrtbuilder.TaskBuilder{},
 		}),
 		TemplateVariablesProvider: utils.OSDataProvider{},
 	}
@@ -69,20 +69,20 @@ func RunScript(scriptPath string, abortOnError bool, output io.Writer) error {
 
 	execRouter := tasks.ExecutorRouter{
 		Executors: map[string]tasks.Executor{
-			cmdrun.TaskTypeCmdRun: &cmdrun.CrtExecutor{
+			cmdrun.TaskType: &cmdrun.CrtExecutor{
 				Runner:    cmdRunner,
 				FsManager: &utils.FsManager{},
 			},
-			filemanaged.TaskTypeFileManaged: &filemanaged.FmtExecutor{
+			filemanaged.TaskType: &filemanaged.FmtExecutor{
 				Runner:      cmdRunner,
 				FsManager:   &utils.FsManager{},
 				HashManager: &utils.HashManager{},
 			},
-			filereplace.TaskTypeFileReplace: &filereplace.FrtExecutor{
+			filereplace.TaskType: &filereplace.FrtExecutor{
 				Runner:    cmdRunner,
 				FsManager: &utils.FsManager{},
 			},
-			realvncserver.TaskTypeRealVNCServer: &realvncserver.RvstExecutor{
+			realvncserver.TaskTypeConfigUpdate: &realvncserver.RvstExecutor{
 				Runner:    cmdRunner,
 				FsManager: &utils.FsManager{},
 			},

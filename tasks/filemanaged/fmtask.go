@@ -20,7 +20,7 @@ import (
 )
 
 const (
-	TaskTypeFileManaged = "file.managed"
+	TaskType = "file.managed"
 
 	DefaultFileMode = 0744
 )

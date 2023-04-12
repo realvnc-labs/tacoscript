@@ -20,7 +20,7 @@ import (
 )
 
 const (
-	TaskTypeCmdRun = "cmd.run"
+	TaskType = "cmd.run"
 )
 
 type CrTask struct {

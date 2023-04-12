@@ -17,7 +17,7 @@ import (
 )
 
 const (
-	TaskTypeRealVNCServer = "realvnc_server.config_update"
+	TaskTypeConfigUpdate = "realvnc_server.config_update"
 
 	ServiceServerMode = "Service"
 	UserServerMode    = "User"

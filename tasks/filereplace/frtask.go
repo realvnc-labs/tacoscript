@@ -22,7 +22,7 @@ var (
 )
 
 const (
-	TaskTypeFileReplace = "file.replace"
+	TaskType = "file.replace"
 
 	defaultMaxFileSize = "512k"
 )
