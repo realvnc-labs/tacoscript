@@ -10,7 +10,7 @@ import (
 func Init(isVerbose bool) {
 	f := &MultiLineFormatter{
 		TextFormatter: log.TextFormatter{
-			TimestampFormat: "2006-01-02T15:04:05.000000",
+			TimestampFormat: "2006-01-02T15:04:05.0000",
 			FullTimestamp:   true,
 		},
 	}
@@ -18,7 +18,6 @@ func Init(isVerbose bool) {
 
 	logLevel := log.InfoLevel
 	if isVerbose {
-		log.SetReportCaller(true)
 		logLevel = log.DebugLevel
 	}
 
