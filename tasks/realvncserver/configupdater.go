@@ -15,8 +15,8 @@ import (
 	"github.com/sirupsen/logrus"
 
 	tacoexec "github.com/realvnc-labs/tacoscript/exec"
-	"github.com/realvnc-labs/tacoscript/realvnc"
 	"github.com/realvnc-labs/tacoscript/tasks/shared/fieldstatus"
+	"github.com/realvnc-labs/tacoscript/tasks/support/realvnc"
 	"github.com/realvnc-labs/tacoscript/utils"
 )
 

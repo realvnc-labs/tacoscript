@@ -11,9 +11,9 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"github.com/realvnc-labs/tacoscript/reg"
 	"github.com/realvnc-labs/tacoscript/tasks/realvncserver"
 	"github.com/realvnc-labs/tacoscript/tasks/shared/fieldstatus"
+	"github.com/realvnc-labs/tacoscript/tasks/support/reg"
 	"github.com/realvnc-labs/tacoscript/utils"
 )
 

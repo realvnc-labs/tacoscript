@@ -1,33 +1,33 @@
 Run:
   no-update-cause-no-fields:
     realvnc_server.config_update:
-      - config_file: ../realvnc/test/realvncserver-config.conf
+      - config_file: ../testdata/realvncserver-config.conf
   add-config-param:
     realvnc_server.config_update:
-      - config_file: ../realvnc/test/realvncserver-config.conf
+      - config_file: ../testdata/realvncserver-config.conf
       - blank_screen: true
       - skip_reload: true
   update-config-params:
     realvnc_server.config_update:
-      - config_file: ../realvnc/test/realvncserver-config.conf
+      - config_file: ../testdata/realvncserver-config.conf
       - encryption: AlwaysOn
       - skip_reload: true
       - onlyif:
-          - test -f ../realvnc/test/realvncserver-config.conf
+          - test -f ../testdata/realvncserver-config.conf
   do-not-update-config-params-missing-config-file:
     realvnc_server.config_update:
-      - config_file: ../realvnc/test/realvncserver-config.conf
+      - config_file: ../testdata/realvncserver-config.conf
       - encryption: AlwaysOn
       - skip_reload: true
       - onlyif:
-          - test -f ../realvnc/test/realvncserver-config-missing.conf
+          - test -f ../testdata/realvncserver-config-missing.conf
   update-config-params-due-to-missing-config-file:
     realvnc_server.config_update:
-      - config_file: ../realvnc/test/realvncserver-config.conf
+      - config_file: ../testdata/realvncserver-config.conf
       - encryption: PreferOn
       - skip_reload: true
       - unless:
-          - test -f ../realvnc/test/realvncserver-config-missing.conf
+          - test -f ../testdata/realvncserver-config-missing.conf
 
 On:
   - darwin
@@ -35,7 +35,7 @@ On:
 
 Expect:
   PreExec: |
-    cp ../realvnc/test/realvncserver-config.conf.orig ../realvnc/test/realvncserver-config.conf
+    cp ../testdata/realvncserver-config.conf.orig ../testdata/realvncserver-config.conf
   Summary:
     Succeeded: 5
     Changes: 3
@@ -69,5 +69,5 @@ Expect:
       HasChanges: true
 
   PostExec: |
-    rm ../realvnc/test/realvncserver-config.conf
-    rm ../realvnc/test/realvncserver-config.conf.bak
+    rm ../testdata/realvncserver-config.conf
+    rm ../testdata/realvncserver-config.conf.bak

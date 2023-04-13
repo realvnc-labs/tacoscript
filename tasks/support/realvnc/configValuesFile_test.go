@@ -114,7 +114,7 @@ func TestShouldNotUpdateUnchangedConfigValue(t *testing.T) {
 }
 
 func TestShouldGetConfigValues(t *testing.T) {
-	configFilename := "./test/realvncserver-config.conf.orig"
+	configFilename := "../../../testdata/realvncserver-config.conf.orig"
 
 	configValues, err := NewConfigValuesFromFile(configFilename)
 	require.NoError(t, err)
@@ -131,7 +131,7 @@ func TestShouldGetConfigValues(t *testing.T) {
 }
 
 func TestShouldErrorWhenCannotOpenConfigFile(t *testing.T) {
-	configFilename := "./test/realvncserver-config-1.conf"
+	configFilename := "../../../testdata/realvncserver-config-1.conf"
 
 	_, err := NewConfigValuesFromFile(configFilename)
 	require.ErrorIs(t, err, os.ErrNotExist)

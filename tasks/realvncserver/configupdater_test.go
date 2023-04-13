@@ -24,8 +24,8 @@ import (
 )
 
 const (
-	origTestConfigFilename = "../../realvnc/test/realvncserver-config.conf.orig"
-	testConfigFilename     = "../../realvnc/test/realvncserver-config.conf"
+	origTestConfigFilename = "../../testdata/realvncserver-config.conf.orig"
+	testConfigFilename     = "../../testdata/realvncserver-config.conf"
 )
 
 func testSetup(t *testing.T) {
@@ -74,7 +74,7 @@ func TestShouldUpdateSimpleConfigFileParam(t *testing.T) {
 
 	task := &realvncserver.RvsTask{
 		Path:       "realvnc-server-1",
-		ConfigFile: "../../realvnc/test/realvncserver-config.conf",
+		ConfigFile: testConfigFilename,
 		Encryption: "AlwaysOn",
 	}
 
@@ -122,7 +122,7 @@ func TestShouldAddSimpleConfigFileParam(t *testing.T) {
 
 	task := &realvncserver.RvsTask{
 		Path:        "realvnc-server-1",
-		ConfigFile:  "../../realvnc/test/realvncserver-config.conf",
+		ConfigFile:  testConfigFilename,
 		SkipBackup:  true,
 		BlankScreen: true,
 	}
@@ -162,7 +162,7 @@ func TestShouldAddSimpleConfigWhenNoExistingConfigFile(t *testing.T) {
 
 	fmt.Printf("cwd = %+v\n", cwd)
 
-	newConfigFilename := "../../realvnc/test/realvncserver-config-new.conf"
+	newConfigFilename := "../../testdata/realvncserver-config-new.conf"
 	defer os.Remove(newConfigFilename)
 
 	tracker := fieldstatus.NewFieldNameStatusTrackerWithMapAndStatus(
@@ -228,7 +228,7 @@ func TestShouldRemoveSimpleConfigFileParam(t *testing.T) {
 
 	task := &realvncserver.RvsTask{
 		Path:       "realvnc-server-1",
-		ConfigFile: "../../realvnc/test/realvncserver-config.conf",
+		ConfigFile: testConfigFilename,
 		Encryption: "!UNSET!",
 	}
 

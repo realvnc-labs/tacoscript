@@ -4,9 +4,7 @@ import (
 	"context"
 	"io"
 
-	"github.com/realvnc-labs/tacoscript/builder"
 	"github.com/realvnc-labs/tacoscript/exec"
-	"github.com/realvnc-labs/tacoscript/pkgmanager"
 	"github.com/realvnc-labs/tacoscript/tasks/cmdrun"
 	"github.com/realvnc-labs/tacoscript/tasks/cmdrun/crtbuilder"
 	"github.com/realvnc-labs/tacoscript/tasks/filemanaged"
@@ -17,6 +15,8 @@ import (
 	"github.com/realvnc-labs/tacoscript/tasks/pkgtask/pkgbuilder"
 	"github.com/realvnc-labs/tacoscript/tasks/realvncserver"
 	"github.com/realvnc-labs/tacoscript/tasks/realvncserver/rvstbuilder"
+	"github.com/realvnc-labs/tacoscript/tasks/shared/builder"
+	"github.com/realvnc-labs/tacoscript/tasks/support/pkgmanager"
 	"github.com/realvnc-labs/tacoscript/tasks/winreg"
 	"github.com/realvnc-labs/tacoscript/tasks/winreg/wrtbuilder"
 	"github.com/realvnc-labs/tacoscript/utils"

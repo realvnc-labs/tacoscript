@@ -8,9 +8,9 @@ import (
 	"github.com/sirupsen/logrus"
 	"gopkg.in/yaml.v2"
 
-	"github.com/realvnc-labs/tacoscript/builder/parser"
 	"github.com/realvnc-labs/tacoscript/conv"
 	"github.com/realvnc-labs/tacoscript/tasks"
+	"github.com/realvnc-labs/tacoscript/tasks/shared/builder/parser"
 	"github.com/realvnc-labs/tacoscript/tasks/shared/fieldstatus"
 	"github.com/realvnc-labs/tacoscript/tasks/shared/fieldstatus/statusbuilder"
 	"github.com/realvnc-labs/tacoscript/utils"

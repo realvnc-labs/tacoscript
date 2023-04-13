@@ -49,7 +49,7 @@ func TestShouldPerformSimpleConfigParamUpdate(t *testing.T) {
 	task.SetTracker(tracker)
 
 	if runtime.GOOS != "windows" {
-		task.ConfigFile = "../../realvnc/test/realvncserver-config.conf"
+		task.ConfigFile = "../../testdata/realvncserver-config.conf"
 	}
 
 	err := task.Validate(runtime.GOOS)

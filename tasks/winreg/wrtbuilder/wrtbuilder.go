@@ -1,8 +1,8 @@
 package wrtbuilder
 
 import (
-	builder "github.com/realvnc-labs/tacoscript/builder"
 	"github.com/realvnc-labs/tacoscript/tasks"
+	"github.com/realvnc-labs/tacoscript/tasks/shared/builder"
 	"github.com/realvnc-labs/tacoscript/tasks/winreg"
 )
 

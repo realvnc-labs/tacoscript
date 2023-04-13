@@ -4,11 +4,11 @@ import (
 	"database/sql"
 	"fmt"
 
-	builder "github.com/realvnc-labs/tacoscript/builder"
-	"github.com/realvnc-labs/tacoscript/builder/parser"
 	"github.com/realvnc-labs/tacoscript/conv"
 	"github.com/realvnc-labs/tacoscript/tasks"
 	"github.com/realvnc-labs/tacoscript/tasks/filemanaged"
+	"github.com/realvnc-labs/tacoscript/tasks/shared/builder"
+	"github.com/realvnc-labs/tacoscript/tasks/shared/builder/parser"
 	"github.com/realvnc-labs/tacoscript/utils"
 )
 

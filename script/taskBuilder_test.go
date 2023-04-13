@@ -11,10 +11,10 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"github.com/realvnc-labs/tacoscript/builder"
 	"github.com/realvnc-labs/tacoscript/tasks"
 	"github.com/realvnc-labs/tacoscript/tasks/filemanaged"
 	"github.com/realvnc-labs/tacoscript/tasks/filemanaged/fmtbuilder"
+	"github.com/realvnc-labs/tacoscript/tasks/shared/builder"
 	"github.com/realvnc-labs/tacoscript/utils"
 )
 

@@ -3,11 +3,11 @@ package crtbuilder
 import (
 	"fmt"
 
-	builder "github.com/realvnc-labs/tacoscript/builder"
-	"github.com/realvnc-labs/tacoscript/builder/parser"
 	"github.com/realvnc-labs/tacoscript/conv"
 	"github.com/realvnc-labs/tacoscript/tasks"
 	"github.com/realvnc-labs/tacoscript/tasks/cmdrun"
+	"github.com/realvnc-labs/tacoscript/tasks/shared/builder"
+	"github.com/realvnc-labs/tacoscript/tasks/shared/builder/parser"
 )
 
 type TaskBuilder struct {

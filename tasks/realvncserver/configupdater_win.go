@@ -12,8 +12,8 @@ import (
 	"github.com/sirupsen/logrus"
 
 	tacoexec "github.com/realvnc-labs/tacoscript/exec"
-	"github.com/realvnc-labs/tacoscript/reg"
 	"github.com/realvnc-labs/tacoscript/tasks/shared/fieldstatus"
+	"github.com/realvnc-labs/tacoscript/tasks/support/reg"
 )
 
 const (
