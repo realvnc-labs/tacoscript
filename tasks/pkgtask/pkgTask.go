@@ -29,7 +29,7 @@ const (
 	ActionUpdate
 )
 
-type PTask struct {
+type Task struct {
 	ActionType PkgActionType
 	TypeName   string
 	Path       string
@@ -46,15 +46,15 @@ type PTask struct {
 	Updated bool
 }
 
-func (pt *PTask) GetTypeName() string {
+func (pt *Task) GetTypeName() string {
 	return pt.TypeName
 }
 
-func (pt *PTask) GetRequirements() []string {
+func (pt *Task) GetRequirements() []string {
 	return pt.Require
 }
 
-func (pt *PTask) Validate(goos string) error {
+func (pt *Task) Validate(goos string) error {
 	errs := &utils.Errors{}
 
 	err1 := tasks.ValidateRequired(pt.Named.Name, pt.Path+"."+tasks.NameField)
@@ -72,23 +72,23 @@ func (pt *PTask) Validate(goos string) error {
 	return errs.ToError()
 }
 
-func (pt *PTask) GetPath() string {
+func (pt *Task) GetPath() string {
 	return pt.Path
 }
 
-func (pt *PTask) String() string {
+func (pt *Task) String() string {
 	return fmt.Sprintf("task '%s' at path '%s'", pt.TypeName, pt.GetPath())
 }
 
-func (pt *PTask) GetOnlyIfCmds() []string {
+func (pt *Task) GetOnlyIfCmds() []string {
 	return pt.OnlyIf
 }
 
-func (pt *PTask) GetUnlessCmds() []string {
+func (pt *Task) GetUnlessCmds() []string {
 	return pt.Unless
 }
 
-func (pt *PTask) GetCreatesFilesList() []string {
+func (pt *Task) GetCreatesFilesList() []string {
 	return pt.Creates
 }
 
@@ -100,7 +100,7 @@ type ExecutionResult struct {
 }
 
 type PackageManager interface {
-	ExecuteTask(ctx context.Context, t *PTask) (res *ExecutionResult, err error)
+	ExecuteTask(ctx context.Context, t *Task) (res *ExecutionResult, err error)
 }
 
 type PtExecutor struct {
@@ -113,9 +113,9 @@ func (pte *PtExecutor) Execute(ctx context.Context, task tasks.CoreTask) executi
 	logrus.Debugf("will trigger '%s' task", task.GetPath())
 	execRes := executionresult.ExecutionResult{}
 
-	pkgTask, ok := task.(*PTask)
+	pkgTask, ok := task.(*Task)
 	if !ok {
-		execRes.Err = fmt.Errorf("cannot convert task '%v' to PTask", task)
+		execRes.Err = fmt.Errorf("cannot convert task '%v' to Task", task)
 		return execRes
 	}
 

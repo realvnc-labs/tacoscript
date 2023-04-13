@@ -15,7 +15,7 @@ import (
 type mockConfigReloader struct {
 }
 
-func (rl *mockConfigReloader) Reload(rvst *realvncserver.RvsTask) (err error) {
+func (rl *mockConfigReloader) Reload(rvst *realvncserver.Task) (err error) {
 	return nil
 }
 
@@ -39,7 +39,7 @@ func TestShouldPerformSimpleConfigParamUpdate(t *testing.T) {
 			},
 		})
 
-	task := &realvncserver.RvsTask{
+	task := &realvncserver.Task{
 		Path:       "realvnc-server-1",
 		Encryption: "AlwaysOn",
 		ServerMode: "Service",

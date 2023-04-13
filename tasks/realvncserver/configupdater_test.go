@@ -72,7 +72,7 @@ func TestShouldUpdateSimpleConfigFileParam(t *testing.T) {
 			},
 		})
 
-	task := &realvncserver.RvsTask{
+	task := &realvncserver.Task{
 		Path:       "realvnc-server-1",
 		ConfigFile: testConfigFilename,
 		Encryption: "AlwaysOn",
@@ -120,7 +120,7 @@ func TestShouldAddSimpleConfigFileParam(t *testing.T) {
 			},
 		})
 
-	task := &realvncserver.RvsTask{
+	task := &realvncserver.Task{
 		Path:        "realvnc-server-1",
 		ConfigFile:  testConfigFilename,
 		SkipBackup:  true,
@@ -173,7 +173,7 @@ func TestShouldAddSimpleConfigWhenNoExistingConfigFile(t *testing.T) {
 			},
 		})
 
-	task := &realvncserver.RvsTask{
+	task := &realvncserver.Task{
 		Path:        "realvnc-server-1",
 		ConfigFile:  newConfigFilename,
 		IdleTimeout: 3600,
@@ -226,7 +226,7 @@ func TestShouldRemoveSimpleConfigFileParam(t *testing.T) {
 			},
 		})
 
-	task := &realvncserver.RvsTask{
+	task := &realvncserver.Task{
 		Path:       "realvnc-server-1",
 		ConfigFile: testConfigFilename,
 		Encryption: "!UNSET!",
@@ -254,14 +254,14 @@ func TestShouldRemoveSimpleConfigFileParam(t *testing.T) {
 func TestShouldMakeReloadCmdLine(t *testing.T) {
 	cases := []struct {
 		name            string
-		task            realvncserver.RvsTask
+		task            realvncserver.Task
 		goos            string
 		expectedCmdLine string
 		expectedParams  []string
 	}{
 		{
 			name: "linux service server mode",
-			task: realvncserver.RvsTask{
+			task: realvncserver.Task{
 				Path:       "MyTask",
 				ServerMode: realvncserver.ServiceServerMode,
 			},
@@ -271,7 +271,7 @@ func TestShouldMakeReloadCmdLine(t *testing.T) {
 		},
 		{
 			name: "linux user server mode",
-			task: realvncserver.RvsTask{
+			task: realvncserver.Task{
 				Path:       "MyTask",
 				ServerMode: realvncserver.UserServerMode,
 			},
@@ -281,7 +281,7 @@ func TestShouldMakeReloadCmdLine(t *testing.T) {
 		},
 		{
 			name: "linux virtual server mode",
-			task: realvncserver.RvsTask{
+			task: realvncserver.Task{
 				Path:       "MyTask",
 				ServerMode: realvncserver.VirtualServerMode,
 			},
@@ -291,7 +291,7 @@ func TestShouldMakeReloadCmdLine(t *testing.T) {
 		},
 		{
 			name: "user specified",
-			task: realvncserver.RvsTask{
+			task: realvncserver.Task{
 				Path:           "MyTask",
 				ServerMode:     realvncserver.ServiceServerMode,
 				ReloadExecPath: "/my/path/vncserver-x11",
@@ -413,7 +413,7 @@ func TestShouldHandleBackups(t *testing.T) {
 			)
 			require.NoError(t, err)
 
-			rvsTask, ok := task.(*realvncserver.RvsTask)
+			rvsTask, ok := task.(*realvncserver.Task)
 			require.True(t, ok)
 
 			err = rvsTask.Validate(runtime.GOOS)

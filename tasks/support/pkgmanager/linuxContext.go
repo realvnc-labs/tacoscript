@@ -54,7 +54,7 @@ func BuildManagementCmdsProviders() ([]ManagementCmdsProvider, error) {
 
 type AptCmdsProvider struct{}
 
-func (ecb AptCmdsProvider) GetManagementCmds(t *pkgtask.PTask) (*ManagementCmds, error) {
+func (ecb AptCmdsProvider) GetManagementCmds(t *pkgtask.Task) (*ManagementCmds, error) {
 	rawCmds := t.Named.GetNames()
 	rawInstallCmds := buildInstallCmds(rawCmds, t.Version)
 
@@ -70,7 +70,7 @@ func (ecb AptCmdsProvider) GetManagementCmds(t *pkgtask.PTask) (*ManagementCmds,
 
 type AptGetCmdsProvider struct{}
 
-func (ecb AptGetCmdsProvider) GetManagementCmds(t *pkgtask.PTask) (*ManagementCmds, error) {
+func (ecb AptGetCmdsProvider) GetManagementCmds(t *pkgtask.Task) (*ManagementCmds, error) {
 	rawCmds := t.Named.GetNames()
 	rawInstallCmds := buildInstallCmds(rawCmds, t.Version)
 
@@ -86,7 +86,7 @@ func (ecb AptGetCmdsProvider) GetManagementCmds(t *pkgtask.PTask) (*ManagementCm
 
 type YumCmdsProvider struct{}
 
-func (ecb YumCmdsProvider) GetManagementCmds(t *pkgtask.PTask) (*ManagementCmds, error) {
+func (ecb YumCmdsProvider) GetManagementCmds(t *pkgtask.Task) (*ManagementCmds, error) {
 	rawCmds := t.Named.GetNames()
 	rawInstallCmds := buildInstallCmds(rawCmds, t.Version)
 
@@ -102,7 +102,7 @@ func (ecb YumCmdsProvider) GetManagementCmds(t *pkgtask.PTask) (*ManagementCmds,
 
 type DnfCmdsProvider struct{}
 
-func (ecb DnfCmdsProvider) GetManagementCmds(t *pkgtask.PTask) (*ManagementCmds, error) {
+func (ecb DnfCmdsProvider) GetManagementCmds(t *pkgtask.Task) (*ManagementCmds, error) {
 	rawCmds := t.Named.GetNames()
 	rawInstallCmds := buildInstallCmds(rawCmds, t.Version)
 

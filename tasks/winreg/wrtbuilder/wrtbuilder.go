@@ -10,7 +10,7 @@ type TaskBuilder struct {
 }
 
 func (tb TaskBuilder) Build(typeName, path string, params interface{}) (tasks.CoreTask, error) {
-	task := &winreg.WrTask{
+	task := &winreg.Task{
 		TypeName: typeName,
 		Path:     path,
 	}

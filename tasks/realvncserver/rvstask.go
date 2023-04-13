@@ -28,11 +28,11 @@ const (
 	TestServerMode = "Test"
 )
 
-type RvsTask struct {
+type Task struct {
 	TypeName string // TaskType
 	Path     string // TaskName
 
-	// the RvsTask uses the field status tracking capability (the second field of the tag) to indicate
+	// the Task uses the field status tracking capability (the second field of the tag) to indicate
 	// whether a field is a realvnc server parameter or not. if set to true then it is a config parameter
 	// and it will be used to update the realvnc server config. if not tracked, then it means the field
 	// is used for the task itself and is NOT a realvnc config param.
@@ -78,46 +78,46 @@ var (
 	ErrFieldTypeNotSupported = errors.New("task field type not supported")
 
 	// make sure we support the field tracker interface
-	_ tasks.TaskWithFieldTracker = new(RvsTask)
+	_ tasks.TaskWithFieldTracker = new(Task)
 )
 
-func (t *RvsTask) SetMapper(mapper fieldstatus.NameMapper) {
+func (t *Task) SetMapper(mapper fieldstatus.NameMapper) {
 	t.fieldMapper = mapper
 }
 
-func (t *RvsTask) SetTracker(tracker fieldstatus.Tracker) {
+func (t *Task) SetTracker(tracker fieldstatus.Tracker) {
 	t.fieldTracker = tracker
 }
 
-func (t *RvsTask) GetTypeName() string {
+func (t *Task) GetTypeName() string {
 	return t.TypeName
 }
 
-func (t *RvsTask) GetRequirements() []string {
+func (t *Task) GetRequirements() []string {
 	return t.Require
 }
 
-func (t *RvsTask) GetPath() string {
+func (t *Task) GetPath() string {
 	return t.Path
 }
 
-func (t *RvsTask) String() string {
+func (t *Task) String() string {
 	return fmt.Sprintf("task '%s' at path '%s'", t.TypeName, t.GetPath())
 }
 
-func (t *RvsTask) GetOnlyIfCmds() []string {
+func (t *Task) GetOnlyIfCmds() []string {
 	return t.OnlyIf
 }
 
-func (t *RvsTask) GetUnlessCmds() []string {
+func (t *Task) GetUnlessCmds() []string {
 	return t.Unless
 }
 
-func (t *RvsTask) GetCreatesFilesList() []string {
+func (t *Task) GetCreatesFilesList() []string {
 	return t.Creates
 }
 
-func (t *RvsTask) getFieldValueAsString(fieldName string) (val string, err error) {
+func (t *Task) getFieldValueAsString(fieldName string) (val string, err error) {
 	rTaskValue := reflect.ValueOf(*t)
 
 	// get field from the task
@@ -148,7 +148,7 @@ func (t *RvsTask) getFieldValueAsString(fieldName string) (val string, err error
 }
 
 type RvsConfigReloader interface {
-	Reload(rvst *RvsTask) (err error)
+	Reload(rvst *Task) (err error)
 }
 
 type RvstExecutor struct {
@@ -166,9 +166,9 @@ func (rvste *RvstExecutor) Execute(ctx context.Context, task tasks.CoreTask) exe
 		Changes: make(map[string]string),
 	}
 
-	rvst, ok := task.(*RvsTask)
+	rvst, ok := task.(*Task)
 	if !ok {
-		execRes.Err = fmt.Errorf("cannot convert task '%v' to RvsTask", task)
+		execRes.Err = fmt.Errorf("cannot convert task '%v' to Task", task)
 		return execRes
 	}
 

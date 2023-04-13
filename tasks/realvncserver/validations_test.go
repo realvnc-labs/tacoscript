@@ -28,7 +28,7 @@ func newTrackerWithSingleFieldStatus(fieldKey string, fieldName string) (tracker
 	return tracker
 }
 
-func initMapperTracker(task *realvncserver.RvsTask) {
+func initMapperTracker(task *realvncserver.Task) {
 	tracker := newTrackerWithSingleFieldStatus("encryption", "Encryption")
 	task.SetMapper(tracker)
 	task.SetTracker(tracker)
@@ -37,19 +37,19 @@ func initMapperTracker(task *realvncserver.RvsTask) {
 func TestRealVNCNameFieldValidations(t *testing.T) {
 	testCases := []struct {
 		name          string
-		task          realvncserver.RvsTask
+		task          realvncserver.Task
 		expectedError string
 	}{
 		{
 			name: "valid name value",
-			task: realvncserver.RvsTask{
+			task: realvncserver.Task{
 				Path:       "MyTask",
 				ConfigFile: "/tmp/config.conf",
 			},
 		},
 		{
 			name: "invalid path value",
-			task: realvncserver.RvsTask{
+			task: realvncserver.Task{
 				// Path: "MyTask",
 				ConfigFile: "/tmp/config.conf",
 			},
@@ -82,14 +82,14 @@ func TestRealVNCConfigFileBaseFieldValidations(t *testing.T) {
 	}
 	testCases := []struct {
 		name               string
-		task               realvncserver.RvsTask
+		task               realvncserver.Task
 		goos               string
 		expectedErrorMsg   string
 		expectedConfigFile string
 	}{
 		{
 			name: "valid config_file value",
-			task: realvncserver.RvsTask{
+			task: realvncserver.Task{
 				Path:       "MyTask",
 				ConfigFile: "/config/file/name/here",
 			},
@@ -98,14 +98,14 @@ func TestRealVNCConfigFileBaseFieldValidations(t *testing.T) {
 		},
 		{
 			name: "when no config file, use service server mode config file",
-			task: realvncserver.RvsTask{
+			task: realvncserver.Task{
 				Path: "MyTask",
 			},
 			goos:               "any",
 			expectedConfigFile: realvncserver.DefaultServiceServerModeConfigFile,
 		},
 		{
-			task: realvncserver.RvsTask{
+			task: realvncserver.Task{
 				Path:       "MyTask",
 				ServerMode: realvncserver.ServiceServerMode,
 			},
@@ -148,14 +148,14 @@ func TestRealVNCConfigFileExtendedFieldValidations(t *testing.T) {
 	}
 	testCases := []struct {
 		name               string
-		task               realvncserver.RvsTask
+		task               realvncserver.Task
 		goos               string
 		expectedErrorMsg   string
 		expectedConfigFile string
 	}{
 		{
 			name: "default path when user server mode",
-			task: realvncserver.RvsTask{
+			task: realvncserver.Task{
 				Path:       "MyTask",
 				ServerMode: realvncserver.UserServerMode,
 			},
@@ -164,7 +164,7 @@ func TestRealVNCConfigFileExtendedFieldValidations(t *testing.T) {
 		},
 		{
 			name: "default path when virtual server mode",
-			task: realvncserver.RvsTask{
+			task: realvncserver.Task{
 				Path:       "MyTask",
 				ServerMode: realvncserver.VirtualServerMode,
 			},
@@ -173,7 +173,7 @@ func TestRealVNCConfigFileExtendedFieldValidations(t *testing.T) {
 		},
 		{
 			name: "error when virtual server mode and darwin",
-			task: realvncserver.RvsTask{
+			task: realvncserver.Task{
 				Path:       "MyTask",
 				ServerMode: realvncserver.VirtualServerMode,
 			},
@@ -183,7 +183,7 @@ func TestRealVNCConfigFileExtendedFieldValidations(t *testing.T) {
 		},
 		{
 			name: "error when virtual server mode and windows",
-			task: realvncserver.RvsTask{
+			task: realvncserver.Task{
 				Path:       "MyTask",
 				ServerMode: realvncserver.VirtualServerMode,
 			},
@@ -223,13 +223,13 @@ func TestShouldSetUseVNCLicenseReloadWhenVirtualServiceMode(t *testing.T) {
 
 	cases := []struct {
 		name                  string
-		task                  realvncserver.RvsTask
+		task                  realvncserver.Task
 		goos                  string
 		expectedLicenseReload bool
 	}{
 		{
 			name: "virtual mode license reload linux",
-			task: realvncserver.RvsTask{
+			task: realvncserver.Task{
 				Path:       "MyTask",
 				ServerMode: realvncserver.VirtualServerMode,
 			},
@@ -238,7 +238,7 @@ func TestShouldSetUseVNCLicenseReloadWhenVirtualServiceMode(t *testing.T) {
 		},
 		{
 			name: "no license reload darwin",
-			task: realvncserver.RvsTask{
+			task: realvncserver.Task{
 				Path: "MyTask",
 			},
 			goos:                  "darwin",
@@ -246,7 +246,7 @@ func TestShouldSetUseVNCLicenseReloadWhenVirtualServiceMode(t *testing.T) {
 		},
 		{
 			name: "no license reload windows",
-			task: realvncserver.RvsTask{
+			task: realvncserver.Task{
 				Path: "MyTask",
 			},
 			goos:                  "windows",
@@ -270,7 +270,7 @@ func TestShouldNotSetUseVNCLicenseReloadWhenNotVirtualServiceMode(t *testing.T) 
 	// TODO: (rs): remove this Skip when support for user and virtual server modes is reintroduced.
 	t.Skip()
 
-	task := realvncserver.RvsTask{
+	task := realvncserver.Task{
 		Path: "MyTask",
 	}
 
@@ -286,7 +286,7 @@ func TestShouldErrorWhenVirtualServerModeAndNotLinux(t *testing.T) {
 	// TODO: (rs): remove this Skip when support for user and virtual server modes is reintroduced.
 	t.Skip()
 
-	task := &realvncserver.RvsTask{
+	task := &realvncserver.Task{
 		Path:       "MyTask",
 		ServerMode: realvncserver.VirtualServerMode,
 	}
@@ -301,7 +301,7 @@ func TestShouldNotErrorWhenVirtualServerModeAndLinux(t *testing.T) {
 	// TODO: (rs): remove this Skip when support for user and virtual server modes is reintroduced.
 	t.Skip()
 
-	task := &realvncserver.RvsTask{
+	task := &realvncserver.Task{
 		Path:       "MyTask",
 		ServerMode: realvncserver.VirtualServerMode,
 	}
@@ -313,12 +313,12 @@ func TestShouldNotErrorWhenVirtualServerModeAndLinux(t *testing.T) {
 func TestRealVNCServerEncryptionFieldValidations(t *testing.T) {
 	testCases := []struct {
 		name          string
-		task          realvncserver.RvsTask
+		task          realvncserver.Task
 		expectedError string
 	}{
 		{
 			name: "valid encryption value",
-			task: realvncserver.RvsTask{
+			task: realvncserver.Task{
 				Path:       "MyTask",
 				ConfigFile: "/config/file/name/here",
 				Encryption: "AlwaysOn",
@@ -326,7 +326,7 @@ func TestRealVNCServerEncryptionFieldValidations(t *testing.T) {
 		},
 		{
 			name: "invalid encryption value",
-			task: realvncserver.RvsTask{
+			task: realvncserver.Task{
 				Path:       "MyTask",
 				ConfigFile: "/config/file/name/here",
 				Encryption: "randomvalue",
@@ -335,7 +335,7 @@ func TestRealVNCServerEncryptionFieldValidations(t *testing.T) {
 		},
 		{
 			name: "invalid encryption value",
-			task: realvncserver.RvsTask{
+			task: realvncserver.Task{
 				Path:       "MyTask",
 				ConfigFile: "/config/file/name/here",
 				Encryption: "AlwaysOn   # this comment is an error",
@@ -366,12 +366,12 @@ func TestRealVNCServerEncryptionFieldValidations(t *testing.T) {
 func TestRealVNCServerAuthenticationFieldValidations(t *testing.T) {
 	testCases := []struct {
 		name          string
-		task          realvncserver.RvsTask
+		task          realvncserver.Task
 		expectedError string
 	}{
 		{
 			name: "invalid authentication value",
-			task: realvncserver.RvsTask{
+			task: realvncserver.Task{
 				Path:           "MyTask",
 				ConfigFile:     "/config/file/name/here",
 				Authentication: "invalidValue",
@@ -380,7 +380,7 @@ func TestRealVNCServerAuthenticationFieldValidations(t *testing.T) {
 		},
 		{
 			name: "valid authentication value",
-			task: realvncserver.RvsTask{
+			task: realvncserver.Task{
 				Path:           "MyTask",
 				ConfigFile:     "/config/file/name/here",
 				Authentication: "SingleSignOn+Radius,SystemAuth+Radius",
@@ -388,7 +388,7 @@ func TestRealVNCServerAuthenticationFieldValidations(t *testing.T) {
 		},
 		{
 			name: "SingleSignOn   +Radius   ,  SystemAuth+  Radius",
-			task: realvncserver.RvsTask{
+			task: realvncserver.Task{
 				Path:           "MyTask",
 				ConfigFile:     "/config/file/name/here",
 				Authentication: "SingleSignOn   +Radius   ,  SystemAuth+  Radius",
@@ -396,7 +396,7 @@ func TestRealVNCServerAuthenticationFieldValidations(t *testing.T) {
 		},
 		{
 			name: "missing additional authentication",
-			task: realvncserver.RvsTask{
+			task: realvncserver.Task{
 				Path:           "MyTask",
 				ConfigFile:     "/config/file/name/here",
 				Authentication: "SingleSignOn+Radius,",
@@ -405,7 +405,7 @@ func TestRealVNCServerAuthenticationFieldValidations(t *testing.T) {
 		},
 		{
 			name: "missing additional authentication scheme",
-			task: realvncserver.RvsTask{
+			task: realvncserver.Task{
 				Path:           "MyTask",
 				ConfigFile:     "/config/file/name/here",
 				Authentication: "SingleSignOn+",
@@ -414,7 +414,7 @@ func TestRealVNCServerAuthenticationFieldValidations(t *testing.T) {
 		},
 		{
 			name: "contains illegal comment",
-			task: realvncserver.RvsTask{
+			task: realvncserver.Task{
 				Path:           "MyTask",
 				ConfigFile:     "/config/file/name/here",
 				Authentication: "SingleSignOn    # not allowed comment",
@@ -447,12 +447,12 @@ func TestRealVNCServerAuthenticationFieldValidations(t *testing.T) {
 func TestRealVNCServerPermissionsFieldValidations(t *testing.T) {
 	testCases := []struct {
 		name          string
-		task          realvncserver.RvsTask
+		task          realvncserver.Task
 		expectedError string
 	}{
 		{
 			name: "invalid permissions value",
-			task: realvncserver.RvsTask{
+			task: realvncserver.Task{
 				Path:        "MyTask",
 				ConfigFile:  "/config/file/name/here",
 				Permissions: "invalidValue",
@@ -461,7 +461,7 @@ func TestRealVNCServerPermissionsFieldValidations(t *testing.T) {
 		},
 		{
 			name: "valid permissions value",
-			task: realvncserver.RvsTask{
+			task: realvncserver.Task{
 				Path:        "MyTask",
 				ConfigFile:  "/config/file/name/here",
 				Permissions: "superuser:f,%vncusers:d,johndoe:v,janedoe:skp-t!r",
@@ -469,7 +469,7 @@ func TestRealVNCServerPermissionsFieldValidations(t *testing.T) {
 		},
 		{
 			name: "valid permissions value - user with no permissions",
-			task: realvncserver.RvsTask{
+			task: realvncserver.Task{
 				Path:        "MyTask",
 				ConfigFile:  "/config/file/name/here",
 				Permissions: "superuser:,%vncusers:d,johndoe:v,janedoe:skp-t!r",
@@ -477,7 +477,7 @@ func TestRealVNCServerPermissionsFieldValidations(t *testing.T) {
 		},
 		{
 			name: "permissions with whitespace",
-			task: realvncserver.RvsTask{
+			task: realvncserver.Task{
 				Path:        "MyTask",
 				ConfigFile:  "/config/file/name/here",
 				Permissions: "superuser :f, %vncusers :d , johndoe:v, janedoe:skp-t!r",
@@ -485,7 +485,7 @@ func TestRealVNCServerPermissionsFieldValidations(t *testing.T) {
 		},
 		{
 			name: "missing additional permissions",
-			task: realvncserver.RvsTask{
+			task: realvncserver.Task{
 				Path:        "MyTask",
 				ConfigFile:  "/config/file/name/here",
 				Permissions: "superuser :f, ",
@@ -494,7 +494,7 @@ func TestRealVNCServerPermissionsFieldValidations(t *testing.T) {
 		},
 		{
 			name: "invalid permissions character",
-			task: realvncserver.RvsTask{
+			task: realvncserver.Task{
 				Path:        "MyTask",
 				ConfigFile:  "/config/file/name/here",
 				Permissions: "superuser :fx, ",
@@ -503,7 +503,7 @@ func TestRealVNCServerPermissionsFieldValidations(t *testing.T) {
 		},
 		{
 			name: "invalid permissions character - has space",
-			task: realvncserver.RvsTask{
+			task: realvncserver.Task{
 				Path:        "MyTask",
 				ConfigFile:  "/config/file/name/here",
 				Permissions: "superuser :f x",
@@ -535,12 +535,12 @@ func TestRealVNCServerPermissionsFieldValidations(t *testing.T) {
 func TestRealVNCServerLogsFieldValidations(t *testing.T) {
 	testCases := []struct {
 		name          string
-		task          realvncserver.RvsTask
+		task          realvncserver.Task
 		expectedError string
 	}{
 		{
 			name: "invalid value",
-			task: realvncserver.RvsTask{
+			task: realvncserver.Task{
 				Path:       "MyTask",
 				ConfigFile: "/config/file/name/here",
 				Log:        "invalidValue",
@@ -549,7 +549,7 @@ func TestRealVNCServerLogsFieldValidations(t *testing.T) {
 		},
 		{
 			name: "valid value",
-			task: realvncserver.RvsTask{
+			task: realvncserver.Task{
 				Path:       "MyTask",
 				ConfigFile: "/config/file/name/here",
 				Log:        "*:file:10,Connections:file:100",
@@ -557,7 +557,7 @@ func TestRealVNCServerLogsFieldValidations(t *testing.T) {
 		},
 		{
 			name: "missing log area",
-			task: realvncserver.RvsTask{
+			task: realvncserver.Task{
 				Path:       "MyTask",
 				ConfigFile: "/config/file/name/here",
 				Log:        ":file:10,Connections:file:100",
@@ -566,7 +566,7 @@ func TestRealVNCServerLogsFieldValidations(t *testing.T) {
 		},
 		{
 			name: "missing log target",
-			task: realvncserver.RvsTask{
+			task: realvncserver.Task{
 				Path:       "MyTask",
 				ConfigFile: "/config/file/name/here",
 				Log:        "*::10,Connections:file:100",
@@ -575,7 +575,7 @@ func TestRealVNCServerLogsFieldValidations(t *testing.T) {
 		},
 		{
 			name: "missing log level",
-			task: realvncserver.RvsTask{
+			task: realvncserver.Task{
 				Path:       "MyTask",
 				ConfigFile: "/config/file/name/here",
 				Log:        "*:stderr:,Connections:file:100",
@@ -584,7 +584,7 @@ func TestRealVNCServerLogsFieldValidations(t *testing.T) {
 		},
 		{
 			name: "incomplete value 1",
-			task: realvncserver.RvsTask{
+			task: realvncserver.Task{
 				Path:       "MyTask",
 				ConfigFile: "/config/file/name/here",
 				Log:        "*:stderr:10,",
@@ -593,7 +593,7 @@ func TestRealVNCServerLogsFieldValidations(t *testing.T) {
 		},
 		{
 			name: "incomplete value 2",
-			task: realvncserver.RvsTask{
+			task: realvncserver.Task{
 				Path:       "MyTask",
 				ConfigFile: "/config/file/name/here",
 				Log:        ",*:stderr:10",
@@ -602,7 +602,7 @@ func TestRealVNCServerLogsFieldValidations(t *testing.T) {
 		},
 		{
 			name: "invalid log level - value not permitted",
-			task: realvncserver.RvsTask{
+			task: realvncserver.Task{
 				Path:       "MyTask",
 				ConfigFile: "/config/file/name/here",
 				Log:        "*:stderr:11",
@@ -611,7 +611,7 @@ func TestRealVNCServerLogsFieldValidations(t *testing.T) {
 		},
 		{
 			name: "invalid log level - too high",
-			task: realvncserver.RvsTask{
+			task: realvncserver.Task{
 				Path:       "MyTask",
 				ConfigFile: "/config/file/name/here",
 				Log:        "*:stderr:1000",
@@ -620,7 +620,7 @@ func TestRealVNCServerLogsFieldValidations(t *testing.T) {
 		},
 		{
 			name: "invalid log level - too low",
-			task: realvncserver.RvsTask{
+			task: realvncserver.Task{
 				Path:       "MyTask",
 				ConfigFile: "/config/file/name/here",
 				Log:        "*:stderr:-100",
@@ -653,12 +653,12 @@ func TestRealVNCServerLogsFieldValidations(t *testing.T) {
 func TestRealVNCServerCaptureMethodFieldValidations(t *testing.T) {
 	testCases := []struct {
 		name          string
-		task          realvncserver.RvsTask
+		task          realvncserver.Task
 		expectedError string
 	}{
 		{
 			name: "valid value",
-			task: realvncserver.RvsTask{
+			task: realvncserver.Task{
 				Path:          "MyTask",
 				ConfigFile:    "/config/file/name/here",
 				CaptureMethod: 1,
@@ -666,7 +666,7 @@ func TestRealVNCServerCaptureMethodFieldValidations(t *testing.T) {
 		},
 		{
 			name: "negative",
-			task: realvncserver.RvsTask{
+			task: realvncserver.Task{
 				Path:          "MyTask",
 				ConfigFile:    "/config/file/name/here",
 				CaptureMethod: -1,
@@ -675,7 +675,7 @@ func TestRealVNCServerCaptureMethodFieldValidations(t *testing.T) {
 		},
 		{
 			name: "too high",
-			task: realvncserver.RvsTask{
+			task: realvncserver.Task{
 				Path:          "MyTask",
 				ConfigFile:    "/config/file/name/here",
 				CaptureMethod: 100,
@@ -706,7 +706,7 @@ func TestRealVNCServerCaptureMethodFieldValidations(t *testing.T) {
 }
 
 func TestShouldSetDefaultBackupExtension(t *testing.T) {
-	task := &realvncserver.RvsTask{
+	task := &realvncserver.Task{
 		Path:       "MyTask",
 		ConfigFile: "/config/file/name/here",
 	}
@@ -722,7 +722,7 @@ func TestShouldSetDefaultBackupExtension(t *testing.T) {
 }
 
 func TestShouldSetBackupExtension(t *testing.T) {
-	task := &realvncserver.RvsTask{
+	task := &realvncserver.Task{
 		Path:       "MyTask",
 		ConfigFile: "/config/file/name/here",
 		Backup:     "orig",

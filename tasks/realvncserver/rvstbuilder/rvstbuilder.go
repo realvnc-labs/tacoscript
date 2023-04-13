@@ -12,7 +12,7 @@ type TaskBuilder struct {
 
 func (tb TaskBuilder) Build(typeName, path string, fields interface{}) (t tasks.CoreTask, err error) {
 	tracker := fieldstatus.NewFieldNameStatusTracker()
-	task := &realvncserver.RvsTask{
+	task := &realvncserver.Task{
 		TypeName: typeName,
 		Path:     path,
 	}

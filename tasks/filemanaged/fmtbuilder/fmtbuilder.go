@@ -19,7 +19,7 @@ var FileManagedTaskParamsFnMap = parser.TaskFieldsParserConfig{
 	tasks.ModeField: parser.TaskField{
 		ParseFn: func(task tasks.CoreTask, path string, val interface{}) error {
 			var err error
-			t := task.(*filemanaged.FmTask)
+			t := task.(*filemanaged.Task)
 			t.Mode, err = conv.ConvertToFileMode(val)
 			return err
 		},
@@ -27,7 +27,7 @@ var FileManagedTaskParamsFnMap = parser.TaskFieldsParserConfig{
 	},
 	tasks.SourceField: parser.TaskField{
 		ParseFn: func(task tasks.CoreTask, path string, val interface{}) error {
-			t := task.(*filemanaged.FmTask)
+			t := task.(*filemanaged.Task)
 			t.Source = utils.ParseLocation(fmt.Sprint(val))
 			return nil
 		},
@@ -35,7 +35,7 @@ var FileManagedTaskParamsFnMap = parser.TaskFieldsParserConfig{
 	},
 	tasks.ContentsField: parser.TaskField{
 		ParseFn: func(task tasks.CoreTask, path string, val interface{}) error {
-			t := task.(*filemanaged.FmTask)
+			t := task.(*filemanaged.Task)
 			t.Contents = parseContentsField(val)
 			return nil
 		},
@@ -44,7 +44,7 @@ var FileManagedTaskParamsFnMap = parser.TaskFieldsParserConfig{
 }
 
 func (tb TaskBuilder) Build(typeName, path string, params interface{}) (tasks.CoreTask, error) {
-	task := &filemanaged.FmTask{
+	task := &filemanaged.Task{
 		TypeName: typeName,
 		Path:     path,
 		Replace:  true,

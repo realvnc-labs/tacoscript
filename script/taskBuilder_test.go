@@ -47,7 +47,7 @@ maintain-my-file:
 			expectedScript: tasks.Script{
 				ID: "maintain-my-file",
 				Tasks: []tasks.CoreTask{
-					&filemanaged.FmTask{
+					&filemanaged.Task{
 						TypeName: filemanaged.TaskType,
 						Path:     "maintain-my-file.file.managed[1]",
 						Name:     "C:\\temp\\npp.7.8.8.Installer.x64.exe",
@@ -95,7 +95,7 @@ maintain-another-file:
 			expectedScript: tasks.Script{
 				ID: "maintain-another-file",
 				Tasks: []tasks.CoreTask{
-					&filemanaged.FmTask{
+					&filemanaged.Task{
 						TypeName: filemanaged.TaskType,
 						Path:     "maintain-another-file.file.managed[1]",
 						Name:     "/tmp/my-file.txt",
@@ -138,6 +138,6 @@ Funny file
 
 		require.NoError(t, err)
 
-		assert.True(t, cmp.Equal(tasks.Scripts{testCase.expectedScript}, scripts, cmpopts.IgnoreUnexported(filemanaged.FmTask{})))
+		assert.True(t, cmp.Equal(tasks.Scripts{testCase.expectedScript}, scripts, cmpopts.IgnoreUnexported(filemanaged.Task{})))
 	}
 }

@@ -32,7 +32,7 @@ const (
 
 var ErrUnknownWinRegAction = errors.New("unknown action")
 
-type WrTask struct {
+type Task struct {
 	ActionType ActionType
 	TypeName   string
 	Path       string
@@ -52,15 +52,15 @@ type WrTask struct {
 	Updated bool
 }
 
-func (wrt *WrTask) GetTypeName() string {
+func (wrt *Task) GetTypeName() string {
 	return wrt.TypeName
 }
 
-func (wrt *WrTask) GetRequirements() []string {
+func (wrt *Task) GetRequirements() []string {
 	return wrt.Require
 }
 
-func (wrt *WrTask) Validate(goos string) error {
+func (wrt *Task) Validate(goos string) error {
 	errs := &utils.Errors{}
 
 	if wrt.ActionType == 0 {
@@ -101,23 +101,23 @@ func (wrt *WrTask) Validate(goos string) error {
 	return errs.ToError()
 }
 
-func (wrt *WrTask) GetPath() string {
+func (wrt *Task) GetPath() string {
 	return wrt.Path
 }
 
-func (wrt *WrTask) String() string {
+func (wrt *Task) String() string {
 	return fmt.Sprintf("task '%s' at path '%s'", wrt.TypeName, wrt.GetPath())
 }
 
-func (wrt *WrTask) GetOnlyIfCmds() []string {
+func (wrt *Task) GetOnlyIfCmds() []string {
 	return wrt.OnlyIf
 }
 
-func (wrt *WrTask) GetUnlessCmds() []string {
+func (wrt *Task) GetUnlessCmds() []string {
 	return wrt.Unless
 }
 
-func (wrt *WrTask) GetCreatesFilesList() []string {
+func (wrt *Task) GetCreatesFilesList() []string {
 	return wrt.Creates
 }
 
@@ -140,9 +140,9 @@ func (wrte *WrtExecutor) Execute(ctx context.Context, task tasks.CoreTask) execu
 
 	logrus.Debugf("will trigger '%s' task", task.GetPath())
 
-	wrt, ok := task.(*WrTask)
+	wrt, ok := task.(*Task)
 	if !ok {
-		execRes.Err = fmt.Errorf("cannot convert task '%v' to WrTask", task)
+		execRes.Err = fmt.Errorf("cannot convert task '%v' to Task", task)
 		return execRes
 	}
 
@@ -186,7 +186,7 @@ func (wrte *WrtExecutor) Execute(ctx context.Context, task tasks.CoreTask) execu
 	return execRes
 }
 
-func (wrte *WrtExecutor) ExecuteTask(ctx context.Context, t *WrTask, res *executionresult.ExecutionResult) (err error) {
+func (wrte *WrtExecutor) ExecuteTask(ctx context.Context, t *Task, res *executionresult.ExecutionResult) (err error) {
 	var updated bool
 	var desc string
 

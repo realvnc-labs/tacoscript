@@ -23,7 +23,7 @@ const (
 	TaskType = "cmd.run"
 )
 
-type CrTask struct {
+type Task struct {
 	TypeName string
 	Path     string
 	Named    names.TaskNames
@@ -41,15 +41,15 @@ type CrTask struct {
 	AbortOnError bool
 }
 
-func (crt *CrTask) GetTypeName() string {
+func (crt *Task) GetTypeName() string {
 	return crt.TypeName
 }
 
-func (crt *CrTask) GetRequirements() []string {
+func (crt *Task) GetRequirements() []string {
 	return crt.Require
 }
 
-func (crt *CrTask) Validate(goos string) error {
+func (crt *Task) Validate(goos string) error {
 	errs := &utils.Errors{}
 	err1 := tasks.ValidateRequired(crt.Named.Name, crt.Path+"."+tasks.NameField)
 	err2 := tasks.ValidateRequiredMany(crt.Named.Names, crt.Path+"."+tasks.NamesField)
@@ -63,23 +63,23 @@ func (crt *CrTask) Validate(goos string) error {
 	return nil
 }
 
-func (crt *CrTask) GetPath() string {
+func (crt *Task) GetPath() string {
 	return crt.Path
 }
 
-func (crt *CrTask) String() string {
+func (crt *Task) String() string {
 	return conv.ConvertSourceToJSONStrIfPossible(crt)
 }
 
-func (crt *CrTask) GetOnlyIfCmds() []string {
+func (crt *Task) GetOnlyIfCmds() []string {
 	return crt.OnlyIf
 }
 
-func (crt *CrTask) GetUnlessCmds() []string {
+func (crt *Task) GetUnlessCmds() []string {
 	return crt.Unless
 }
 
-func (crt *CrTask) GetCreatesFilesList() []string {
+func (crt *Task) GetCreatesFilesList() []string {
 	return crt.Creates
 }
 
@@ -90,9 +90,9 @@ type CrtExecutor struct {
 
 func (crte *CrtExecutor) Execute(ctx context.Context, task tasks.CoreTask) executionresult.ExecutionResult {
 	execRes := executionresult.ExecutionResult{}
-	cmdRunTask, ok := task.(*CrTask)
+	cmdRunTask, ok := task.(*Task)
 	if !ok {
-		execRes.Err = fmt.Errorf("cannot convert task '%v' to CrTask", task)
+		execRes.Err = fmt.Errorf("cannot convert task '%v' to Task", task)
 		return execRes
 	}
 	execRes.Name = strings.Join(cmdRunTask.Named.GetNames(), "; ")

@@ -16,7 +16,7 @@ func TestTaskBuilder(t *testing.T) {
 		typeName      string
 		path          string
 		values        []interface{}
-		expectedTask  *realvncserver.RvsTask
+		expectedTask  *realvncserver.Task
 		expectedError string
 	}{
 		{
@@ -56,7 +56,7 @@ func TestTaskBuilder(t *testing.T) {
 
 				yaml.MapSlice{yaml.MapItem{Key: tasks.ShellField, Value: "someshell"}},
 			},
-			expectedTask: &realvncserver.RvsTask{
+			expectedTask: &realvncserver.Task{
 				TypeName: "realVNCServerType",
 				Path:     "realVNCServerPath",
 
@@ -109,7 +109,7 @@ func TestTaskBuilder(t *testing.T) {
 			}
 			require.NoError(t, err)
 
-			actualTask, ok := task.(*realvncserver.RvsTask)
+			actualTask, ok := task.(*realvncserver.Task)
 			require.True(t, ok)
 
 			assertRealVNCServerTaskEquals(t, tc.expectedTask, actualTask)
@@ -123,7 +123,7 @@ func TestTaskBuilderWithUnsets(t *testing.T) {
 		typeName      string
 		path          string
 		values        []interface{}
-		expectedTask  *realvncserver.RvsTask
+		expectedTask  *realvncserver.Task
 		expectedError string
 	}{
 		{
@@ -157,7 +157,7 @@ func TestTaskBuilderWithUnsets(t *testing.T) {
 
 				yaml.MapSlice{yaml.MapItem{Key: tasks.ShellField, Value: "someshell"}},
 			},
-			expectedTask: &realvncserver.RvsTask{
+			expectedTask: &realvncserver.Task{
 				TypeName: "realVNCServerType",
 				Path:     "realVNCServerPath",
 
@@ -205,7 +205,7 @@ func TestTaskBuilderWithUnsets(t *testing.T) {
 			}
 			require.NoError(t, err)
 
-			actualTask, ok := task.(*realvncserver.RvsTask)
+			actualTask, ok := task.(*realvncserver.Task)
 			require.True(t, ok)
 
 			assertRealVNCServerTaskEquals(t, tc.expectedTask, actualTask)
@@ -213,7 +213,7 @@ func TestTaskBuilderWithUnsets(t *testing.T) {
 	}
 }
 
-func assertRealVNCServerTaskEquals(t *testing.T, expectedTask, actualTask *realvncserver.RvsTask) {
+func assertRealVNCServerTaskEquals(t *testing.T, expectedTask, actualTask *realvncserver.Task) {
 	assert.Equal(t, expectedTask.Path, actualTask.GetPath())
 
 	assert.Equal(t, expectedTask.Encryption, actualTask.Encryption)

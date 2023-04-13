@@ -10,7 +10,7 @@ type TaskBuilder struct {
 }
 
 func (tb TaskBuilder) Build(typeName, path string, params interface{}) (t tasks.CoreTask, err error) {
-	task := &filereplace.FrTask{
+	task := &filereplace.Task{
 		TypeName: typeName,
 		Path:     path,
 	}

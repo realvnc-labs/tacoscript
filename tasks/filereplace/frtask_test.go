@@ -18,12 +18,12 @@ import (
 func TestFileReplaceTaskValidation(t *testing.T) {
 	testCases := []struct {
 		Name             string
-		InputTask        FrTask
+		InputTask        Task
 		ExpectedErrorStr string
 	}{
 		{
 			Name: "missing_name",
-			InputTask: FrTask{
+			InputTask: Task{
 				Path:    "somepath",
 				Pattern: "search for this text",
 			},
@@ -31,14 +31,14 @@ func TestFileReplaceTaskValidation(t *testing.T) {
 		},
 		{
 			Name: "valid task",
-			InputTask: FrTask{
+			InputTask: Task{
 				Name:    "some p",
 				Pattern: "search for this text",
 			},
 		},
 		{
 			Name: "bad pattern",
-			InputTask: FrTask{
+			InputTask: Task{
 				Name:    "some p",
 				Pattern: "*.txt",
 			},
@@ -46,7 +46,7 @@ func TestFileReplaceTaskValidation(t *testing.T) {
 		},
 		{
 			Name: "invalid file size units",
-			InputTask: FrTask{
+			InputTask: Task{
 				Name:        "some p",
 				Pattern:     "search for this text",
 				MaxFileSize: "100c",
@@ -55,7 +55,7 @@ func TestFileReplaceTaskValidation(t *testing.T) {
 		},
 		{
 			Name: "append and prepend",
-			InputTask: FrTask{
+			InputTask: Task{
 				Name:              "some p",
 				Pattern:           "search for this text",
 				AppendIfNotFound:  true,
@@ -129,7 +129,7 @@ func TestShouldFailWhenTargetFileNotFound(t *testing.T) {
 	executor := &FrtExecutor{
 		FsManager: &utils.FsManager{},
 	}
-	task := &FrTask{
+	task := &Task{
 		Path:    "replace-1",
 		Name:    testFilename,
 		Pattern: "a test",
@@ -154,19 +154,19 @@ func TestShouldFailWhenTargetFileNotFound(t *testing.T) {
 func TestShouldFailWhenMandatoryParamsMissing(t *testing.T) {
 	cases := []struct {
 		name           string
-		task           FrTask
+		task           Task
 		expectedErrStr string
 	}{
 		{
 			name: "all required params",
-			task: FrTask{
+			task: Task{
 				Name:    "test",
 				Pattern: "pattern text",
 			},
 		},
 		{
 			name: "missing name",
-			task: FrTask{
+			task: Task{
 				// Name:    "test",
 				Pattern: "pattern text",
 			},
@@ -174,7 +174,7 @@ func TestShouldFailWhenMandatoryParamsMissing(t *testing.T) {
 		},
 		{
 			name: "missing pattern",
-			task: FrTask{
+			task: Task{
 				Name: "test",
 				// Pattern: "pattern text",
 			},
@@ -204,7 +204,7 @@ func TestShouldMakeBackupOfOriginalFileWhenBackupExtensionSet(t *testing.T) {
 	executor := &FrtExecutor{
 		FsManager: &utils.FsManager{},
 	}
-	task := &FrTask{
+	task := &Task{
 		Path:            "replace-1",
 		Name:            testFilename,
 		Pattern:         "a test",
@@ -234,7 +234,7 @@ func TestShouldNotMakeBackupOfOriginalFileWhenBackupExtensionNotSet(t *testing.T
 	executor := &FrtExecutor{
 		FsManager: &utils.FsManager{},
 	}
-	task := &FrTask{
+	task := &Task{
 		Path:    "replace-1",
 		Name:    testConfigFilename,
 		Pattern: "a test",
@@ -263,7 +263,7 @@ func TestShouldReplaceAllMatchingItems(t *testing.T) {
 	executor := &FrtExecutor{
 		FsManager: &utils.FsManager{},
 	}
-	task := &FrTask{
+	task := &Task{
 		Path:    "replace-1",
 		Name:    testFilename,
 		Pattern: "line",
@@ -301,7 +301,7 @@ func TestShouldNotReplaceAnything(t *testing.T) {
 	executor := &FrtExecutor{
 		FsManager: &utils.FsManager{},
 	}
-	task := &FrTask{
+	task := &Task{
 		Path:    "replace-1",
 		Name:    testFilename,
 		Pattern: "unknown line",
@@ -337,7 +337,7 @@ func TestShouldReplaceCountMatchingItems(t *testing.T) {
 	executor := &FrtExecutor{
 		FsManager: &utils.FsManager{},
 	}
-	task := &FrTask{
+	task := &Task{
 		Path:    "replace-1",
 		Name:    testFilename,
 		Pattern: "line",
@@ -374,7 +374,7 @@ func TestShouldSkipWhenFilesizeTooLarge(t *testing.T) {
 	executor := &FrtExecutor{
 		FsManager: &utils.FsManager{},
 	}
-	task := &FrTask{
+	task := &Task{
 		Path:        "replace-1",
 		Name:        testFilename,
 		Pattern:     "line",
@@ -406,7 +406,7 @@ func TestShouldErrorIfTargetNotRegularFile(t *testing.T) {
 	executor := &FrtExecutor{
 		FsManager: &utils.FsManager{},
 	}
-	task := &FrTask{
+	task := &Task{
 		Path:    "replace-1",
 		Name:    testFilename,
 		Pattern: "line",
@@ -433,7 +433,7 @@ func TestShouldAppendNotFoundContent(t *testing.T) {
 	executor := &FrtExecutor{
 		FsManager: &utils.FsManager{},
 	}
-	task := &FrTask{
+	task := &Task{
 		Path:             "replace-1",
 		Name:             testFilename,
 		Pattern:          "unknown line",
@@ -472,7 +472,7 @@ func TestShouldPrependNotFoundContent(t *testing.T) {
 	executor := &FrtExecutor{
 		FsManager: &utils.FsManager{},
 	}
-	task := &FrTask{
+	task := &Task{
 		Path:              "replace-1",
 		Name:              testFilename,
 		Pattern:           "unknown line",
@@ -511,7 +511,7 @@ func TestShouldUseReplContentWhenWhenNoNotFoundContent(t *testing.T) {
 	executor := &FrtExecutor{
 		FsManager: &utils.FsManager{},
 	}
-	task := &FrTask{
+	task := &Task{
 		Path:    "replace-1",
 		Name:    testFilename,
 		Pattern: "unknown line",

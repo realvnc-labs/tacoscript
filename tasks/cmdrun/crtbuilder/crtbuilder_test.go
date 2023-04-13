@@ -18,7 +18,7 @@ func TestTaskBuilder(t *testing.T) {
 		typeName      string
 		path          string
 		ctx           []interface{}
-		expectedTask  *cmdrun.CrTask
+		expectedTask  *cmdrun.Task
 		expectedError string
 	}{
 		{
@@ -36,7 +36,7 @@ func TestTaskBuilder(t *testing.T) {
 				yaml.MapSlice{yaml.MapItem{Key: tasks.CreatesField, Value: "somefile.txt"}},
 				yaml.MapSlice{yaml.MapItem{Key: tasks.OnlyIfField, Value: "one condition"}},
 			},
-			expectedTask: &cmdrun.CrTask{
+			expectedTask: &cmdrun.Task{
 				TypeName:   "someType",
 				Path:       "somePath",
 				Named:      names.TaskNames{Name: "1"},
@@ -64,7 +64,7 @@ func TestTaskBuilder(t *testing.T) {
 			ctx: []interface{}{
 				yaml.MapSlice{yaml.MapItem{Key: tasks.EnvField, Value: 123}},
 			},
-			expectedTask: &cmdrun.CrTask{
+			expectedTask: &cmdrun.Task{
 				TypeName: "someTypeWithErrors",
 				Path:     "somePathWithErrors",
 				Envs:     conv.KeyValues{},
@@ -79,7 +79,7 @@ func TestTaskBuilder(t *testing.T) {
 					"one",
 				}}},
 			},
-			expectedTask: &cmdrun.CrTask{
+			expectedTask: &cmdrun.Task{
 				TypeName: "someTypeWithErrors2",
 				Path:     "somePathWithErrors2",
 				Envs:     conv.KeyValues{},
@@ -96,7 +96,7 @@ func TestTaskBuilder(t *testing.T) {
 					"name two",
 				}}},
 			},
-			expectedTask: &cmdrun.CrTask{
+			expectedTask: &cmdrun.Task{
 				TypeName: "manyNamesType",
 				Path:     "manyNamesPath",
 				Require: []string{
@@ -129,7 +129,7 @@ func TestTaskBuilder(t *testing.T) {
 					"OnlyIf three",
 				}}},
 			},
-			expectedTask: &cmdrun.CrTask{
+			expectedTask: &cmdrun.Task{
 				TypeName: "manyCreatesType",
 				Path:     "manyCreatesPath",
 				Named:    names.TaskNames{Name: "many creates command"},
@@ -157,7 +157,7 @@ func TestTaskBuilder(t *testing.T) {
 				yaml.MapSlice{yaml.MapItem{Key: tasks.NameField, Value: "one unless value"}},
 				yaml.MapSlice{yaml.MapItem{Key: tasks.UnlessField, Value: "unless one"}},
 			},
-			expectedTask: &cmdrun.CrTask{
+			expectedTask: &cmdrun.Task{
 				TypeName: "oneUnlessValue",
 				Path:     "oneUnlessValuePath",
 				Named:    names.TaskNames{Name: "one unless value"},
@@ -177,7 +177,7 @@ func TestTaskBuilder(t *testing.T) {
 					"Unless three",
 				}}},
 			},
-			expectedTask: &cmdrun.CrTask{
+			expectedTask: &cmdrun.Task{
 				TypeName: "manyUnlessValue",
 				Path:     "manyUnlessValuePath",
 				Named:    names.TaskNames{Name: "many unless value"},
@@ -210,7 +210,7 @@ func TestTaskBuilder(t *testing.T) {
 				return
 			}
 
-			actualCmdRunTask, ok := actualTask.(*cmdrun.CrTask)
+			actualCmdRunTask, ok := actualTask.(*cmdrun.Task)
 			assert.True(t, ok)
 			if !ok {
 				return

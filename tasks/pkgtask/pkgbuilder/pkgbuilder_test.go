@@ -15,7 +15,7 @@ func TestTaskBuilder(t *testing.T) {
 		typeName      string
 		path          string
 		ctx           []interface{}
-		expectedTask  *pkgtask.PTask
+		expectedTask  *pkgtask.Task
 		expectedError string
 	}{
 		{
@@ -40,7 +40,7 @@ func TestTaskBuilder(t *testing.T) {
 					"Unless one",
 				}}},
 			},
-			expectedTask: &pkgtask.PTask{
+			expectedTask: &pkgtask.Task{
 				ActionType:    pkgtask.ActionInstall,
 				TypeName:      pkgtask.TaskTypePkgInstalled,
 				Path:          "vim",
@@ -71,7 +71,7 @@ func TestTaskBuilder(t *testing.T) {
 				yaml.MapSlice{yaml.MapItem{Key: tasks.Version, Value: "2.0.2"}},
 				yaml.MapSlice{yaml.MapItem{Key: tasks.Refresh, Value: "false"}},
 			},
-			expectedTask: &pkgtask.PTask{
+			expectedTask: &pkgtask.Task{
 				ActionType:    pkgtask.ActionUpdate,
 				TypeName:      pkgtask.TaskTypePkgUpgraded,
 				Path:          "git",
@@ -91,7 +91,7 @@ func TestTaskBuilder(t *testing.T) {
 				yaml.MapSlice{yaml.MapItem{Key: tasks.Refresh, Value: ""}},
 				yaml.MapSlice{yaml.MapItem{Key: "someField", Value: "someValue"}},
 			},
-			expectedTask: &pkgtask.PTask{
+			expectedTask: &pkgtask.Task{
 				ActionType: pkgtask.ActionUninstall,
 				TypeName:   pkgtask.TaskTypePkgRemoved,
 				Path:       "nano",
@@ -123,7 +123,7 @@ func TestTaskBuilder(t *testing.T) {
 				return
 			}
 
-			actualTask, ok := actualTaskI.(*pkgtask.PTask)
+			actualTask, ok := actualTaskI.(*pkgtask.Task)
 			assert.True(t, ok)
 			if !ok {
 				return
@@ -134,7 +134,7 @@ func TestTaskBuilder(t *testing.T) {
 	}
 }
 
-func assertPkgTaskEquals(t *testing.T, expectedTask, actualTask *pkgtask.PTask) {
+func assertPkgTaskEquals(t *testing.T, expectedTask, actualTask *pkgtask.Task) {
 	assert.Equal(t, expectedTask.TypeName, actualTask.TypeName)
 	assert.Equal(t, expectedTask.Path, actualTask.Path)
 	assert.Equal(t, expectedTask.Named.Name, actualTask.Named.Name)

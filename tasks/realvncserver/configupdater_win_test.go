@@ -50,7 +50,7 @@ func TestShouldSetSimpleConfigRegistryParam(t *testing.T) {
 
 	tracker := newTrackerWithSingleFieldStatus("encryption", "Encryption")
 
-	task := &realvncserver.RvsTask{
+	task := &realvncserver.Task{
 		Path:       "realvnc-server-1",
 		ServerMode: "Service",
 		Encryption: "AlwaysOff",
@@ -88,7 +88,7 @@ func TestShouldUpdateSimpleConfigRegistryParam(t *testing.T) {
 
 	tracker := newTrackerWithSingleFieldStatus("encryption", "Encryption")
 
-	setupTask := &realvncserver.RvsTask{
+	setupTask := &realvncserver.Task{
 		Path:       "realvnc-server-1",
 		ServerMode: "Service",
 		Encryption: "AlwaysOff",
@@ -104,7 +104,7 @@ func TestShouldUpdateSimpleConfigRegistryParam(t *testing.T) {
 	require.NoError(t, res.Err)
 	require.True(t, setupTask.Updated)
 
-	task := &realvncserver.RvsTask{
+	task := &realvncserver.Task{
 		Path:       "realvnc-server-2",
 		ServerMode: "Service",
 		Encryption: "PreferOn",
@@ -151,7 +151,7 @@ func TestShouldClearSimpleConfigRegistryParam(t *testing.T) {
 			},
 		})
 
-	setupTask := &realvncserver.RvsTask{
+	setupTask := &realvncserver.Task{
 		Path:        "realvnc-server-1",
 		ServerMode:  "Service",
 		BlankScreen: true,
@@ -178,7 +178,7 @@ func TestShouldClearSimpleConfigRegistryParam(t *testing.T) {
 			},
 		})
 
-	clearTask := &realvncserver.RvsTask{
+	clearTask := &realvncserver.Task{
 		Path:        "realvnc-server-1",
 		ServerMode:  "Service",
 		BlankScreen: false,

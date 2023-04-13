@@ -27,7 +27,7 @@ var (
 	TestBaseKey = `HKCU:\Software\RealVNCTest\vncserver`
 )
 
-func (rvste *RvstExecutor) applyConfigChanges(rvst *RvsTask) (addedCount int, updatedCount int, err error) {
+func (rvste *RvstExecutor) applyConfigChanges(rvst *Task) (addedCount int, updatedCount int, err error) {
 	baseKey := getBaseKeyForServerMode(rvst.ServerMode)
 
 	err = rvst.fieldTracker.WithNewValues(func(fieldName string, fs fieldstatus.FieldStatus) (err error) {
@@ -77,7 +77,7 @@ func (rvste *RvstExecutor) applyConfigChanges(rvst *RvsTask) (addedCount int, up
 	return addedCount, updatedCount, nil
 }
 
-func (rvste *RvstExecutor) ReloadConfig(rvst *RvsTask) (err error) {
+func (rvste *RvstExecutor) ReloadConfig(rvst *Task) (err error) {
 	var cmd *exec.Cmd
 
 	cmdLine := rvste.makeReloadPSCmdLine(rvst)
@@ -113,7 +113,7 @@ func getBaseKeyForServerMode(serverMode string) (baseKey string) {
 	return baseKey
 }
 
-func (rvste *RvstExecutor) makeReloadPSCmdLine(rvst *RvsTask) (cmdLine string) {
+func (rvste *RvstExecutor) makeReloadPSCmdLine(rvst *Task) (cmdLine string) {
 	baseCmdLine := `Start-Process -FilePath '%s' -WindowStyle Hidden  -ArgumentList '%s'`
 	argumentList := `service -reload`
 

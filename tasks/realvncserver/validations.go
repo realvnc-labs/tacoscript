@@ -42,7 +42,7 @@ var (
 	ErrServerModeCannotBeVirtualWhenNotLinuxMsg = "server mode cannot be virtual when not running Linux"
 )
 
-func (t *RvsTask) Validate(goos string) error {
+func (t *Task) Validate(goos string) error {
 	errs := &utils.Errors{}
 
 	err := tasks.ValidateRequired(t.Path, t.Path+"."+tasks.NameField)
@@ -101,12 +101,12 @@ func (t *RvsTask) Validate(goos string) error {
 	return errs.ToError()
 }
 
-func (t *RvsTask) shouldValidate(fieldKey string) (should bool) {
+func (t *Task) shouldValidate(fieldKey string) (should bool) {
 	fieldName := t.fieldMapper.GetFieldName(fieldKey)
 	return t.fieldTracker.HasNewValue(fieldName) && !t.fieldTracker.ShouldClear(fieldName)
 }
 
-func (t *RvsTask) ValidateConfigFileField(goos string) error {
+func (t *Task) ValidateConfigFileField(goos string) error {
 	if goos != "windows" && t.ConfigFile == "" {
 		switch t.ServerMode {
 		case ServiceServerMode:
@@ -143,7 +143,7 @@ func getUserHomeDir() (homeDir string, err error) {
 	return homeDir, nil
 }
 
-func (t *RvsTask) ValidateServerModeField(goos string) error {
+func (t *Task) ValidateServerModeField(goos string) error {
 	if t.ServerMode == "" {
 		t.ServerMode = ServiceServerMode
 		return nil
@@ -176,7 +176,7 @@ func (t *RvsTask) ValidateServerModeField(goos string) error {
 }
 
 // https://help.realvnc.com/hc/en-us/articles/360002251297-VNC-Server-Parameter-Reference#Encryption
-func (t *RvsTask) ValidateEncryptionField() error {
+func (t *Task) ValidateEncryptionField() error {
 	err := validation.Validate(t.Encryption,
 		validation.In(AllowableEncryptionValues...).Error(ErrInvalidEncryptionValueMsg),
 	)
@@ -187,7 +187,7 @@ func (t *RvsTask) ValidateEncryptionField() error {
 }
 
 // https://help.realvnc.com/hc/en-us/articles/360002251297-VNC-Server-Parameter-Reference#Authentication
-func (t *RvsTask) ValidateAuthenticationField() error {
+func (t *Task) ValidateAuthenticationField() error {
 	authValue := t.Authentication
 	authParts := strings.Split(authValue, ",")
 	for _, authPart := range authParts {
@@ -206,7 +206,7 @@ func (t *RvsTask) ValidateAuthenticationField() error {
 }
 
 // https://help.realvnc.com/hc/en-us/articles/360002251297-VNC-Server-Parameter-Reference#Permissions
-func (t *RvsTask) ValidatePermissionsField() error {
+func (t *Task) ValidatePermissionsField() error {
 	permsValue := t.Permissions
 	permsParts := strings.Split(permsValue, ",")
 	for _, permPart := range permsParts {
@@ -228,7 +228,7 @@ func (t *RvsTask) ValidatePermissionsField() error {
 }
 
 // https://help.realvnc.com/hc/en-us/articles/360002251297-VNC-Server-Parameter-Reference#Log
-func (t *RvsTask) ValidateLogField() error {
+func (t *Task) ValidateLogField() error {
 	logsValue := t.Log
 	logsParts := strings.Split(logsValue, ",")
 	for _, logPart := range logsParts {
@@ -272,7 +272,7 @@ func (t *RvsTask) ValidateLogField() error {
 }
 
 // https://help.realvnc.com/hc/en-us/articles/360002251297-VNC-Server-Parameter-Reference#Capture_Method
-func (t *RvsTask) ValidateCaptureMethodField() error {
+func (t *Task) ValidateCaptureMethodField() error {
 	method := t.CaptureMethod
 
 	err := validation.Validate(method,

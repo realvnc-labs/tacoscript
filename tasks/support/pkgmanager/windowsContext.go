@@ -19,7 +19,7 @@ func BuildManagementCmdsProviders() ([]ManagementCmdsProvider, error) {
 	}, nil
 }
 
-func (ecb OsPackageManagerCmdProvider) GetManagementCmds(t *pkgtask.PTask) (*ManagementCmds, error) {
+func (ecb OsPackageManagerCmdProvider) GetManagementCmds(t *pkgtask.Task) (*ManagementCmds, error) {
 	rawCmds := t.Named.GetNames()
 
 	versionStr := ""

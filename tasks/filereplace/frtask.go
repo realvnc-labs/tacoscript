@@ -27,7 +27,7 @@ const (
 	defaultMaxFileSize = "512k"
 )
 
-type FrTask struct {
+type Task struct {
 	TypeName string // TaskType
 	Path     string // TaskName
 
@@ -54,35 +54,35 @@ type FrTask struct {
 	Updated bool
 }
 
-func (t *FrTask) GetTypeName() string {
+func (t *Task) GetTypeName() string {
 	return t.TypeName
 }
 
-func (t *FrTask) GetRequirements() []string {
+func (t *Task) GetRequirements() []string {
 	return t.Require
 }
 
-func (t *FrTask) GetPath() string {
+func (t *Task) GetPath() string {
 	return t.Path
 }
 
-func (t *FrTask) String() string {
+func (t *Task) String() string {
 	return fmt.Sprintf("task '%s' at path '%s'", t.TypeName, t.GetPath())
 }
 
-func (t *FrTask) GetOnlyIfCmds() []string {
+func (t *Task) GetOnlyIfCmds() []string {
 	return t.OnlyIf
 }
 
-func (t *FrTask) GetUnlessCmds() []string {
+func (t *Task) GetUnlessCmds() []string {
 	return t.Unless
 }
 
-func (t *FrTask) GetCreatesFilesList() []string {
+func (t *Task) GetCreatesFilesList() []string {
 	return t.Creates
 }
 
-func (t *FrTask) Validate(goos string) error {
+func (t *Task) Validate(goos string) error {
 	errs := &utils.Errors{}
 
 	err := tasks.ValidateRequired(t.Name, t.Path+"."+tasks.NameField)
@@ -131,9 +131,9 @@ func (frte *FrtExecutor) Execute(ctx context.Context, task tasks.CoreTask) execu
 		Changes: make(map[string]string),
 	}
 
-	frt, ok := task.(*FrTask)
+	frt, ok := task.(*Task)
 	if !ok {
-		execRes.Err = fmt.Errorf("cannot convert task '%v' to FrTask", task)
+		execRes.Err = fmt.Errorf("cannot convert task '%v' to Task", task)
 		return execRes
 	}
 

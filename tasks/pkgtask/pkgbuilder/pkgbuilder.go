@@ -16,7 +16,7 @@ type TaskBuilder struct {
 var pkgTaskParamsFnMap = parser.TaskFieldsParserConfig{
 	tasks.NameField: parser.TaskField{
 		ParseFn: func(task tasks.CoreTask, path string, val interface{}) error {
-			t := task.(*pkgtask.PTask)
+			t := task.(*pkgtask.Task)
 			t.Named.Name = fmt.Sprint(val)
 			return nil
 		},
@@ -26,7 +26,7 @@ var pkgTaskParamsFnMap = parser.TaskFieldsParserConfig{
 		ParseFn: func(task tasks.CoreTask, path string, val interface{}) error {
 			var names []string
 			var err error
-			t := task.(*pkgtask.PTask)
+			t := task.(*pkgtask.Task)
 			names, err = conv.ConvertToValues(val)
 			t.Named.Names = names
 			return err
@@ -36,7 +36,7 @@ var pkgTaskParamsFnMap = parser.TaskFieldsParserConfig{
 }
 
 func (tb TaskBuilder) Build(typeName, path string, params interface{}) (tasks.CoreTask, error) {
-	task := &pkgtask.PTask{
+	task := &pkgtask.Task{
 		TypeName: typeName,
 		Path:     path,
 	}

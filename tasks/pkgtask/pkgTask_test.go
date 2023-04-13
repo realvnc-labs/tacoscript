@@ -18,12 +18,12 @@ import (
 
 type PackageManagerMock struct {
 	givenCtx     context.Context
-	givenTask    *PTask
+	givenTask    *Task
 	outputToGive *ExecutionResult
 	errToGive    error
 }
 
-func (pmm *PackageManagerMock) ExecuteTask(ctx context.Context, t *PTask) (res *ExecutionResult, err error) {
+func (pmm *PackageManagerMock) ExecuteTask(ctx context.Context, t *Task) (res *ExecutionResult, err error) {
 	pmm.givenCtx = ctx
 	pmm.givenTask = t
 
@@ -34,11 +34,11 @@ func TestPkgTaskValidation(t *testing.T) {
 	testCases := []struct {
 		Name          string
 		ExpectedError string
-		InputTask     PTask
+		InputTask     Task
 	}{
 		{
 			Name: "missing_name_and_names",
-			InputTask: PTask{
+			InputTask: Task{
 				Path:       "somepath",
 				ActionType: ActionUpdate,
 			},
@@ -50,7 +50,7 @@ func TestPkgTaskValidation(t *testing.T) {
 		},
 		{
 			Name: "valid_task_name",
-			InputTask: PTask{
+			InputTask: Task{
 				Named:      names.TaskNames{Name: "some name"},
 				ActionType: ActionUninstall,
 			},
@@ -58,7 +58,7 @@ func TestPkgTaskValidation(t *testing.T) {
 		},
 		{
 			Name: "valid_task_names",
-			InputTask: PTask{
+			InputTask: Task{
 				Named:      names.TaskNames{Names: []string{"some name1", "some name 2"}},
 				ActionType: ActionInstall,
 			},
@@ -66,7 +66,7 @@ func TestPkgTaskValidation(t *testing.T) {
 		},
 		{
 			Name: "invalid_action_name",
-			InputTask: PTask{
+			InputTask: Task{
 				TypeName:   "unknown type name",
 				Path:       "somepath",
 				Named:      names.TaskNames{Name: "some name"},
@@ -90,7 +90,7 @@ func TestPkgTaskValidation(t *testing.T) {
 }
 
 func TestPkgTaskPath(t *testing.T) {
-	task := PTask{
+	task := Task{
 		Path: "somepath",
 	}
 
@@ -98,7 +98,7 @@ func TestPkgTaskPath(t *testing.T) {
 }
 
 func TestPkgTaskName(t *testing.T) {
-	task := PTask{
+	task := Task{
 		TypeName: TaskTypePkgRemoved,
 	}
 
@@ -106,7 +106,7 @@ func TestPkgTaskName(t *testing.T) {
 }
 
 func TestPkgTaskRequire(t *testing.T) {
-	task := PTask{
+	task := Task{
 		Require: []string{"require one", "require two"},
 	}
 
@@ -114,7 +114,7 @@ func TestPkgTaskRequire(t *testing.T) {
 }
 
 func TestPkgTaskString(t *testing.T) {
-	task := PTask{
+	task := Task{
 		Path:     "task1",
 		TypeName: TaskTypePkgUpgraded,
 	}
@@ -124,7 +124,7 @@ func TestPkgTaskString(t *testing.T) {
 
 func TestPkgTaskExecution(t *testing.T) {
 	testCases := []struct {
-		InputTask          *PTask
+		InputTask          *Task
 		ExpectedResult     executionresult.ExecutionResult
 		RunnerMock         *appExec.SystemRunner
 		PackageManagerMock *PackageManagerMock
@@ -133,7 +133,7 @@ func TestPkgTaskExecution(t *testing.T) {
 	}{
 		{
 			Name: "execute one name install",
-			InputTask: &PTask{
+			InputTask: &Task{
 				ActionType: ActionInstall,
 				TypeName:   TaskTypePkgInstalled,
 				Path:       "one name path",
@@ -155,7 +155,7 @@ func TestPkgTaskExecution(t *testing.T) {
 		},
 		{
 			Name: "executing one onlyif condition with success",
-			InputTask: &PTask{
+			InputTask: &Task{
 				Named:  names.TaskNames{Name: "cmd lala"},
 				OnlyIf: []string{"check before lala"},
 			},
@@ -184,7 +184,7 @@ func TestPkgTaskExecution(t *testing.T) {
 		},
 		{
 			Name: "executing one onlyif condition with skip execution",
-			InputTask: &PTask{
+			InputTask: &Task{
 				Named:  names.TaskNames{Name: "cmd with OnlyIf skipped"},
 				OnlyIf: []string{"check OnlyIf error"},
 			},
@@ -202,7 +202,7 @@ func TestPkgTaskExecution(t *testing.T) {
 		},
 		{
 			Name: "executing one unless condition with success",
-			InputTask: &PTask{
+			InputTask: &Task{
 				Named:  names.TaskNames{Name: "cmd stop"},
 				Unless: []string{"run unless stop"},
 			},
@@ -221,7 +221,7 @@ func TestPkgTaskExecution(t *testing.T) {
 		},
 		{
 			Name: "executing one unless condition with failure",
-			InputTask: &PTask{
+			InputTask: &Task{
 				Named:  names.TaskNames{Name: "cmd with unless failure"},
 				Unless: []string{"check unless failure"},
 			},
@@ -280,11 +280,11 @@ func TestInvalidTaskTypeExecution(t *testing.T) {
 		PackageManager: pkgManager,
 	}
 
-	res := executor.Execute(context.TODO(), &cmdrun.CrTask{Path: "some path"})
-	assert.Contains(t, res.Err.Error(), "to PTask")
+	res := executor.Execute(context.TODO(), &cmdrun.Task{Path: "some path"})
+	assert.Contains(t, res.Err.Error(), "to Task")
 }
 
-func assertPkgTaskEquals(t *testing.T, expectedTask, actualTask *PTask) {
+func assertPkgTaskEquals(t *testing.T, expectedTask, actualTask *Task) {
 	assert.Equal(t, expectedTask.TypeName, actualTask.TypeName)
 	assert.Equal(t, expectedTask.Path, actualTask.Path)
 	assert.Equal(t, expectedTask.Named.Name, actualTask.Named.Name)
