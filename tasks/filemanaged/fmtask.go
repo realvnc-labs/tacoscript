@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/realvnc-labs/tacoscript/tasks"
+	"github.com/realvnc-labs/tacoscript/tasks/shared/conditionals"
 	"github.com/realvnc-labs/tacoscript/tasks/shared/executionresult"
 
 	tacoexec "github.com/realvnc-labs/tacoscript/exec"
@@ -145,7 +146,7 @@ func (fmte *Executor) Execute(ctx context.Context, task tasks.CoreTask) executio
 
 	logrus.Debugf("will check if the task '%s' should be executed", task.GetPath())
 
-	skipReason, err := tasks.CheckConditionals(execCtx, fmte.FsManager, fmte.Runner, fileManagedTask)
+	skipReason, err := conditionals.Check(execCtx, fmte.FsManager, fmte.Runner, fileManagedTask)
 	if err != nil {
 		execRes.Err = err
 		return execRes

@@ -9,6 +9,7 @@ import (
 
 	tacoexec "github.com/realvnc-labs/tacoscript/exec"
 	"github.com/realvnc-labs/tacoscript/tasks"
+	"github.com/realvnc-labs/tacoscript/tasks/shared/conditionals"
 	"github.com/realvnc-labs/tacoscript/tasks/shared/executionresult"
 	"github.com/realvnc-labs/tacoscript/tasks/shared/names"
 
@@ -129,7 +130,7 @@ func (pte *Executor) Execute(ctx context.Context, task tasks.CoreTask) execution
 	}
 
 	logrus.Debugf("will check if the task '%s' should be executed", task.GetPath())
-	skipReason, err := tasks.CheckConditionals(execCtx, pte.FsManager, pte.Runner, pkgTask)
+	skipReason, err := conditionals.Check(execCtx, pte.FsManager, pte.Runner, pkgTask)
 	if err != nil {
 		execRes.Err = err
 		return execRes

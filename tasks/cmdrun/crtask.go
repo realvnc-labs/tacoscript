@@ -9,6 +9,7 @@ import (
 
 	tacoexec "github.com/realvnc-labs/tacoscript/exec"
 	"github.com/realvnc-labs/tacoscript/tasks"
+	"github.com/realvnc-labs/tacoscript/tasks/shared/conditionals"
 	"github.com/realvnc-labs/tacoscript/tasks/shared/executionresult"
 	"github.com/realvnc-labs/tacoscript/tasks/shared/names"
 
@@ -110,7 +111,7 @@ func (crte *Executor) Execute(ctx context.Context, task tasks.CoreTask) executio
 		Shell:        cmdRunTask.Shell,
 	}
 
-	shouldNotBeExecutedReason, err := tasks.CheckConditionals(execCtx, crte.FsManager, crte.Runner, cmdRunTask)
+	shouldNotBeExecutedReason, err := conditionals.Check(execCtx, crte.FsManager, crte.Runner, cmdRunTask)
 	if err != nil {
 		execRes.Err = err
 		return execRes

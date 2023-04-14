@@ -11,6 +11,7 @@ import (
 	"github.com/realvnc-labs/tacoscript/conv"
 	tacoexec "github.com/realvnc-labs/tacoscript/exec"
 	"github.com/realvnc-labs/tacoscript/tasks"
+	"github.com/realvnc-labs/tacoscript/tasks/shared/conditionals"
 	"github.com/realvnc-labs/tacoscript/tasks/shared/executionresult"
 	"github.com/realvnc-labs/tacoscript/utils"
 	"github.com/sirupsen/logrus"
@@ -150,7 +151,7 @@ func (frte *Executor) Execute(ctx context.Context, task tasks.CoreTask) executio
 	}
 
 	logrus.Debugf("will check if the task '%s' should be executed", task.GetPath())
-	skipReason, err := tasks.CheckConditionals(execCtx, frte.FsManager, frte.Runner, frt)
+	skipReason, err := conditionals.Check(execCtx, frte.FsManager, frte.Runner, frt)
 	if err != nil {
 		execRes.Err = err
 		return execRes
