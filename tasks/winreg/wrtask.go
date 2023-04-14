@@ -121,12 +121,12 @@ func (wrt *Task) GetCreatesFilesList() []string {
 	return wrt.Creates
 }
 
-type WrtExecutor struct {
+type Executor struct {
 	Runner    tacoexec.Runner
 	FsManager *utils.FsManager
 }
 
-func (wrte *WrtExecutor) Execute(ctx context.Context, task tasks.CoreTask) executionresult.ExecutionResult {
+func (wrte *Executor) Execute(ctx context.Context, task tasks.CoreTask) executionresult.ExecutionResult {
 	execRes := executionresult.ExecutionResult{
 		Name:    task.GetTypeName(),
 		Comment: "registry not updated",
@@ -186,7 +186,7 @@ func (wrte *WrtExecutor) Execute(ctx context.Context, task tasks.CoreTask) execu
 	return execRes
 }
 
-func (wrte *WrtExecutor) ExecuteTask(ctx context.Context, t *Task, res *executionresult.ExecutionResult) (err error) {
+func (wrte *Executor) ExecuteTask(ctx context.Context, t *Task, res *executionresult.ExecutionResult) (err error) {
 	var updated bool
 	var desc string
 

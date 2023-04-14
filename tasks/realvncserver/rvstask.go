@@ -151,14 +151,14 @@ type RvsConfigReloader interface {
 	Reload(rvst *Task) (err error)
 }
 
-type RvstExecutor struct {
+type Executor struct {
 	FsManager tasks.FsManager
 	Runner    tacoexec.Runner
 
 	Reloader RvsConfigReloader
 }
 
-func (rvste *RvstExecutor) Execute(ctx context.Context, task tasks.CoreTask) executionresult.ExecutionResult {
+func (rvste *Executor) Execute(ctx context.Context, task tasks.CoreTask) executionresult.ExecutionResult {
 	start := time.Now()
 
 	logrus.Debugf("will trigger '%s' task", task.GetPath())

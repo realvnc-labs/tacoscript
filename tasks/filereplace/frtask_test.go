@@ -126,7 +126,7 @@ func TestShouldFailWhenTargetFileNotFound(t *testing.T) {
 
 	testFilename := getTestFilename()
 
-	executor := &FrtExecutor{
+	executor := &Executor{
 		FsManager: &utils.FsManager{},
 	}
 	task := &Task{
@@ -201,7 +201,7 @@ func TestShouldMakeBackupOfOriginalFileWhenBackupExtensionSet(t *testing.T) {
 	WriteTestFile(t, testFilename, simpleTestFileContents)
 	defer os.Remove(testFilename)
 
-	executor := &FrtExecutor{
+	executor := &Executor{
 		FsManager: &utils.FsManager{},
 	}
 	task := &Task{
@@ -231,7 +231,7 @@ func TestShouldNotMakeBackupOfOriginalFileWhenBackupExtensionNotSet(t *testing.T
 	WriteTestFile(t, testConfigFilename, simpleTestFileContents)
 	defer os.Remove(testConfigFilename)
 
-	executor := &FrtExecutor{
+	executor := &Executor{
 		FsManager: &utils.FsManager{},
 	}
 	task := &Task{
@@ -260,7 +260,7 @@ func TestShouldReplaceAllMatchingItems(t *testing.T) {
 	WriteTestFile(t, testFilename, simpleTestFileContentWithRepetition)
 	defer os.Remove(testFilename)
 
-	executor := &FrtExecutor{
+	executor := &Executor{
 		FsManager: &utils.FsManager{},
 	}
 	task := &Task{
@@ -298,7 +298,7 @@ func TestShouldNotReplaceAnything(t *testing.T) {
 	origfileInfo, err := os.Stat(testFilename)
 	require.NoError(t, err)
 
-	executor := &FrtExecutor{
+	executor := &Executor{
 		FsManager: &utils.FsManager{},
 	}
 	task := &Task{
@@ -334,7 +334,7 @@ func TestShouldReplaceCountMatchingItems(t *testing.T) {
 	WriteTestFile(t, testFilename, simpleTestFileContentWithRepetition)
 	defer os.Remove(testFilename)
 
-	executor := &FrtExecutor{
+	executor := &Executor{
 		FsManager: &utils.FsManager{},
 	}
 	task := &Task{
@@ -371,7 +371,7 @@ func TestShouldSkipWhenFilesizeTooLarge(t *testing.T) {
 	WriteTestFile(t, testFilename, largerContents)
 	defer os.Remove(testFilename)
 
-	executor := &FrtExecutor{
+	executor := &Executor{
 		FsManager: &utils.FsManager{},
 	}
 	task := &Task{
@@ -403,7 +403,7 @@ func TestShouldErrorIfTargetNotRegularFile(t *testing.T) {
 		testFilename = "/tmp"
 	}
 
-	executor := &FrtExecutor{
+	executor := &Executor{
 		FsManager: &utils.FsManager{},
 	}
 	task := &Task{
@@ -430,7 +430,7 @@ func TestShouldAppendNotFoundContent(t *testing.T) {
 	WriteTestFile(t, testFilename, simpleTestFileContentWithRepetition)
 	defer os.Remove(testFilename)
 
-	executor := &FrtExecutor{
+	executor := &Executor{
 		FsManager: &utils.FsManager{},
 	}
 	task := &Task{
@@ -469,7 +469,7 @@ func TestShouldPrependNotFoundContent(t *testing.T) {
 	WriteTestFile(t, testFilename, simpleTestFileContentWithRepetition)
 	defer os.Remove(testFilename)
 
-	executor := &FrtExecutor{
+	executor := &Executor{
 		FsManager: &utils.FsManager{},
 	}
 	task := &Task{
@@ -508,7 +508,7 @@ func TestShouldUseReplContentWhenWhenNoNotFoundContent(t *testing.T) {
 	WriteTestFile(t, testFilename, simpleTestFileContentWithRepetition)
 	defer os.Remove(testFilename)
 
-	executor := &FrtExecutor{
+	executor := &Executor{
 		FsManager: &utils.FsManager{},
 	}
 	task := &Task{

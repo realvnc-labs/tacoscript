@@ -42,7 +42,7 @@ func TestShouldSetSimpleConfigRegistryParam(t *testing.T) {
 
 	ctx := context.Background()
 
-	executor := &realvncserver.RvstExecutor{
+	executor := &realvncserver.Executor{
 		FsManager: &utils.FsManager{},
 
 		Reloader: &mockConfigReloader{},
@@ -80,7 +80,7 @@ func TestShouldUpdateSimpleConfigRegistryParam(t *testing.T) {
 
 	ctx := context.Background()
 
-	executor := &realvncserver.RvstExecutor{
+	executor := &realvncserver.Executor{
 		FsManager: &utils.FsManager{},
 
 		Reloader: &mockConfigReloader{},
@@ -134,7 +134,7 @@ func TestShouldClearSimpleConfigRegistryParam(t *testing.T) {
 
 	ctx := context.Background()
 
-	executor := &realvncserver.RvstExecutor{
+	executor := &realvncserver.Executor{
 		FsManager: &utils.FsManager{},
 
 		Reloader: &mockConfigReloader{},

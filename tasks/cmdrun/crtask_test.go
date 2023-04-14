@@ -331,7 +331,7 @@ func TestTaskExecution(t *testing.T) {
 	for _, testCase := range testCases {
 		tc := testCase
 		t.Run(tc.Name, func(tt *testing.T) {
-			cmdRunExecutor := &CrtExecutor{
+			cmdRunExecutor := &Executor{
 				Runner: tc.RunnerMock,
 				FsManager: &apptest.FsManagerMock{
 					FileExistsExistsToReturn: tc.FileShouldExist,

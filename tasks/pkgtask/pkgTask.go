@@ -103,13 +103,13 @@ type PackageManager interface {
 	ExecuteTask(ctx context.Context, t *Task) (res *ExecutionResult, err error)
 }
 
-type PtExecutor struct {
+type Executor struct {
 	PackageManager PackageManager
 	Runner         tacoexec.Runner
 	FsManager      *utils.FsManager
 }
 
-func (pte *PtExecutor) Execute(ctx context.Context, task tasks.CoreTask) executionresult.ExecutionResult {
+func (pte *Executor) Execute(ctx context.Context, task tasks.CoreTask) executionresult.ExecutionResult {
 	logrus.Debugf("will trigger '%s' task", task.GetPath())
 	execRes := executionresult.ExecutionResult{}
 

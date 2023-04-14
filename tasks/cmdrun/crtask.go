@@ -83,12 +83,12 @@ func (crt *Task) GetCreatesFilesList() []string {
 	return crt.Creates
 }
 
-type CrtExecutor struct {
+type Executor struct {
 	Runner    tacoexec.Runner
 	FsManager tasks.FsManager
 }
 
-func (crte *CrtExecutor) Execute(ctx context.Context, task tasks.CoreTask) executionresult.ExecutionResult {
+func (crte *Executor) Execute(ctx context.Context, task tasks.CoreTask) executionresult.ExecutionResult {
 	execRes := executionresult.ExecutionResult{}
 	cmdRunTask, ok := task.(*Task)
 	if !ok {

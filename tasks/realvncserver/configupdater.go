@@ -28,7 +28,7 @@ const (
 	DefaultConfigFilePermissions = 0644
 )
 
-func (rvste *RvstExecutor) applyConfigChanges(rvst *Task) (addedCount int, updatedCount int, err error) {
+func (rvste *Executor) applyConfigChanges(rvst *Task) (addedCount int, updatedCount int, err error) {
 	configValues, outputBuffer, err := newConfigValuesWithOutputBuffer(rvst)
 	if err != nil {
 		return 0, 0, err
@@ -71,7 +71,7 @@ func newConfigValuesWithOutputBuffer(rvst *Task) (
 	return configValuesFile, outputBuffer, nil
 }
 
-func (rvste *RvstExecutor) makeChanges(rvst *Task, configValues *realvnc.ConfigValues) (
+func (rvste *Executor) makeChanges(rvst *Task, configValues *realvnc.ConfigValues) (
 	addedCount int, updatedCount int, err error) {
 	updatedCount, err = rvste.updateExistingValues(rvst, configValues)
 	if err != nil {
@@ -86,7 +86,7 @@ func (rvste *RvstExecutor) makeChanges(rvst *Task, configValues *realvnc.ConfigV
 	return addedCount, updatedCount, nil
 }
 
-func (rvste *RvstExecutor) updateExistingValues(rvst *Task, configValues *realvnc.ConfigValues) (
+func (rvste *Executor) updateExistingValues(rvst *Task, configValues *realvnc.ConfigValues) (
 	updatedCount int, err error) {
 	updatedCount = 0
 	lineNum := 0
@@ -179,7 +179,7 @@ func (rvste *RvstExecutor) updateExistingValues(rvst *Task, configValues *realvn
 	return updatedCount, nil
 }
 
-func (rvste *RvstExecutor) addNewValues(rvst *Task, configValues *realvnc.ConfigValues) (
+func (rvste *Executor) addNewValues(rvst *Task, configValues *realvnc.ConfigValues) (
 	addedCount int, err error) {
 	addedCount = 0
 
@@ -288,7 +288,7 @@ func commitChanges(rvst *Task, outputBuffer *bytes.Buffer) (err error) {
 	return nil
 }
 
-func (rvste *RvstExecutor) ReloadConfig(rvst *Task) (err error) {
+func (rvste *Executor) ReloadConfig(rvst *Task) (err error) {
 	var cmd *exec.Cmd
 
 	execCmd, params := MakeReloadCmdLine(rvst, runtime.GOOS)

@@ -25,7 +25,7 @@ func TestShouldPerformSimpleConfigParamUpdate(t *testing.T) {
 
 	ctx := context.Background()
 
-	executor := &realvncserver.RvstExecutor{
+	executor := &realvncserver.Executor{
 		FsManager: &utils.FsManager{},
 
 		Reloader: &mockConfigReloader{},

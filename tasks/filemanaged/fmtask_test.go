@@ -564,7 +564,7 @@ three`,
 				runner = &appExec.SystemRunner{SystemAPI: &appExec.SystemAPIMock{}}
 			}
 
-			fileManagedExecutor := &FmtExecutor{
+			fileManagedExecutor := &Executor{
 				Runner:      runner,
 				FsManager:   &utils.FsManager{},
 				HashManager: &utils.HashManager{},
@@ -733,7 +733,7 @@ func TestFileManagedUserAndGroup(t *testing.T) {
 			fsMock.StatOutputError = errors.New(testCase.fileStatError)
 		}
 
-		fileManagedExecutor := &FmtExecutor{
+		fileManagedExecutor := &Executor{
 			FsManager:   fsMock,
 			HashManager: &utils.HashManager{},
 		}

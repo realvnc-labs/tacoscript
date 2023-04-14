@@ -58,7 +58,7 @@ func TestShouldUpdateSimpleConfigFileParam(t *testing.T) {
 
 	ctx := context.Background()
 
-	executor := &realvncserver.RvstExecutor{
+	executor := &realvncserver.Executor{
 		FsManager: &utils.FsManager{},
 
 		Reloader: &mockConfigReloader{},
@@ -106,7 +106,7 @@ func TestShouldAddSimpleConfigFileParam(t *testing.T) {
 
 	ctx := context.Background()
 
-	executor := &realvncserver.RvstExecutor{
+	executor := &realvncserver.Executor{
 		FsManager: &utils.FsManager{},
 
 		Reloader: &mockConfigReloader{},
@@ -151,7 +151,7 @@ func TestShouldAddSimpleConfigFileParam(t *testing.T) {
 func TestShouldAddSimpleConfigWhenNoExistingConfigFile(t *testing.T) {
 	ctx := context.Background()
 
-	executor := &realvncserver.RvstExecutor{
+	executor := &realvncserver.Executor{
 		FsManager: &utils.FsManager{},
 
 		Reloader: &mockConfigReloader{},
@@ -211,7 +211,7 @@ func TestShouldRemoveSimpleConfigFileParam(t *testing.T) {
 
 	ctx := context.Background()
 
-	executor := &realvncserver.RvstExecutor{
+	executor := &realvncserver.Executor{
 		FsManager: &utils.FsManager{},
 
 		Reloader: &mockConfigReloader{},
@@ -397,7 +397,7 @@ func TestShouldHandleBackups(t *testing.T) {
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
 			ctx := context.Background()
-			executor := &realvncserver.RvstExecutor{
+			executor := &realvncserver.Executor{
 				FsManager: &utils.FsManager{},
 			}
 

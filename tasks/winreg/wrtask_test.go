@@ -168,7 +168,7 @@ func TestWinRegTaskRequire(t *testing.T) {
 func TestShouldEnsureRegistryValueIsPresent(t *testing.T) {
 	ctx := context.Background()
 
-	executor := &WrtExecutor{}
+	executor := &Executor{}
 
 	task := &Task{
 		ActionType: ActionWinRegPresent,
@@ -200,7 +200,7 @@ func TestShouldEnsureRegistryValueIsPresent(t *testing.T) {
 func TestShouldEnsureRegistryValueIsAbsent(t *testing.T) {
 	ctx := context.Background()
 
-	executor := &WrtExecutor{}
+	executor := &Executor{}
 
 	task := &Task{
 		ActionType: ActionWinRegAbsent,
@@ -231,7 +231,7 @@ func TestShouldEnsureRegistryValueIsAbsent(t *testing.T) {
 func TestShouldEnsureRegistryKeyIsAbsent(t *testing.T) {
 	ctx := context.Background()
 
-	executor := &WrtExecutor{}
+	executor := &Executor{}
 
 	task := &Task{
 		ActionType: ActionWinRegAbsentKey,

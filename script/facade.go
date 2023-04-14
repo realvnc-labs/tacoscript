@@ -56,33 +56,33 @@ func RunScript(scriptPath string, abortOnError bool, output io.Writer) error {
 		ManagementCmdsProviderBuildFunc: pkgmanager.BuildManagementCmdsProviders,
 	}
 
-	pkgTaskExecutor := &pkgtask.PtExecutor{
+	pkgTaskExecutor := &pkgtask.Executor{
 		PackageManager: pkgTaskManager,
 		Runner:         cmdRunner,
 		FsManager:      &utils.FsManager{},
 	}
 
-	winRegTaskExecutor := &winreg.WrtExecutor{
+	winRegTaskExecutor := &winreg.Executor{
 		Runner:    cmdRunner,
 		FsManager: &utils.FsManager{},
 	}
 
 	execRouter := tasks.ExecutorRouter{
 		Executors: map[string]tasks.Executor{
-			cmdrun.TaskType: &cmdrun.CrtExecutor{
+			cmdrun.TaskType: &cmdrun.Executor{
 				Runner:    cmdRunner,
 				FsManager: &utils.FsManager{},
 			},
-			filemanaged.TaskType: &filemanaged.FmtExecutor{
+			filemanaged.TaskType: &filemanaged.Executor{
 				Runner:      cmdRunner,
 				FsManager:   &utils.FsManager{},
 				HashManager: &utils.HashManager{},
 			},
-			filereplace.TaskType: &filereplace.FrtExecutor{
+			filereplace.TaskType: &filereplace.Executor{
 				Runner:    cmdRunner,
 				FsManager: &utils.FsManager{},
 			},
-			realvncserver.TaskTypeConfigUpdate: &realvncserver.RvstExecutor{
+			realvncserver.TaskTypeConfigUpdate: &realvncserver.Executor{
 				Runner:    cmdRunner,
 				FsManager: &utils.FsManager{},
 			},

@@ -120,12 +120,12 @@ func (t *Task) Validate(goos string) error {
 	return errs.ToError()
 }
 
-type FrtExecutor struct {
+type Executor struct {
 	FsManager tasks.FsManager
 	Runner    tacoexec.Runner
 }
 
-func (frte *FrtExecutor) Execute(ctx context.Context, task tasks.CoreTask) executionresult.ExecutionResult {
+func (frte *Executor) Execute(ctx context.Context, task tasks.CoreTask) executionresult.ExecutionResult {
 	logrus.Debugf("will trigger '%s' task", task.GetPath())
 	execRes := executionresult.ExecutionResult{
 		Changes: make(map[string]string),

@@ -239,7 +239,7 @@ func TestPkgTaskExecution(t *testing.T) {
 	for _, testCase := range testCases {
 		tc := testCase
 		t.Run(tc.Name, func(tt *testing.T) {
-			executor := &PtExecutor{
+			executor := &Executor{
 				Runner:         tc.RunnerMock,
 				PackageManager: tc.PackageManagerMock,
 			}
@@ -275,7 +275,7 @@ func TestInvalidTaskTypeExecution(t *testing.T) {
 		Cmds: []*exec.Cmd{},
 	}}
 	pkgManager := &PackageManagerMock{}
-	executor := &PtExecutor{
+	executor := &Executor{
 		Runner:         runnerMock,
 		PackageManager: pkgManager,
 	}
