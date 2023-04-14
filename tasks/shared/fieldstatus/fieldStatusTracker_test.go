@@ -11,9 +11,9 @@ import (
 )
 
 type TestTaskWithCombinedNameMapperAndChangeTracker struct {
-	Field1 string `taco:"field_1,true"`
-	Field2 string `taco:"field_2,true"`
-	Field3 string `taco:"field_3,false"`
+	Field1 string `taco:"field_1,tracked"`
+	Field2 string `taco:"field_2,tracked"`
+	Field3 string `taco:"field_3"`
 
 	Require []string `taco:"require"`
 

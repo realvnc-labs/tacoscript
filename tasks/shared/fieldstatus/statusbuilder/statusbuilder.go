@@ -10,6 +10,7 @@ import (
 
 const (
 	TacoStructTag = "taco"
+	IsTrackedFlag = "tracked"
 )
 
 func Build(t tasks.CoreTask, mapper fieldstatus.NameMapper, tracker fieldstatus.Tracker) {
@@ -44,7 +45,7 @@ func updateFieldStatus(tracker fieldstatus.Tracker, fieldName string, tagValues 
 	if len(tagValues) > 1 {
 		// there was a second field in tag, which may mean the field is being tracked
 		isTracked := strings.TrimSpace(tagValues[1])
-		if strings.EqualFold("true", isTracked) {
+		if strings.EqualFold(isTracked, IsTrackedFlag) {
 			_ = tracker.SetTracked(fieldName)
 		}
 	}

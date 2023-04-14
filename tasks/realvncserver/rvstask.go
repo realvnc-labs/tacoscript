@@ -36,18 +36,18 @@ type Task struct {
 	// whether a field is a realvnc server parameter or not. if set to true then it is a config parameter
 	// and it will be used to update the realvnc server config. if not tracked, then it means the field
 	// is used for the task itself and is NOT a realvnc config param.
-	Encryption          string `taco:"encryption,true"`
-	Authentication      string `taco:"authentication,true"`
-	Permissions         string `taco:"permissions,true"` // multiple key:value pairs delimited by commas
-	QueryConnect        bool   `taco:"query_connect,true"`
-	QueryOnlyIfLoggedOn bool   `taco:"query_only_if_logged_on,true"`
-	QueryConnectTimeout int    `taco:"query_connect_timeout,true"` // seconds
-	BlankScreen         bool   `taco:"blank_screen,true"`
-	ConnNotifyTimeout   int    `taco:"conn_notify_timeout,true"` // seconds
-	ConnNotifyAlways    bool   `taco:"conn_notify_always,true"`
-	IdleTimeout         int    `taco:"idle_timeout,true"` // seconds
-	Log                 string `taco:"log,true"`
-	CaptureMethod       int    `taco:"capture_method,true"`
+	Encryption          string `taco:"encryption,tracked"`
+	Authentication      string `taco:"authentication,tracked"`
+	Permissions         string `taco:"permissions,tracked"` // multiple key:value pairs delimited by commas
+	QueryConnect        bool   `taco:"query_connect,tracked"`
+	QueryOnlyIfLoggedOn bool   `taco:"query_only_if_logged_on,tracked"`
+	QueryConnectTimeout int    `taco:"query_connect_timeout,tracked"` // seconds
+	BlankScreen         bool   `taco:"blank_screen,tracked"`
+	ConnNotifyTimeout   int    `taco:"conn_notify_timeout,tracked"` // seconds
+	ConnNotifyAlways    bool   `taco:"conn_notify_always,tracked"`
+	IdleTimeout         int    `taco:"idle_timeout,tracked"` // seconds
+	Log                 string `taco:"log,tracked"`
+	CaptureMethod       int    `taco:"capture_method,tracked"`
 
 	ConfigFile          string `taco:"config_file"` // config file path for non-windows
 	ServerMode          string `taco:"server_mode"` // server mode for windows (registry keys)
