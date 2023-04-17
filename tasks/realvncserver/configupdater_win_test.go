@@ -13,7 +13,7 @@ import (
 
 	"github.com/realvnc-labs/tacoscript/tasks/realvncserver"
 	"github.com/realvnc-labs/tacoscript/tasks/shared/fieldstatus"
-	"github.com/realvnc-labs/tacoscript/tasks/support/reg"
+	"github.com/realvnc-labs/tacoscript/tasks/support/winregistry"
 	"github.com/realvnc-labs/tacoscript/utils"
 )
 
@@ -31,7 +31,7 @@ func testTeardown(t *testing.T) {
 	t.Helper()
 	// remove test key and restore base key
 	defer func() {
-		_ = reg.DeleteKeyRecursive(testRealVNCBaseKey)
+		_ = winregistry.DeleteKeyRecursive(testRealVNCBaseKey)
 		realvncserver.HKLMBaseKey = origHKLMBaseKey
 	}()
 }
@@ -68,7 +68,7 @@ func TestShouldSetSimpleConfigRegistryParam(t *testing.T) {
 
 	assert.Equal(t, "1 config value change(s) applied", res.Changes["count"])
 
-	found, regVal, err := reg.GetValue(realvncserver.HKLMBaseKey, "Encryption", reg.REG_SZ)
+	found, regVal, err := winregistry.GetValue(realvncserver.HKLMBaseKey, "Encryption", winregistry.REG_SZ)
 	require.NoError(t, err)
 	assert.True(t, found)
 	assert.Equal(t, "AlwaysOff", regVal)
@@ -122,7 +122,7 @@ func TestShouldUpdateSimpleConfigRegistryParam(t *testing.T) {
 
 	assert.Equal(t, "1 config value change(s) applied", res.Changes["count"])
 
-	found, regVal, err := reg.GetValue(realvncserver.HKLMBaseKey, "Encryption", reg.REG_SZ)
+	found, regVal, err := winregistry.GetValue(realvncserver.HKLMBaseKey, "Encryption", winregistry.REG_SZ)
 	require.NoError(t, err)
 	assert.True(t, found)
 	assert.Equal(t, "PreferOn", regVal)
@@ -196,7 +196,7 @@ func TestShouldClearSimpleConfigRegistryParam(t *testing.T) {
 
 	assert.Equal(t, "1 config value change(s) applied", res.Changes["count"])
 
-	found, _, err := reg.GetValue(realvncserver.HKLMBaseKey, "BlankScreen", reg.REG_SZ)
+	found, _, err := winregistry.GetValue(realvncserver.HKLMBaseKey, "BlankScreen", winregistry.REG_SZ)
 	require.NoError(t, err)
 	assert.False(t, found)
 }

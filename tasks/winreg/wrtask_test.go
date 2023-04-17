@@ -10,7 +10,7 @@ import (
 	"testing"
 
 	"github.com/realvnc-labs/tacoscript/tasks"
-	"github.com/realvnc-labs/tacoscript/tasks/support/reg"
+	"github.com/realvnc-labs/tacoscript/tasks/support/winregistry"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -179,7 +179,7 @@ func TestShouldEnsureRegistryValueIsPresent(t *testing.T) {
 		ValType:    "REG_SZ",
 	}
 
-	_, _, err := reg.RemoveValue(task.RegPath, task.Name)
+	_, _, err := winregistry.RemoveValue(task.RegPath, task.Name)
 	require.NoError(t, err)
 
 	err = task.Validate(runtime.GOOS)
@@ -191,7 +191,7 @@ func TestShouldEnsureRegistryValueIsPresent(t *testing.T) {
 	assert.True(t, task.Updated)
 	assert.False(t, res.IsSkipped)
 
-	found, val, err := reg.GetValue(task.RegPath, task.Name, "REG_SZ")
+	found, val, err := winregistry.GetValue(task.RegPath, task.Name, "REG_SZ")
 	assert.NoError(t, err)
 	assert.True(t, found)
 	assert.Equal(t, task.Val, val)
@@ -211,7 +211,7 @@ func TestShouldEnsureRegistryValueIsAbsent(t *testing.T) {
 		ValType:    "REG_SZ",
 	}
 
-	_, _, err := reg.SetValue(task.RegPath, task.Name, task.Val, reg.REG_SZ)
+	_, _, err := winregistry.SetValue(task.RegPath, task.Name, task.Val, winregistry.REG_SZ)
 	require.NoError(t, err)
 
 	err = task.Validate(runtime.GOOS)
@@ -223,7 +223,7 @@ func TestShouldEnsureRegistryValueIsAbsent(t *testing.T) {
 	assert.True(t, task.Updated)
 	assert.False(t, res.IsSkipped)
 
-	found, _, err := reg.GetValue(task.RegPath, task.Name, "REG_SZ")
+	found, _, err := winregistry.GetValue(task.RegPath, task.Name, "REG_SZ")
 	assert.NoError(t, err)
 	assert.False(t, found)
 }
@@ -242,7 +242,7 @@ func TestShouldEnsureRegistryKeyIsAbsent(t *testing.T) {
 		ValType:    "REG_SZ",
 	}
 
-	_, _, err := reg.SetValue(task.RegPath, task.Name, task.Val, reg.REG_SZ)
+	_, _, err := winregistry.SetValue(task.RegPath, task.Name, task.Val, winregistry.REG_SZ)
 	require.NoError(t, err)
 
 	err = task.Validate(runtime.GOOS)
@@ -254,7 +254,7 @@ func TestShouldEnsureRegistryKeyIsAbsent(t *testing.T) {
 	assert.True(t, task.Updated)
 	assert.False(t, res.IsSkipped)
 
-	found, _, err := reg.GetValue(task.RegPath, task.Name, reg.REG_SZ)
+	found, _, err := winregistry.GetValue(task.RegPath, task.Name, winregistry.REG_SZ)
 	assert.NoError(t, err)
 	assert.False(t, found)
 }

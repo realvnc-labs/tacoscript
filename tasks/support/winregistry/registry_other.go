@@ -1,7 +1,7 @@
 //go:build !windows
 // +build !windows
 
-package reg
+package winregistry
 
 import "errors"
 

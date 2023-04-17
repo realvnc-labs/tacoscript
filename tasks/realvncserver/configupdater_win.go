@@ -13,7 +13,7 @@ import (
 
 	tacoexec "github.com/realvnc-labs/tacoscript/exec"
 	"github.com/realvnc-labs/tacoscript/tasks/shared/fieldstatus"
-	"github.com/realvnc-labs/tacoscript/tasks/support/reg"
+	"github.com/realvnc-labs/tacoscript/tasks/support/winregistry"
 )
 
 const (
@@ -40,7 +40,7 @@ func (rvste *Executor) applyConfigChanges(rvst *Task) (addedCount int, updatedCo
 		desc := ""
 
 		if fs.Clear {
-			_, desc, err = reg.RemoveValue(baseKey, regPath)
+			_, desc, err = winregistry.RemoveValue(baseKey, regPath)
 			if err != nil {
 				return err
 			}
@@ -49,7 +49,7 @@ func (rvste *Executor) applyConfigChanges(rvst *Task) (addedCount int, updatedCo
 				logrus.Debugf(`removed key %s\%s`, baseKey, regPath)
 			}
 		} else {
-			_, desc, err = reg.SetValue(baseKey, regPath, regValue, reg.REG_SZ)
+			_, desc, err = winregistry.SetValue(baseKey, regPath, regValue, winregistry.REG_SZ)
 			if err != nil {
 				return err
 			}
