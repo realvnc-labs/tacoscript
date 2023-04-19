@@ -15,7 +15,8 @@ import (
 )
 
 const (
-	DefaultServiceServerModeConfigFile = `/root/.vnc/config.d/vncserver-x11`
+	DefaultLinuxServiceServerModeConfigFile  = `/root/.vnc/config.d/vncserver-x11`
+	DefaultDarwinServiceServerModeConfigFile = `/var/root/.vnc/config.d/vncserver`
 	// the user's home dir will be prepended to the values below
 	DefaultUserServerModeConfigFile    = `/.vnc/config.d/vncserver-x11`
 	DefaultVirtualServerModeConfigFile = `/.vnc/config.d/vncserver-x11-virtual`
@@ -110,7 +111,11 @@ func (t *Task) ValidateConfigFileField(goos string) error {
 	if goos != "windows" && t.ConfigFile == "" {
 		switch t.ServerMode {
 		case ServiceServerMode:
-			t.ConfigFile = DefaultServiceServerModeConfigFile
+			if goos == "darwin" {
+				t.ConfigFile = DefaultDarwinServiceServerModeConfigFile
+			} else {
+				t.ConfigFile = DefaultLinuxServiceServerModeConfigFile
+			}
 		case UserServerMode:
 			homeDir, err := getUserHomeDir()
 			if err != nil {

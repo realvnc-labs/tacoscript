@@ -97,20 +97,29 @@ func TestRealVNCConfigFileBaseFieldValidations(t *testing.T) {
 			expectedConfigFile: "/config/file/name/here",
 		},
 		{
-			name: "when no config file, use service server mode config file",
+			name: "when no config file and linux, use linux service server mode config file",
 			task: realvncserver.Task{
 				Path: "MyTask",
 			},
-			goos:               "any",
-			expectedConfigFile: realvncserver.DefaultServiceServerModeConfigFile,
+			goos:               "linux",
+			expectedConfigFile: realvncserver.DefaultLinuxServiceServerModeConfigFile,
 		},
 		{
+			name: "when no config file and mac, use darwin service server mode config file",
+			task: realvncserver.Task{
+				Path: "MyTask",
+			},
+			goos:               "darwin",
+			expectedConfigFile: realvncserver.DefaultDarwinServiceServerModeConfigFile,
+		},
+		{
+			name: "when no config file, linux and service server mode, use linux service server mode config file",
 			task: realvncserver.Task{
 				Path:       "MyTask",
 				ServerMode: realvncserver.ServiceServerMode,
 			},
-			goos:               "any",
-			expectedConfigFile: realvncserver.DefaultServiceServerModeConfigFile,
+			goos:               "linux",
+			expectedConfigFile: realvncserver.DefaultLinuxServiceServerModeConfigFile,
 		},
 	}
 
