@@ -11,6 +11,7 @@ import (
 	"gopkg.in/yaml.v2"
 
 	"github.com/realvnc-labs/tacoscript/tasks"
+	"github.com/realvnc-labs/tacoscript/tasks/shared/builder"
 	"github.com/realvnc-labs/tacoscript/utils"
 )
 
@@ -32,7 +33,7 @@ type TemplateVariablesProvider interface {
 
 type Builder struct {
 	DataProvider              RawDataProvider
-	TaskBuilder               tasks.Builder
+	TaskBuilder               builder.Builder
 	TemplateVariablesProvider TemplateVariablesProvider
 }
 
@@ -66,7 +67,7 @@ func (p Builder) BuildScripts() (tasks.Scripts, error) {
 		scriptID := rawTask.Key.(string)
 		script := tasks.Script{
 			ID:    scriptID,
-			Tasks: []tasks.Task{},
+			Tasks: []tasks.CoreTask{},
 		}
 		index := 0
 		if steps, ok := rawTask.Value.(yaml.MapSlice); ok {

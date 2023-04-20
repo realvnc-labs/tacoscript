@@ -96,7 +96,7 @@ func TestTacoScript(t *testing.T) {
 
 		inFile := file.Name()
 		testScript, err := os.ReadFile(inFile)
-		assert.NoError(t, err)
+		require.NoError(t, err)
 
 		var test testYml
 		err = yaml.Unmarshal(testScript, &test)

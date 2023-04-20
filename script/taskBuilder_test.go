@@ -12,6 +12,9 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/realvnc-labs/tacoscript/tasks"
+	"github.com/realvnc-labs/tacoscript/tasks/filemanaged"
+	"github.com/realvnc-labs/tacoscript/tasks/filemanaged/fmtbuilder"
+	"github.com/realvnc-labs/tacoscript/tasks/shared/builder"
 	"github.com/realvnc-labs/tacoscript/utils"
 )
 
@@ -43,9 +46,9 @@ maintain-my-file:
 `,
 			expectedScript: tasks.Script{
 				ID: "maintain-my-file",
-				Tasks: []tasks.Task{
-					&tasks.FileManagedTask{
-						TypeName: tasks.FileManaged,
+				Tasks: []tasks.CoreTask{
+					&filemanaged.Task{
+						TypeName: filemanaged.TaskType,
 						Path:     "maintain-my-file.file.managed[1]",
 						Name:     "C:\\temp\\npp.7.8.8.Installer.x64.exe",
 						Source: utils.Location{
@@ -91,9 +94,9 @@ maintain-another-file:
 `,
 			expectedScript: tasks.Script{
 				ID: "maintain-another-file",
-				Tasks: []tasks.Task{
-					&tasks.FileManagedTask{
-						TypeName: tasks.FileManaged,
+				Tasks: []tasks.CoreTask{
+					&filemanaged.Task{
+						TypeName: filemanaged.TaskType,
 						Path:     "maintain-another-file.file.managed[1]",
 						Name:     "/tmp/my-file.txt",
 						Contents: sql.NullString{
@@ -121,8 +124,8 @@ Funny file
 		dataProviderMock := RawDataProviderMock{DataToReturn: testCase.YamlInput}
 		parser := Builder{
 			DataProvider: dataProviderMock,
-			TaskBuilder: tasks.NewBuilderRouter(map[string]tasks.Builder{
-				tasks.FileManaged: tasks.FileManagedTaskBuilder{},
+			TaskBuilder: builder.NewBuilderRouter(map[string]builder.Builder{
+				filemanaged.TaskType: fmtbuilder.TaskBuilder{},
 			}),
 			TemplateVariablesProvider: TemplateVariablesProviderMock{},
 		}
@@ -135,6 +138,6 @@ Funny file
 
 		require.NoError(t, err)
 
-		assert.True(t, cmp.Equal(tasks.Scripts{testCase.expectedScript}, scripts, cmpopts.IgnoreUnexported(tasks.FileManagedTask{})))
+		assert.True(t, cmp.Equal(tasks.Scripts{testCase.expectedScript}, scripts, cmpopts.IgnoreUnexported(filemanaged.Task{})))
 	}
 }

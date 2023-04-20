@@ -1,41 +1,15 @@
 package tasks
 
-import (
-	"fmt"
-	"time"
-)
+import "github.com/realvnc-labs/tacoscript/tasks/shared/fieldstatus"
 
 type Scripts []Script
 
 type Script struct {
 	ID    string
-	Tasks []Task
+	Tasks []CoreTask
 }
 
-type FieldNameMapper interface {
-	BuildFieldMap(t Task)
-	GetFieldName(fk string) (fieldName string)
-	SetFieldName(fk string, fieldName string)
-}
-
-type FieldStatus struct {
-	HasNewValue   bool
-	ChangeApplied bool
-	Clear         bool
-}
-
-type FieldStatusTracker interface {
-	GetFieldStatus(fieldName string) (status FieldStatus, found bool)
-	SetFieldStatus(fieldName string, status FieldStatus)
-	SetHasNewValue(fieldName string) (err error)
-	HasNewValue(fieldName string) (hasNew bool)
-	SetClear(fieldName string) (err error)
-	ShouldClear(fieldName string) (should bool)
-	SetChangeApplied(fieldName string) (err error)
-	WithNewValues(applyFn func(fieldName string, fs FieldStatus) (err error)) (err error)
-}
-
-type Task interface {
+type CoreTask interface {
 	GetTypeName() string
 	Validate(goos string) error
 	GetPath() string
@@ -49,37 +23,6 @@ type Task interface {
 // New interfaces will be required if there's a requirement for allowing access to only one or
 // the other.
 type TaskWithFieldTracker interface {
-	SetMapper(mapper FieldNameMapper)
-	SetTracker(tracker FieldStatusTracker)
-	IsChangeField(fieldName string) (excluded bool)
-}
-
-type ExecutionResult struct {
-	Err        error
-	Duration   time.Duration
-	StdErr     string
-	StdOut     string
-	IsSkipped  bool
-	SkipReason string
-	Pid        int
-	Name       string
-	Comment    string
-	Changes    map[string]string
-}
-
-func (tr *ExecutionResult) String() string {
-	if tr.Err != nil {
-		return fmt.Sprintf(`Execution failed: %v, StdErr: %s, Took: %v, StdOut: %s`, tr.Err, tr.StdErr, tr.Duration, tr.StdOut)
-	}
-
-	if tr.IsSkipped {
-		return fmt.Sprintf(`Execution is Skipped: %s, StdOut: %s, StdErr: %s, Took: %v`, tr.SkipReason, tr.StdOut, tr.StdErr, tr.Duration)
-	}
-
-	return fmt.Sprintf(`Execution success, StdOut: %s, StdErr: %s, Took: %s`, tr.StdOut, tr.StdErr, tr.Duration)
-}
-
-// Succeeded returns true if task succeeded or was skipped
-func (tr *ExecutionResult) Succeeded() bool {
-	return tr.Err == nil
+	SetMapper(mapper fieldstatus.NameMapper)
+	SetTracker(tracker fieldstatus.Tracker)
 }

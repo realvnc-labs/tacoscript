@@ -6,12 +6,13 @@ import (
 	"testing"
 
 	"github.com/realvnc-labs/tacoscript/tasks"
+	"github.com/realvnc-labs/tacoscript/tasks/shared/executionresult"
 	"github.com/stretchr/testify/assert"
 )
 
 type TaskMock struct {
 	ID           string
-	ExecResult   tasks.ExecutionResult
+	ExecResult   executionresult.ExecutionResult
 	Requirements []string
 	OnlyIf       []string
 	Unless       []string
@@ -46,16 +47,12 @@ func (tm *TaskMock) GetCreatesFilesList() []string {
 	return tm.Creates
 }
 
-func (tm *TaskMock) IsChangeField(inputKey string) (excluded bool) {
-	return false
-}
-
 type ExecutorMock struct {
-	ExecResult tasks.ExecutionResult
-	InputTasks []tasks.Task
+	ExecResult executionresult.ExecutionResult
+	InputTasks []tasks.CoreTask
 }
 
-func (em *ExecutorMock) Execute(ctx context.Context, task tasks.Task) tasks.ExecutionResult {
+func (em *ExecutorMock) Execute(ctx context.Context, task tasks.CoreTask) executionresult.ExecutionResult {
 	em.InputTasks = append(em.InputTasks, task)
 	return em.ExecResult
 }
@@ -71,13 +68,13 @@ func TestScriptRunner(t *testing.T) {
 		{
 			ExpectedError: "",
 			Scripts: tasks.Scripts{
-				{
+				tasks.Script{
 					ID:    "script1",
-					Tasks: []tasks.Task{&TaskMock{ID: "123"}},
+					Tasks: []tasks.CoreTask{&TaskMock{ID: "123"}},
 				},
 			},
 			ExecutorMock: &ExecutorMock{
-				ExecResult: tasks.ExecutionResult{
+				ExecResult: executionresult.ExecutionResult{
 					StdOut: "some task1",
 				},
 			},
@@ -86,17 +83,17 @@ func TestScriptRunner(t *testing.T) {
 		},
 		{
 			Scripts: tasks.Scripts{
-				{
+				tasks.Script{
 					ID:    "script5",
-					Tasks: []tasks.Task{&TaskMock{ID: "task8"}, &TaskMock{ID: "task9"}},
+					Tasks: []tasks.CoreTask{&TaskMock{ID: "task8"}, &TaskMock{ID: "task9"}},
 				},
-				{
+				tasks.Script{
 					ID:    "script6",
-					Tasks: []tasks.Task{&TaskMock{ID: "task12"}, &TaskMock{ID: "task13"}},
+					Tasks: []tasks.CoreTask{&TaskMock{ID: "task12"}, &TaskMock{ID: "task13"}},
 				},
 			},
 			ExecutorMock: &ExecutorMock{
-				ExecResult: tasks.ExecutionResult{},
+				ExecResult: executionresult.ExecutionResult{},
 			},
 			ExpectedExecutedTasks: []string{"task8", "task9", "task12", "task13"},
 			ExecutorsMapKey:       "TaskMock",
@@ -104,30 +101,30 @@ func TestScriptRunner(t *testing.T) {
 		{
 			ExpectedError: "cannot find executor for task TaskMock",
 			Scripts: tasks.Scripts{
-				{
+				tasks.Script{
 					ID:    "script7",
-					Tasks: []tasks.Task{&TaskMock{ID: "task10"}},
+					Tasks: []tasks.CoreTask{&TaskMock{ID: "task10"}},
 				},
 			},
 			ExecutorMock: &ExecutorMock{
-				ExecResult: tasks.ExecutionResult{},
+				ExecResult: executionresult.ExecutionResult{},
 			},
 			ExpectedExecutedTasks: []string{},
 			ExecutorsMapKey:       "someUnknownKey",
 		},
 		{
 			Scripts: tasks.Scripts{
-				{
+				tasks.Script{
 					ID:    "script8",
-					Tasks: []tasks.Task{&TaskMock{ID: "task11", Requirements: []string{"script9"}}},
+					Tasks: []tasks.CoreTask{&TaskMock{ID: "task11", Requirements: []string{"script9"}}},
 				},
-				{
+				tasks.Script{
 					ID:    "script9",
-					Tasks: []tasks.Task{&TaskMock{ID: "task12"}},
+					Tasks: []tasks.CoreTask{&TaskMock{ID: "task12"}},
 				},
 			},
 			ExecutorMock: &ExecutorMock{
-				ExecResult: tasks.ExecutionResult{},
+				ExecResult: executionresult.ExecutionResult{},
 			},
 			ExpectedExecutedTasks: []string{"task12", "task11"},
 			ExecutorsMapKey:       "TaskMock",

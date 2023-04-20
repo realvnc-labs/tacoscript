@@ -7,6 +7,7 @@ import (
 	"path/filepath"
 	"testing"
 
+	"github.com/realvnc-labs/tacoscript/tasks/shared/executionresult"
 	"github.com/realvnc-labs/tacoscript/utils"
 	"gopkg.in/yaml.v2"
 
@@ -27,7 +28,7 @@ type TaskBuilderMock struct {
 	TaskRequirements    []string
 }
 
-func (bm *TaskBuilderMock) Build(typeName, path string, ctx interface{}) (tasks.Task, error) {
+func (bm *TaskBuilderMock) Build(typeName, path string, ctx interface{}) (tasks.CoreTask, error) {
 	t := &TaskBuilderTaskMock{
 		TypeName:        typeName,
 		Path:            path,
@@ -54,8 +55,8 @@ func (tm *TaskBuilderTaskMock) GetTypeName() string {
 	return tm.TypeName
 }
 
-func (tm *TaskBuilderTaskMock) Execute(ctx context.Context) tasks.ExecutionResult {
-	return tasks.ExecutionResult{}
+func (tm *TaskBuilderTaskMock) Execute(ctx context.Context) executionresult.ExecutionResult {
+	return executionresult.ExecutionResult{}
 }
 
 func (tm *TaskBuilderTaskMock) Validate(goos string) error {
@@ -115,9 +116,9 @@ func TestBuilder(t *testing.T) {
 		{
 			YamlFileName: "test1.yaml",
 			ExpectedScripts: tasks.Scripts{
-				{
+				tasks.Script{
 					ID: "cwd",
-					Tasks: []tasks.Task{
+					Tasks: []tasks.CoreTask{
 						&TaskBuilderTaskMock{
 							TypeName: "cmd.run",
 							Path:     "cwd.cmd.run[1]",
@@ -168,9 +169,9 @@ func TestBuilder(t *testing.T) {
 		{
 			YamlFileName: "test5.yaml",
 			ExpectedScripts: tasks.Scripts{
-				{
+				tasks.Script{
 					ID: "cwd",
-					Tasks: []tasks.Task{
+					Tasks: []tasks.CoreTask{
 						&TaskBuilderTaskMock{
 							TypeName: "cmd.run",
 							Path:     "cwd.cmd.run[1]",
@@ -200,9 +201,9 @@ func TestBuilder(t *testing.T) {
 		{
 			YamlFileName: "test6.yaml",
 			ExpectedScripts: tasks.Scripts{
-				{
+				tasks.Script{
 					ID: "manyCreates",
-					Tasks: []tasks.Task{
+					Tasks: []tasks.CoreTask{
 						&TaskBuilderTaskMock{
 							TypeName: "cmd.run",
 							Path:     "manyCreates.cmd.run[1]",
@@ -234,9 +235,9 @@ func TestBuilder(t *testing.T) {
 				utils.OSFamily: "RedHat",
 			},
 			ExpectedScripts: tasks.Scripts{
-				{
+				tasks.Script{
 					ID: "template",
-					Tasks: []tasks.Task{
+					Tasks: []tasks.CoreTask{
 						&TaskBuilderTaskMock{
 							TypeName: "cmd.run",
 							Path:     "template.cmd.run[1]",
@@ -258,9 +259,9 @@ func TestBuilder(t *testing.T) {
 				utils.OSFamily: "Ubuntu",
 			},
 			ExpectedScripts: tasks.Scripts{
-				{
+				tasks.Script{
 					ID: "template",
-					Tasks: []tasks.Task{
+					Tasks: []tasks.CoreTask{
 						&TaskBuilderTaskMock{
 							TypeName: "cmd.run",
 							Path:     "template.cmd.run[1]",

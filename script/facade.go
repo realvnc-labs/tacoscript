@@ -5,7 +5,20 @@ import (
 	"io"
 
 	"github.com/realvnc-labs/tacoscript/exec"
-	"github.com/realvnc-labs/tacoscript/pkgmanager"
+	"github.com/realvnc-labs/tacoscript/tasks/cmdrun"
+	"github.com/realvnc-labs/tacoscript/tasks/cmdrun/crtbuilder"
+	"github.com/realvnc-labs/tacoscript/tasks/filemanaged"
+	"github.com/realvnc-labs/tacoscript/tasks/filemanaged/fmtbuilder"
+	"github.com/realvnc-labs/tacoscript/tasks/filereplace"
+	"github.com/realvnc-labs/tacoscript/tasks/filereplace/frtbuilder"
+	"github.com/realvnc-labs/tacoscript/tasks/pkgtask"
+	"github.com/realvnc-labs/tacoscript/tasks/pkgtask/pkgbuilder"
+	"github.com/realvnc-labs/tacoscript/tasks/realvncserver"
+	"github.com/realvnc-labs/tacoscript/tasks/realvncserver/rvstbuilder"
+	"github.com/realvnc-labs/tacoscript/tasks/shared/builder"
+	"github.com/realvnc-labs/tacoscript/tasks/support/pkgmanager"
+	"github.com/realvnc-labs/tacoscript/tasks/winreg"
+	"github.com/realvnc-labs/tacoscript/tasks/winreg/wrtbuilder"
 	"github.com/realvnc-labs/tacoscript/utils"
 
 	"github.com/realvnc-labs/tacoscript/tasks"
@@ -19,17 +32,17 @@ func RunScript(scriptPath string, abortOnError bool, output io.Writer) error {
 
 	parser := Builder{
 		DataProvider: fileDataProvider,
-		TaskBuilder: tasks.NewBuilderRouter(map[string]tasks.Builder{
-			tasks.TaskTypeCmdRun:  &tasks.CmdRunTaskBuilder{},
-			tasks.FileManaged:     &tasks.FileManagedTaskBuilder{},
-			tasks.FileReplace:     &tasks.FileReplaceTaskBuilder{},
-			tasks.RealVNCServer:   &tasks.RealVNCServerTaskBuilder{},
-			tasks.PkgInstalled:    &tasks.PkgTaskBuilder{},
-			tasks.PkgRemoved:      &tasks.PkgTaskBuilder{},
-			tasks.PkgUpgraded:     &tasks.PkgTaskBuilder{},
-			tasks.WinRegPresent:   &tasks.WinRegTaskBuilder{},
-			tasks.WinRegAbsent:    &tasks.WinRegTaskBuilder{},
-			tasks.WinRegAbsentKey: &tasks.WinRegTaskBuilder{},
+		TaskBuilder: builder.NewBuilderRouter(map[string]builder.Builder{
+			cmdrun.TaskType:                    &crtbuilder.TaskBuilder{},
+			filemanaged.TaskType:               &fmtbuilder.TaskBuilder{},
+			filereplace.TaskType:               &frtbuilder.TaskBuilder{},
+			realvncserver.TaskTypeConfigUpdate: &rvstbuilder.TaskBuilder{},
+			pkgtask.TaskTypePkgInstalled:       &pkgbuilder.TaskBuilder{},
+			pkgtask.TaskTypePkgRemoved:         &pkgbuilder.TaskBuilder{},
+			pkgtask.TaskTypePkgUpgraded:        &pkgbuilder.TaskBuilder{},
+			winreg.TaskTypeWinRegPresent:       &wrtbuilder.TaskBuilder{},
+			winreg.TaskTypeWinRegAbsent:        &wrtbuilder.TaskBuilder{},
+			winreg.TaskTypeWinRegAbsentKey:     &wrtbuilder.TaskBuilder{},
 		}),
 		TemplateVariablesProvider: utils.OSDataProvider{},
 	}
@@ -43,42 +56,42 @@ func RunScript(scriptPath string, abortOnError bool, output io.Writer) error {
 		ManagementCmdsProviderBuildFunc: pkgmanager.BuildManagementCmdsProviders,
 	}
 
-	pkgTaskExecutor := &tasks.PkgTaskExecutor{
+	pkgTaskExecutor := &pkgtask.Executor{
 		PackageManager: pkgTaskManager,
 		Runner:         cmdRunner,
 		FsManager:      &utils.FsManager{},
 	}
 
-	winRegTaskExecutor := &tasks.WinRegTaskExecutor{
+	winRegTaskExecutor := &winreg.Executor{
 		Runner:    cmdRunner,
 		FsManager: &utils.FsManager{},
 	}
 
 	execRouter := tasks.ExecutorRouter{
 		Executors: map[string]tasks.Executor{
-			tasks.TaskTypeCmdRun: &tasks.CmdRunTaskExecutor{
+			cmdrun.TaskType: &cmdrun.Executor{
 				Runner:    cmdRunner,
 				FsManager: &utils.FsManager{},
 			},
-			tasks.FileManaged: &tasks.FileManagedTaskExecutor{
+			filemanaged.TaskType: &filemanaged.Executor{
 				Runner:      cmdRunner,
 				FsManager:   &utils.FsManager{},
 				HashManager: &utils.HashManager{},
 			},
-			tasks.FileReplace: &tasks.FileReplaceTaskExecutor{
+			filereplace.TaskType: &filereplace.Executor{
 				Runner:    cmdRunner,
 				FsManager: &utils.FsManager{},
 			},
-			tasks.RealVNCServer: &tasks.RealVNCServerTaskExecutor{
+			realvncserver.TaskTypeConfigUpdate: &realvncserver.Executor{
 				Runner:    cmdRunner,
 				FsManager: &utils.FsManager{},
 			},
-			tasks.PkgInstalled:    pkgTaskExecutor,
-			tasks.PkgRemoved:      pkgTaskExecutor,
-			tasks.PkgUpgraded:     pkgTaskExecutor,
-			tasks.WinRegPresent:   winRegTaskExecutor,
-			tasks.WinRegAbsent:    winRegTaskExecutor,
-			tasks.WinRegAbsentKey: winRegTaskExecutor,
+			pkgtask.TaskTypePkgInstalled:   pkgTaskExecutor,
+			pkgtask.TaskTypePkgRemoved:     pkgTaskExecutor,
+			pkgtask.TaskTypePkgUpgraded:    pkgTaskExecutor,
+			winreg.TaskTypeWinRegPresent:   winRegTaskExecutor,
+			winreg.TaskTypeWinRegAbsent:    winRegTaskExecutor,
+			winreg.TaskTypeWinRegAbsentKey: winRegTaskExecutor,
 		},
 	}
 

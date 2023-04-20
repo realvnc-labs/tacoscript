@@ -7,6 +7,7 @@ import (
 	"github.com/stretchr/testify/assert"
 
 	"github.com/realvnc-labs/tacoscript/tasks"
+	"github.com/realvnc-labs/tacoscript/tasks/shared/executionresult"
 )
 
 type RequirementsTaskMock struct {
@@ -21,8 +22,8 @@ func (rtm *RequirementsTaskMock) GetTypeName() string {
 	return ""
 }
 
-func (rtm *RequirementsTaskMock) Execute(ctx context.Context) tasks.ExecutionResult {
-	return tasks.ExecutionResult{}
+func (rtm *RequirementsTaskMock) Execute(ctx context.Context) executionresult.ExecutionResult {
+	return executionresult.ExecutionResult{}
 }
 
 func (rtm *RequirementsTaskMock) Validate(goos string) error {
@@ -63,18 +64,18 @@ func TestScriptsValidation(t *testing.T) {
 		{
 			name: "cycle of 2 scripts requiring each other",
 			scripts: tasks.Scripts{
-				{
+				tasks.Script{
 					ID: "script one",
-					Tasks: []tasks.Task{
+					Tasks: []tasks.CoreTask{
 						&RequirementsTaskMock{
 							RequirementsToGive: []string{"script two"},
 							Path:               "script one.RequirementsTaskMock[0]",
 						},
 					},
 				},
-				{
+				tasks.Script{
 					ID: "script two",
-					Tasks: []tasks.Task{
+					Tasks: []tasks.CoreTask{
 						&RequirementsTaskMock{
 							RequirementsToGive: []string{"script one"},
 							Path:               "script two.RequirementsTaskMock[0]",
@@ -93,18 +94,18 @@ func TestScriptsValidation(t *testing.T) {
 		{
 			name: "no requirement cycle",
 			scripts: tasks.Scripts{
-				{
+				tasks.Script{
 					ID: "script 3",
-					Tasks: []tasks.Task{
+					Tasks: []tasks.CoreTask{
 						&RequirementsTaskMock{},
 						&RequirementsTaskMock{
 							RequirementsToGive: []string{"script 4"},
 						},
 					},
 				},
-				{
+				tasks.Script{
 					ID:    "script 4",
-					Tasks: []tasks.Task{},
+					Tasks: []tasks.CoreTask{},
 				},
 			},
 			errorExpectation: errorExpectation{
@@ -114,33 +115,33 @@ func TestScriptsValidation(t *testing.T) {
 		{
 			name: "circling cycle",
 			scripts: tasks.Scripts{
-				{
+				tasks.Script{
 					ID: "script 6",
-					Tasks: []tasks.Task{
+					Tasks: []tasks.CoreTask{
 						&RequirementsTaskMock{
 							RequirementsToGive: []string{"script 7"},
 						},
 					},
 				},
-				{
+				tasks.Script{
 					ID: "script 7",
-					Tasks: []tasks.Task{
+					Tasks: []tasks.CoreTask{
 						&RequirementsTaskMock{
 							RequirementsToGive: []string{"script 8"},
 						},
 					},
 				},
-				{
+				tasks.Script{
 					ID: "script 8",
-					Tasks: []tasks.Task{
+					Tasks: []tasks.CoreTask{
 						&RequirementsTaskMock{
 							RequirementsToGive: []string{"script 6"},
 						},
 					},
 				},
-				{
+				tasks.Script{
 					ID: "script 9",
-					Tasks: []tasks.Task{
+					Tasks: []tasks.CoreTask{
 						&RequirementsTaskMock{
 							RequirementsToGive: []string{"script 6"},
 						},
@@ -159,33 +160,33 @@ func TestScriptsValidation(t *testing.T) {
 		{
 			name: "many_scripts_no_cycle",
 			scripts: tasks.Scripts{
-				{
+				tasks.Script{
 					ID: "script 10",
-					Tasks: []tasks.Task{
+					Tasks: []tasks.CoreTask{
 						&RequirementsTaskMock{
 							RequirementsToGive: []string{"script 11"},
 						},
 					},
 				},
-				{
+				tasks.Script{
 					ID: "script 11",
-					Tasks: []tasks.Task{
+					Tasks: []tasks.CoreTask{
 						&RequirementsTaskMock{
 							RequirementsToGive: []string{"script 12", "script 13"},
 						},
 					},
 				},
-				{
+				tasks.Script{
 					ID: "script 13",
-					Tasks: []tasks.Task{
+					Tasks: []tasks.CoreTask{
 						&RequirementsTaskMock{
 							RequirementsToGive: []string{},
 						},
 					},
 				},
-				{
+				tasks.Script{
 					ID: "script 12",
-					Tasks: []tasks.Task{
+					Tasks: []tasks.CoreTask{
 						&RequirementsTaskMock{
 							RequirementsToGive: []string{},
 						},
@@ -199,9 +200,9 @@ func TestScriptsValidation(t *testing.T) {
 		{
 			name: "require itself",
 			scripts: tasks.Scripts{
-				{
+				tasks.Script{
 					ID: "script 20",
-					Tasks: []tasks.Task{
+					Tasks: []tasks.CoreTask{
 						&RequirementsTaskMock{
 							RequirementsToGive: []string{"script 20"},
 							Path:               "script 20 task 1 path 1",
@@ -216,9 +217,9 @@ func TestScriptsValidation(t *testing.T) {
 		{
 			name: "multiple required scripts not found",
 			scripts: tasks.Scripts{
-				{
+				tasks.Script{
 					ID: "script 30",
-					Tasks: []tasks.Task{
+					Tasks: []tasks.CoreTask{
 						&RequirementsTaskMock{
 							RequirementsToGive: []string{"script 31", "script 32"},
 							Path:               "path 1",
@@ -237,21 +238,21 @@ func TestScriptsValidation(t *testing.T) {
 		{
 			name: "all required scripts are found",
 			scripts: tasks.Scripts{
-				{
+				tasks.Script{
 					ID: "script 32",
-					Tasks: []tasks.Task{
+					Tasks: []tasks.CoreTask{
 						&RequirementsTaskMock{
 							RequirementsToGive: []string{"script 33", "script 34"},
 						},
 					},
 				},
-				{
+				tasks.Script{
 					ID:    "script 33",
-					Tasks: []tasks.Task{&RequirementsTaskMock{}},
+					Tasks: []tasks.CoreTask{&RequirementsTaskMock{}},
 				},
-				{
+				tasks.Script{
 					ID:    "script 34",
-					Tasks: []tasks.Task{&RequirementsTaskMock{}},
+					Tasks: []tasks.CoreTask{&RequirementsTaskMock{}},
 				},
 			},
 			errorExpectation: errorExpectation{
@@ -261,24 +262,24 @@ func TestScriptsValidation(t *testing.T) {
 		{
 			name: "some required scripts not found",
 			scripts: tasks.Scripts{
-				{
+				tasks.Script{
 					ID: "script 35",
-					Tasks: []tasks.Task{
+					Tasks: []tasks.CoreTask{
 						&RequirementsTaskMock{
 							RequirementsToGive: []string{"script 36"},
 						},
 					},
 				},
-				{
+				tasks.Script{
 					ID: "script 36",
-					Tasks: []tasks.Task{&RequirementsTaskMock{
+					Tasks: []tasks.CoreTask{&RequirementsTaskMock{
 						RequirementsToGive: []string{"script 37"},
 						Path:               "path 36",
 					}},
 				},
-				{
+				tasks.Script{
 					ID: "script 38",
-					Tasks: []tasks.Task{&RequirementsTaskMock{
+					Tasks: []tasks.CoreTask{&RequirementsTaskMock{
 						RequirementsToGive: []string{"script 40"},
 						Path:               "path 38",
 					}},
