@@ -50,3 +50,4 @@ release:
     owner: realvnc-labs
     name: tacoscript
   draft: true
+  prerelease: "true"
