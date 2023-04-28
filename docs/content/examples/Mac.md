@@ -107,3 +107,13 @@ realvnc-server-display-fix:
     - server_mode: Service
     - permissions: <permissions_string>
 ```
+
+## Enable debug logging for RealVNC VNC Server
+
+```yaml
+realvnc-server-debug-logging:
+  realvnc_server.config_update:
+    - server_mode: Service
+    - idle_timeout: 0
+    - log: '*:syslog:10,*:file:100'
+```
