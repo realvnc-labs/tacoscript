@@ -123,6 +123,5 @@ realvnc-server-display-fix:
 realvnc-server-debug-logging:
   realvnc_server.config_update:
     - server_mode: Service
-    - idle_timeout: 0
     - log: '*:EventLog:10,*:file:100'
 ```
