@@ -92,3 +92,46 @@ zchange shell:
     - name: print("hallo python")
     - shell: /usr/local/bin/python3
 ```
+
+## Configure RealVNC VNC Server with 256-bit AES encryption
+
+```yaml
+realvnc-server-max-encryption:
+  realvnc_server.config_update:
+    - server_mode: Service
+    - encryption: AlwaysMaximum
+```
+
+## Configure RealVNC VNC Server for attended access
+
+```yaml
+realvnc-server-attended-access:
+  realvnc_server.config_update:
+    - server_mode: Service
+    - query_connect: true
+    - query_only_if_logged_on: true
+    - query_connect_timeout: 10
+    - blank_screen: false
+    - conn_notify_always: true
+```
+
+## Configure RealVNC VNC Server Access Control List
+
+```yaml
+# Determine <permissions_string> using RealVNC Permissions Creator
+# https://help.realvnc.com/hc/en-us/articles/360002253618#using-vnc-permissions-creator-0-2
+
+realvnc-server-display-fix:
+  realvnc_server.config_update:
+    - server_mode: Service
+    - permissions: <permissions_string>
+```
+
+## Enable debug logging for RealVNC VNC Server
+
+```yaml
+realvnc-server-debug-logging:
+  realvnc_server.config_update:
+    - server_mode: Service
+    - log: '*:syslog:10,*:file:100'
+```
