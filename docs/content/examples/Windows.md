@@ -125,3 +125,101 @@ realvnc-server-debug-logging:
     - server_mode: Service
     - log: '*:EventLog:10,*:file:100'
 ```
+
+## Download, install and license RealVNC VNC Server
+
+```yaml
+# Installs/updates VNC Server and either licenses it offline with license key or joins to the cloud with a cloud connectivity token
+
+# CONFIGURE PARAMETERS BELOW TO YOUR REQUIREMENTS
+
+# Set version of VNC Server to install, e.g. 7.1.0
+# Defaults to Latest
+{{$Version := "Latest"}}
+
+# Set if we're using cloud or offline
+# Accepted values: offline, cloud
+{{$CloudOrOffline := "cloud"}}
+
+# Set offline license to apply
+# Not required if joining to the cloud
+{{$OfflineLicense := ""}}
+
+# Set cloud connectivity token to join VNC Server to the cloud
+# Not required if using direct connections only
+{{$CloudToken := ""}}
+
+# Set group to join VNC Server to - group must exist in the VNC Connect portal
+# Optional
+{{$CloudGroup := ""}}
+
+
+# DO NOT EDIT BELOW THIS LINE
+{{$WindowsScriptPath := "C:\\Windows\\Temp\\vnc.ps1"}}
+
+template:
+  file.managed:
+    - name: {{ $WindowsScriptPath }}
+    - contents: |
+        [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
+        
+        $Version = "{{ $Version }}"
+        $CloudOrOffline = "{{ $CloudOrOffline }}"
+        $OfflineLicense = "{{ $OfflineLicense }}"
+        $CloudToken = "{{ $CloudToken }}"
+        $CloudGroup = "{{ $CloudGroup }}"
+        
+        # Use TEMP for downloaded files
+        $TempPath = $env:TEMP
+                
+        # Detect architecture
+        $Architecture = "64bit"
+        if ((Get-WmiObject win32_operatingsystem | select osarchitecture).osarchitecture -ne "64-bit"){
+          $Architecture = "32bit"
+        }
+        
+        # Download MSI archive from RealVNC website
+        Invoke-WebRequest -URI "https://downloads.realvnc.com/download/file/vnc.files/VNC-Server-$Version-Windows-msi.zip" -OutFile "$TempPath/VNC_MSIs.zip"
+       
+        # Unzip downloaded archive - this requires Powershell 5
+        Expand-Archive "$TempPath/VNC_MSIs.zip" -DestinationPath "$TempPath/VNC_MSIs" -Force
+       
+        # Cleanup downloaded archive now that it's been extracted
+        Remove-Item -Path "$TempPath\VNC_MSIs.zip"
+        
+        # Select MSI matching OS architecture
+        $MSIFilename = Get-ChildItem "$TempPath\VNC_MSIs\*$Architecture*.msi" | Select-Object -ExpandProperty Name
+        
+        # Install VNC Server MSI silently
+        Start-Process msiexec.exe -Wait -ArgumentList "/I $TempPath\VNC_MSIs\$MSIFilename /qn"
+        
+        # Cleanup MSIs
+        Remove-Item -Path "$TempPath\VNC_MSIs" -Recurse
+        
+        # Determine if we are licensing by key or cloud joining
+        if ($CloudOrOffline -eq "offline"){
+          # Call vnclicense.exe to apply the key
+          Start-Process "C:\Program Files\RealVNC\VNC Server\vnclicense.exe" -Wait -ArgumentList "-add $OfflineLicense"
+        }
+        elseif ($CloudOrOffline -eq "cloud"){
+          if ((& 'C:\Program Files\RealVNC\VNC Server\vncserver.exe' -service -cloudstatus | ConvertFrom-JSON | Select-Object -ExpandProperty CloudJoined) -eq $false){
+            # If CloudGroup is set, use it to join VNC Server to that group - group must exist in the VNC Connect portal
+            if ($CloudGroup -ne ""){
+              $joinGroup = "-joinGroup $CloudGroup"
+              # Call vncserver.exe to do the cloud join
+              Start-Process "C:\Program Files\RealVNC\VNC Server\vncserver.exe" -Wait -ArgumentList "-service -joinCloud $CloudToken $joinGroup"
+            }
+            else{
+              Start-Process "C:\Program Files\RealVNC\VNC Server\vncserver.exe" -Wait -ArgumentList "-service -joinCloud $CloudToken"
+            }
+          }
+        }
+    - skip_verify: true
+    - mode: 0755
+    - encoding: UTF-8
+  cmd.run:
+    - names:
+        - PowerShell.exe -ExecutionPolicy Bypass -File {{ $WindowsScriptPath }}
+        - DEL {{ $WindowsScriptPath }}
+    - shell: cmd.exe
+```
