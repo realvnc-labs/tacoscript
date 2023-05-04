@@ -128,8 +128,10 @@ realvnc-server-debug-logging:
 
 ## Download, install and license RealVNC VNC Server
 
+<!-- markdownlint-disable -->
 ```yaml
-# Installs/updates VNC Server and either licenses it offline with license key or joins to the cloud with a cloud connectivity token
+# Installs/updates VNC Server and either licenses it offline with license key 
+# or joins to the cloud with a cloud connectivity token
 
 # CONFIGURE PARAMETERS BELOW TO YOUR REQUIREMENTS
 
@@ -223,3 +225,4 @@ template:
         - DEL {{ $WindowsScriptPath }}
     - shell: cmd.exe
 ```
+<!-- markdownlint-restore -->

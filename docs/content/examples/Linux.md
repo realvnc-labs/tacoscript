@@ -138,8 +138,10 @@ realvnc-server-debug-logging:
 
 ## Download, install and license RealVNC VNC Server
 
+<!-- markdownlint-disable -->
 ```yaml
-# Installs/updates VNC Server and either licenses it offline with license key or joins to the cloud with a cloud connectivity token
+# Installs/updates VNC Server and either licenses it offline with license key 
+# or joins to the cloud with a cloud connectivity token
 
 # CONFIGURE PARAMETERS BELOW TO YOUR REQUIREMENTS
 
@@ -202,7 +204,8 @@ template:
         fi
         
         # Download VNC Server package from RealVNC website
-        curl -fsL --retry 3 "https://downloads.realvnc.com/download/file/vnc.files/VNC-Server-${Version}-Linux-${Architecture}${FileExt}" -o "${TempPath}/VNC${FileExt}"
+        curl -fsL --retry 3 "https://downloads.realvnc.com/download/file/vnc.files/\
+        VNC-Server-${Version}-Linux-${Architecture}${FileExt}" -o "${TempPath}/VNC${FileExt}"
         
         # Install VNC Server package
         if [ "$FileExt" = ".deb" ]; then
@@ -262,3 +265,5 @@ template:
       - sh -x {{ $LinuxScriptPath }}
       - rm -f {{ $LinuxScriptPath }}
     - shell: sh
+```
+<!-- markdownlint-restore -->
