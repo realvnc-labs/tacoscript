@@ -14,5 +14,5 @@ hugo server
 ## Check
 Before pushing, check your file with [markdownlint-cli](https://github.com/igorshubovych/markdownlint-cli)
 ```shell
-npx markdownlint-cli content/
+npx markdownlint-cli2 content/**/*.md
 ```

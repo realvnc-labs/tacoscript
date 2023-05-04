@@ -11,4 +11,4 @@ jobs:
       - name: Markdown Lint
         run: |
           cd docs
-          npx markdownlint-cli  content/
+          npx markdownlint-cli2 content/**/*.md
